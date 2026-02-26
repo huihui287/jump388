@@ -1,8 +1,7 @@
 import { _decorator, Node, tween, v3 } from 'cc';
 
 import { App } from '../Controller/app';
-import { LevelConfig } from '../Tools/levelConfig';
-import { gridCmpt } from '../game/item/gridCmpt';
+
 
 import { EventName } from '../Tools/eventName';
 import CM from '../channel/CM';

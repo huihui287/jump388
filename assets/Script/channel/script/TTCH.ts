@@ -917,4 +917,58 @@ export default class TTCH extends BaseCH implements BaseINT {
             }
         })
     }
+
+
+    /**
+     * 启动陀螺仪
+     * 用于开启设备的陀螺仪传感器，获取设备的旋转角度数据
+     * @description 调用此方法后，系统会开始采集陀螺仪数据，需要配合onGyroscopeChange方法监听数据变化
+     * @example
+     * // 启动陀螺仪
+     * this.startGyroscope();
+     * // 监听陀螺仪数据变化
+     * this.onGyroscopeChange();
+     */
+    startGyroscope() {
+        if (!this.ch) return;
+        this.ch.startGyroscope({
+            interval: 100,//设置每隔100ms刷新一次陀螺仪数据
+            fail(res) {
+                console.warn(res); //失败时候进入这里
+            },
+        });
+    }
+    
+    /**
+     * 监听陀螺仪数据变化
+     * 用于注册陀螺仪数据变化的回调函数，当陀螺仪数据发生变化时触发
+     * @description 此方法需要在startGyroscope方法之后调用，以确保能够接收到陀螺仪数据
+     * @param {Function} callback - 可选参数，自定义的陀螺仪数据回调函数
+     * @example
+     * // 使用默认回调函数
+     * this.onGyroscopeChange();
+     * 
+     * // 使用自定义回调函数
+     * this.onGyroscopeChange(function(params) {
+     *     console.log('陀螺仪数据变化:', params);
+     *     // 处理陀螺仪数据
+     * });
+     */
+    onGyroscopeChange(callback?: (params: {
+        x: number; // 陀螺仪x轴数据
+        y: number; // 陀螺仪y轴数据
+        z: number; // 陀螺仪z轴数据
+        t: number; // 时间戳
+        result: boolean; // 操作结果
+    }) => void) {
+        if (!this.ch) return;
+        this.ch.onGyroscopeChange(callback || function (params) {
+            console.log("陀螺仪数据:x ", params.x);
+            console.log("陀螺仪数据:y ", params.y);
+            console.log("陀螺仪数据:z ", params.z);
+            console.log("陀螺仪数据:t ", params.t);
+            console.log("陀螺仪数据:result ", params.result);
+        });
+    }
+
 }

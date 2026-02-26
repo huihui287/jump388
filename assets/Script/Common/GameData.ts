@@ -7,16 +7,10 @@ const { ccclass, property } = _decorator;
 @ccclass
 export default class GameData {
 
-    /** 炸弹 */
-    public static BombHor = "BombHor";
-    public static BombVer = "BomVerr";
-    public static BombBomb = "BombBomb";
-    public static BombAllSame = "BombAllSame";
-    public static BombChangecolor = "BombChangecolor";
+
     public static Level = 'Level';
     public static IsNewPlayer = 'IsNewPlayer';
     public static Gold = 'Gold';
-    public static TurretLevel = 'TurretLevel';
     public static MusicOn = 'MusicOn';
     public static SoundOn = 'SoundOn';
         /** 当前最新关卡 */
@@ -92,43 +86,6 @@ static loadData(key: string, defaultValue: any): any {
     }
     
 }
-
-   static getBomb(type: Bomb) {
-        switch (type) {
-            case Bomb.hor:
-                return +GameData.loadData(GameData.BombHor,0);
-            case Bomb.ver:
-                return +GameData.loadData(GameData.BombVer,0);
-            case Bomb.bomb:
-                return +GameData.loadData(GameData.BombBomb,0);
-            case Bomb.allSame:
-                return +GameData.loadData(GameData.BombAllSame,0);
-            case Bomb.changecolor:
-                return +GameData.loadData(GameData.BombChangecolor,0);
-        }
-    }
-
-   static setBomb(type: Bomb, count: number) {
-        let baseNum = this.getBomb(type);
-        let ct = baseNum + count >= 0 ? baseNum + count : 0;
-        switch (type) {
-            case Bomb.hor:
-                GameData.saveData(GameData.BombHor, ct + "");
-                break;
-            case Bomb.ver:
-                GameData.saveData(GameData.BombVer, ct + "");   
-                break;
-            case Bomb.bomb:
-                GameData.saveData(GameData.BombBomb, ct + "");
-                break;
-            case Bomb.allSame:
-                GameData.saveData(GameData.BombAllSame, ct + "");
-                break;
-            case Bomb.changecolor:
-                GameData.saveData(GameData.BombChangecolor, ct + "");
-                break;
-        }
-    }
     
     /**
  * 检查是否为新玩家

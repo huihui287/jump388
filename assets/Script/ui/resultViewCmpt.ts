@@ -1,8 +1,7 @@
 import { _decorator, instantiate, Label, Node, tween, v3 } from 'cc';
         
 import { App } from '../Controller/app';
-import { LevelConfig } from '../Tools/levelConfig';
-import { gridCmpt } from '../game/item/gridCmpt';
+
 
 import { EventName } from '../Tools/eventName';
 import CM from '../channel/CM';
@@ -168,17 +167,6 @@ export class ResultViewCmpt extends BaseDialog  {
             ViewManager.show({
                 node: gridUpView,
                 name: "UpgradeFruit"
-            });
-        });
-    }
-    
-    onClick_upTurretBtn() {
-        AudioManager.getInstance().playSound('button_click');
-        LoaderManeger.instance.loadPrefab('prefab/ui/UpTurret').then((prefab) => {
-            let gridUpView = instantiate(prefab);
-            ViewManager.show({
-                node: gridUpView,
-                name: "UpTurret"
             });
         });
     }

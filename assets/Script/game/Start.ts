@@ -204,17 +204,7 @@ export class Start extends BaseNodeCom {
             });
         });
     }
-    onClick_uppaotaBtn() {
-        AudioManager.getInstance().playSound('button_click');
-        // App.view.openView(ViewName.Single.eSettingView);
-        LoaderManeger.instance.loadPrefab('prefab/ui/UpTurret').then((prefab) => {
-            let uppaota = instantiate(prefab);
-            ViewManager.show({
-                node: uppaota,
-                name: "UpTurret"
-            });
-        });
-    }
+
 
     onClick_upgradeFruitBtn() {
         AudioManager.getInstance().playSound('button_click');
