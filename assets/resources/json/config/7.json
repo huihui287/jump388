@@ -1,0 +1,30 @@
+{
+    "mapCount": 1,
+    "blockCount": 5,
+    "RewardCount": 21,
+    "scores": [
+        300,
+        3000,
+        8000
+    ],
+    "blockRatio": [
+        100,
+        100,
+        100,
+        100,
+        100
+    ],
+    "mapData": [
+        {
+            "m_id": [
+                2
+            ],
+            "m_ct": [
+                70
+            ],
+            "m_mk": [
+                15
+            ]
+        }
+    ]
+}
