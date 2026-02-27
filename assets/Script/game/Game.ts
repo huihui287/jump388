@@ -12,6 +12,9 @@ import {  GameState } from '../Tools/enumConst';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
+import { JoystickControl } from './JoystickControl';
+import { DownGridManager } from './Manager/DownGridManager';
+import { Hero } from './Hero';
 
 
 const { ccclass, property } = _decorator;
@@ -24,6 +27,10 @@ const { ccclass, property } = _decorator;
 @ccclass('Game')
 export class Game extends BaseNodeCom {
     /*********************************************  游戏核心组件  *********************************************/
+    /** 摇杆控制器组件 */
+    JoystickControlCom: JoystickControl = null!;
+    /** Hero组件 */
+    heroCom: Hero = null!;
     /*********************************************  游戏核心组件  *********************************************/
     /*********************************************  游戏核心组件  *********************************************/
 
@@ -61,8 +68,8 @@ export class Game extends BaseNodeCom {
         AudioManager.getInstance().playMusic('background1', true);
 
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
-
-        // this.DownGridMgr = this.viewList.get('center/DownGridManager').getComponent(DownGridManager);
+        this.JoystickControlCom = this.viewList.get('JoystickControl').getComponent(JoystickControl);
+        this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
         // this.particleManager = this.viewList.get('center/ParticleManager').getComponent(ParticleManager);
         
         // 设置初始关卡并加载数据 - 从第一关开始
@@ -76,6 +83,17 @@ export class Game extends BaseNodeCom {
         this.addEvents();
     }
     
+    /**
+     * 更新英雄状态
+     * 根据摇杆输入更新英雄的位置和速度
+     * @description 每帧调用，处理英雄的移动和物理操作
+     */
+    updateHeroState() {
+        if (!this.JoystickControlCom || !this.heroCom) return;
+        
+        const inputVector = this.JoystickControlCom.getInputVector();
+        this.heroCom.setInputVector(inputVector);
+    }
     /**
      * 新手引导入口
      * 用于在进入关卡后决定是否开启教学流程或展示操作提示
@@ -175,6 +193,7 @@ export class Game extends BaseNodeCom {
     protected update(dt: number): void {
         if (App.gameCtr.isPause) return;
 
+        this.updateHeroState();
     }
 
 
