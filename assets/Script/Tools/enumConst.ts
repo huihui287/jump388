@@ -1,5 +1,4 @@
-//----------------------------------------大厅
-
+//----------------------------------------大厅相关常量
 /** 窗口打开类型 */
 export enum WindowOpenType {
     /** 只能展示这个，立即打开 */
@@ -24,95 +23,22 @@ export interface ShareInfo {
     imgPath: string;
 }
 
-
-
-/** 三元消除方向 */
-export enum Direction {
-    left,
-    right,
-    up,
-    down
-}
-
 /** 全局常量 */
 export let Constant = {
-    /**  交换时间 */
-    changeTime: 0.3,
-    /** 格子行列数 */
-    layCount: 9,
-    Width: 76,
-    Height: 76,
-    NormalType: 13,
+    /** 游戏宽度 */
+    Width: 720,
+    /** 游戏高度 */
+    Height: 1334,
 }
-
 
 /**
- *  关卡配置
+ * 踏板类型枚举
  */
-export interface LevelCfgData {
-    level?: number,
+export enum PedalType {
+    WOOD = 'woodPedal',
+    CLOUD = 'cloudPedal'
 }
 
-/** 领取金币类型 */
-export enum GoldType {
-    /** 分享 */
-    share = 0,
-    /** 等级 */
-    level,
-    /** 星级 */
-    star,
-}
-
-/** 水果方块的类型 */
-export enum GridType {
-    /** 奇异果*/
-    KIWIFRUIT   = 0,    
-    /** 山竹 */
-    MANGOSTEEN = 1,
-    /** 西瓜 */
-    WATERMELON = 2,
-    /** 苹果 */
-    APPLE = 3,
-    /** 橘子 */
-    ORANGE = 4,
-    // /** 葡萄 */
-    // GRAPE = 5,
-}
-/** Grid的数据 */
-export interface GridData {
-    /**  水果的类型 */
-    type: GridType; // 使用枚举“GridType”作为类型声明
-    // 攻击
-    attack: number;
-}
-export interface mapData {
-    m_id: number[],
-    m_ct: number[],
-    m_mk: number[],
-}
-
-export interface LevelData {
-    mapCount: number,
-    blockCount: number,
-    RewardCount: number,
-    scores: number[],
-    blockRatio: number[],
-    mapData: mapData[]
-}
-
-/** 炸弹编号 */
-export enum Bomb {
-    /** 竖向 */
-    ver = 8,
-    /** 横向 */
-    hor = 9,
-    /** 周围爆炸 */
-    bomb = 10,
-    /** 消灭所有同一类型 */
-    allSame = 11,
-    /** 变颜色 */
-    changecolor = 12,
-}
 
 /** 页面跳转索引 */
 export enum PageIndex {

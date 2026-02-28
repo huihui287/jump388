@@ -15,7 +15,8 @@ import GameData from '../Common/GameData';
 import { JoystickControl } from './JoystickControl';
 import { DownGridManager } from './Manager/DownGridManager';
 import { Hero } from './Hero';
-
+import { CameraManager } from './CameraManager';
+import { pedalManager } from './Manager/pedalManager';
 
 const { ccclass, property } = _decorator;
 
@@ -31,6 +32,12 @@ export class Game extends BaseNodeCom {
     JoystickControlCom: JoystickControl = null!;
     /** Hero组件 */
     heroCom: Hero = null!;
+    /** 踏板管理组件 */
+    pedalManagerCom: pedalManager = null!;  
+
+        /** 相机管理组件 */
+    @property(CameraManager)
+    cameraCom: CameraManager = null!;
     /*********************************************  游戏核心组件  *********************************************/
     /*********************************************  游戏核心组件  *********************************************/
 
@@ -70,19 +77,26 @@ export class Game extends BaseNodeCom {
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
         this.JoystickControlCom = this.viewList.get('JoystickControl').getComponent(JoystickControl);
         this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
-        // this.particleManager = this.viewList.get('center/ParticleManager').getComponent(ParticleManager);
+        this.pedalManagerCom = this.viewList.get('center/pedalManager').getComponent(pedalManager);
+        // 踏板管理组件初始化
+        this.pedalManagerCom.initializePedalGeneration();
         
-        // 设置初始关卡并加载数据 - 从第一关开始
-        // if (DEV) {
-        //     LevelConfig.setCurLevel(1);
-        // }
-        //  LevelConfig.setCurLevel(1);
-
+        this.setCameraTarget();
         this.loadExtraData(GameData.getCurLevel());
         // 添加事件监听器
         this.addEvents();
+        
     }
     
+    /**
+     * 设置相机目标
+     * @description 设置相机跟随的目标节点，包括偏移量和跟随速度
+     */
+    setCameraTarget() {
+        this.cameraCom.setTarget(this.heroCom.node);
+        // this.cameraCom.setOffset(v3(0, 0, -1000));
+        // this.cameraCom.setFollowSpeed(10);
+    }
     /**
      * 更新英雄状态
      * 根据摇杆输入更新英雄的位置和速度
