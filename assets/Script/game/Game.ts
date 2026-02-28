@@ -8,7 +8,7 @@ import { BaseNodeCom } from './BaseNodeCom';
 import { App } from '../Controller/app';
 
 import { EventName } from '../Tools/eventName';
-import {  GameState } from '../Tools/enumConst';
+import {  GameState, Constant } from '../Tools/enumConst';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
@@ -17,6 +17,7 @@ import { DownGridManager } from './Manager/DownGridManager';
 import { Hero } from './Hero';
 import { CameraManager } from './CameraManager';
 import { pedalManager } from './Manager/pedalManager';
+import { Pedal } from './Pedal/Pedal';
 
 const { ccclass, property } = _decorator;
 
@@ -29,6 +30,7 @@ const { ccclass, property } = _decorator;
 export class Game extends BaseNodeCom {
     /*********************************************  游戏核心组件  *********************************************/
     /** 摇杆控制器组件 */
+    @property(JoystickControl)
     JoystickControlCom: JoystickControl = null!;
     /** Hero组件 */
     heroCom: Hero = null!;
@@ -75,11 +77,11 @@ export class Game extends BaseNodeCom {
         AudioManager.getInstance().playMusic('background1', true);
 
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
-        this.JoystickControlCom = this.viewList.get('JoystickControl').getComponent(JoystickControl);
+        //this.JoystickControlCom = this.viewList.get('JoystickControl').getComponent(JoystickControl);
         this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
         this.pedalManagerCom = this.viewList.get('center/pedalManager').getComponent(pedalManager);
         // 踏板管理组件初始化
-        this.pedalManagerCom.initializePedalGeneration();
+         this.pedalManagerCom.initializePedalGeneration();
         
         this.setCameraTarget();
         this.loadExtraData(GameData.getCurLevel());
@@ -104,10 +106,11 @@ export class Game extends BaseNodeCom {
      */
     updateHeroState() {
         if (!this.JoystickControlCom || !this.heroCom) return;
-        
         const inputVector = this.JoystickControlCom.getInputVector();
         this.heroCom.setInputVector(inputVector);
     }
+
+    
     /**
      * 新手引导入口
      * 用于在进入关卡后决定是否开启教学流程或展示操作提示
@@ -205,14 +208,75 @@ export class Game extends BaseNodeCom {
      * @description 实时检查水果水果的位置，当水果过低时显示警告
      */
     protected update(dt: number): void {
-        if (App.gameCtr.isPause) return;
+        if (App.gameCtr.isPause || this.gameState !== GameState.PLAYING) return;
 
         this.updateHeroState();
+        this.checkHeroPedalCollision();
+        this.checkHeroFallDeath();
     }
 
+    /**
+     * 检查Hero是否掉出屏幕下方
+     */
+    private checkHeroFallDeath(): void {
+        if (!this.heroCom) return;
 
+        const heroNode = this.heroCom.node;
+        const heroPos = heroNode.position;
+        const halfScreenHeight = Constant.Height / 2;
 
+        // 如果Hero的Y坐标小于屏幕下边界（带一点偏移）
+        if (heroPos.y < -halfScreenHeight - 100) {
+            console.log('Hero掉出屏幕，游戏结束');
+            this.GameOver();
+        }
+    }
 
+    /**
+     * 检查Hero与踏板的碰撞
+     */
+    private checkHeroPedalCollision(): void {
+        if (!this.heroCom || !this.pedalManagerCom) return;
+
+        // 只有当Hero处于下落状态时才进行检测
+        if (!this.heroCom.isFalling()) return;
+
+        const heroNode = this.heroCom.node;
+        const heroPos = heroNode.worldPosition;
+        const heroUITransform = this.heroCom.getUiTransform();
+        if (!heroUITransform) return;
+
+        const heroBottomY = heroPos.y - heroUITransform.height / 2;
+
+        // 使用pedalManager的getClosestPedal方法获取最近的踏板
+        const closestPedal: Node = this.pedalManagerCom.getClosestPedal(heroNode);
+
+        if (closestPedal) {
+            const closestPedalPos = closestPedal.worldPosition;
+            const closestPedalComponent = closestPedal.getComponent(Pedal);
+            if (!closestPedalComponent) return;
+
+            const closestPedalWidth = closestPedalComponent.getPedalWidth();
+            const closestPedalHeight = closestPedalComponent.getPedalHeight();
+            
+            const closestPedalTopY = closestPedalPos.y + closestPedalHeight / 2;
+
+            // 简单的AABB碰撞检测（只考虑Y轴和X轴重叠）
+            const heroLeftX = heroPos.x - heroUITransform.width / 2;
+            const heroRightX = heroPos.x + heroUITransform.width / 2;
+            const pedalLeftX = closestPedalPos.x - closestPedalWidth / 2;
+            const pedalRightX = closestPedalPos.x + closestPedalWidth / 2;
+
+            const isXOverlap = Math.max(heroLeftX, pedalLeftX) < Math.min(heroRightX, pedalRightX);
+
+            // 如果Hero底部即将接触到踏板顶部，并且X轴有重叠
+            // 这里可以设置一个小的容错值，避免浮点数误差
+            const collisionThreshold = 10; // 允许Hero底部稍微低于踏板顶部一点点
+            if (isXOverlap && heroBottomY <= closestPedalTopY + collisionThreshold && heroBottomY >= closestPedalTopY - heroUITransform.height) {
+                this.heroCom.landOnPedal(closestPedal);
+            }
+        }
+    }
 
 
     /**
@@ -250,7 +314,10 @@ export class Game extends BaseNodeCom {
      * @description 当玩家血量为0时，触发游戏结束逻辑
      */
     GameOver() {
-
+        if (this.gameState === GameState.GAME_OVER) return;
+        this.gameState = GameState.GAME_OVER;
+        console.log('GameOver logic called');
+        // 这里可以弹出结算界面，如 ViewManager.showView(ViewName.GameOver)
     }
 
 

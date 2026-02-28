@@ -19,8 +19,11 @@ export class pedalManager extends Component {
     /** 初始池大小 */
     private initialPoolSize: number = 10;
     
+    /** 当前活跃的踏板列表 */
+    private _activePedals: Node[] = [];
+    
     /** 上一个踏板的位置 */
-    private _lastPedalPosition: Vec3 = v3(0, 0, 0);
+    private _lastPedalPosition: Vec3 = v3(0, -300, 0);
     
     /** Y轴间隔最小值 */
     private minYInterval: number = 200;
@@ -52,6 +55,10 @@ export class pedalManager extends Component {
         console.log("Generating 2 temporary pedals...");
         this.spawnPedal(PedalType.WOOD);
         this.spawnPedal(PedalType.WOOD);
+        this.spawnPedal(PedalType.WOOD);
+        this.spawnPedal(PedalType.WOOD);
+        this.spawnPedal(PedalType.WOOD);
+        this.spawnPedal(PedalType.WOOD);
     }
     /**
      * 添加踏板到管理器
@@ -62,6 +69,7 @@ export class pedalManager extends Component {
         if (!pedalNode) return null;
         this.node.addChild(pedalNode);
         pedalNode.active = true;
+        this._activePedals.push(pedalNode); // 添加到活跃踏板列表
         return pedalNode;
     }   
     /**
@@ -220,6 +228,12 @@ export class pedalManager extends Component {
         const type = pedalComponent.getType();
         const pool = this.getPoolByType(type);
 
+        // 从活跃踏板列表中移除
+        const index = this._activePedals.indexOf(pedalNode);
+        if (index > -1) {
+            this._activePedals.splice(index, 1);
+        }
+
         if (pool) {
             pool.put(pedalNode);
         } else {
@@ -235,7 +249,55 @@ export class pedalManager extends Component {
         this._pedalPools.forEach(pool => {
             pool.clear();
         });
+        this._activePedals.length = 0; // 清空活跃踏板列表
         console.log("All pedal pools cleared.");
+    }
+
+    /**
+     * 获取所有当前活跃的踏板节点
+     * @returns 所有活跃踏板节点的数组
+     */
+    public getAllActivePedals(): Node[] {
+        return this._activePedals;
+    }
+
+    /**
+     * 获取离目标节点最近的踏板
+     * @param targetNode 目标节点
+     * @returns 离目标节点最近的踏板节点，如果没有活跃踏板则返回 null
+     */
+    public getClosestPedal(targetNode: Node): Node | null {
+        if (!targetNode) {
+            console.warn("getClosestPedal: targetNode is null.");
+            return null;
+        }
+
+        const activePedals = this.getAllActivePedals();
+        if (activePedals.length === 0) {
+            return null;
+        }
+
+        let closestPedal: Node  = null;
+        let minDistanceSqr = Infinity;
+        const targetPos = targetNode.worldPosition;
+
+        for (const pedalNode of activePedals) {
+            const pedalPos = pedalNode.worldPosition;
+            
+            // 优化性能：排除在目标节点上方的踏板
+            if (pedalPos.y >= targetPos.y) {
+                continue;
+            }
+
+            const distanceSqr = Vec3.distance(targetPos, pedalPos);
+
+            if (distanceSqr < minDistanceSqr) {
+                minDistanceSqr = distanceSqr;
+                closestPedal = pedalNode;
+            }
+        }
+
+        return closestPedal;
     }
 
 }

@@ -39,6 +39,12 @@ export class Pedal extends Component {
         this.node.position = position;
         this.node.active = true;
     }
+    getPedalHeight(): number {
+        if (!this._uiTransform) {
+            this._uiTransform = this.getComponent(UITransform)!;
+        }
+        return this._uiTransform ? this._uiTransform.height : 20; // 默认高度
+    }
 }
 
 
