@@ -549,4 +549,32 @@ export default class WxCH extends BaseCH implements BaseINT {
             key: 'game_level'
         });
     }
+
+    /**
+     * 启动陀螺仪
+     */
+    startGyroscope() {
+        if (this.ch && this.ch.startGyroscope) {
+            this.ch.startGyroscope({
+                interval: "normal",
+                success: () => {
+                    console.log('微信陀螺仪启动成功');
+                },
+                fail: (err) => {
+                    console.error('微信陀螺仪启动失败', err);
+                }
+            });
+        }
+    }
+
+    /**
+     * 监听陀螺仪数据变化
+     */
+    onGyroscopeChange(callback?: (params: { x: number, y: number, z: number }) => void) {
+        if (this.ch && this.ch.onGyroscopeChange) {
+            this.ch.onGyroscopeChange(callback || ((res) => {
+                console.log('微信陀螺仪数据:', res);
+            }));
+        }
+    }
 }

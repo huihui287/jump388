@@ -2,6 +2,7 @@ import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, N
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { PedalType, Constant } from '../../Tools/enumConst';
 import { Pedal } from '../Pedal/Pedal';
+import GameData from '../../Common/GameData';
 
 const { ccclass, property } = _decorator;
 /**
@@ -23,13 +24,13 @@ export class pedalManager extends Component {
     private _activePedals: Node[] = [];
     
     /** 上一个踏板的位置 */
-    private _lastPedalPosition: Vec3 = v3(0, -300, 0);
+    private _lastPedalPosition: Vec3 = v3(0, -700, 0);
     
     /** Y轴间隔最小值 */
-    private minYInterval: number = 200;
+    private minYInterval: number = 10;
     
     /** Y轴间隔最大值 */
-    private maxYInterval: number = 400;
+    private maxYInterval: number = 11;
 
     protected  onLoad(){
 
@@ -43,7 +44,7 @@ export class pedalManager extends Component {
 
     }
     /**
-     * 加载游戏数据并生成初始踏板
+     * 加载游戏数据并从 JSON 配置生成踏板
      */
     public async initializePedalGeneration(): Promise<void> {
         // 确保对象池已初始化
@@ -51,27 +52,95 @@ export class pedalManager extends Component {
             await this.initPools();
         }
 
-        // 生成两个初始踏板供测试
-        console.log("Generating 2 temporary pedals...");
-        this.spawnPedal(PedalType.WOOD);
-        this.spawnPedal(PedalType.WOOD);
-        this.spawnPedal(PedalType.WOOD);
-        this.spawnPedal(PedalType.WOOD);
-        this.spawnPedal(PedalType.WOOD);
-        this.spawnPedal(PedalType.WOOD);
+        // 加载当前关卡的踏板配置
+        const level = GameData.getCurLevel(); 
+        const configPath = `json/config/pedal_${level}`;
+        
+        try {
+            console.log(`Loading pedal config for level ${level} from ${configPath}...`);
+            const config = await LoaderManeger.instance.loadJSON(configPath) as any;
+            if (config && config.json.pedals && config.json.pedals.length > 0) {
+                console.log(`Successfully loaded ${config.json.pedals.length} pedals from JSON config.`);
+                for (const pedalData of config.json.pedals) {
+                    // 从 JSON 读取 jumpForce, jumpSpeed 和 gravity，如果没有则使用 Pedal 默认值
+                    const jumpForce = pedalData.jumpForce !== undefined ? pedalData.jumpForce : 600;
+                    const jumpSpeed = pedalData.jumpSpeed !== undefined ? pedalData.jumpSpeed : 1.45;
+                    const gravity = pedalData.gravity !== undefined ? pedalData.gravity : -2000;
+                    this.spawnPedalAt(pedalData.type as PedalType, v3(pedalData.x, pedalData.y, 0), jumpForce, jumpSpeed, gravity);
+                }
+            } else {
+                console.warn(`Pedal config at ${configPath} is empty or invalid. Spawning default random pedals.`);
+                this.spawnDefaultPedals();
+            }
+        } catch (error) {
+            console.error(`Failed to load pedal config for level ${level}:`, error);
+            this.spawnDefaultPedals();
+        }
     }
+
     /**
-     * 添加踏板到管理器
-     * @param type 踏板类型
+     * 生成默认踏板 (用于回退逻辑)
      */
-    public spawnPedal(type: PedalType): Node | null {
-        const pedalNode = this.getPedal(type);
+    private spawnDefaultPedals(): void {
+        for (let i = 0; i < 8; i++) {
+            this.spawnPedal(PedalType.WOOD, 600, 1.45, -2000); // 默认踏板也带上默认物理属性
+        }
+    }
+
+    /**
+     * 在指定位置生成踏板
+     * @param type 踏板类型
+     * @param position 踏板位置
+     * @param jumpForce 提供的跳跃力度
+     * @param jumpSpeed 提供的跳跃速度 (上升时间)
+     * @param gravity 提供的重力加速度
+     */
+    public spawnPedalAt(type: PedalType, position: Vec3, jumpForce: number, jumpSpeed: number, gravity: number): Node | null {
+        const pedalNode = this.getPedalFromPool(type);
         if (!pedalNode) return null;
+        
         this.node.addChild(pedalNode);
+        pedalNode.setPosition(position);
         pedalNode.active = true;
-        this._activePedals.push(pedalNode); // 添加到活跃踏板列表
+        
+        // 初始化踏板的物理属性
+        const pedalComponent = pedalNode.getComponent(Pedal);
+        if (pedalComponent) {
+            pedalComponent.init(position, jumpForce, jumpSpeed, gravity);
+        }
+
+        // 更新上一个踏板位置记录
+        this._lastPedalPosition.set(position);
+        
+        this._activePedals.push(pedalNode);
         return pedalNode;
-    }   
+    }
+
+    /**
+     * 添加踏板到管理器 (随机位置)
+     * @param type 踏板类型
+     * @param jumpForce 提供的跳跃力度
+     * @param jumpSpeed 提供的跳跃速度 (上升时间)
+     * @param gravity 提供的重力加速度
+     */
+    public spawnPedal(type: PedalType, jumpForce: number, jumpSpeed: number, gravity: number): Node | null {
+        const pedalNode = this.getPedalFromPool(type);
+        if (!pedalNode) return null;
+        
+        this.node.addChild(pedalNode);
+        // 设置随机位置
+        this.setPedalPosition(pedalNode);
+        
+        // 初始化踏板的物理属性
+        const pedalComponent = pedalNode.getComponent(Pedal);
+        if (pedalComponent) {
+            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, gravity);
+        }
+
+        pedalNode.active = true;
+        this._activePedals.push(pedalNode);
+        return pedalNode;
+    }
     /**
      * 初始化对象池
      */
@@ -128,9 +197,9 @@ export class pedalManager extends Component {
     }
 
     /**
-     * 从对象池获取踏板
+     * 从对象池获取踏板 (不设置位置)
      */
-    public getPedal(type: PedalType): Node {
+    public getPedalFromPool(type: PedalType): Node | null {
         const pool = this.getPoolByType(type);
         if (!pool) {
             console.error(`Pool for pedal type ${type} not found`);
@@ -157,14 +226,11 @@ export class pedalManager extends Component {
             pedalComponent.init(v3(0, 0, 0));
         }
 
-        // 设置踏板位置
-        this.setPedalPosition(pedalNode);
-        pedalNode.active = true;
         return pedalNode;
     }
     
     /**
-     * 设置踏板位置
+     * 设置踏板位置 (随机逻辑)
      */
     private setPedalPosition(pedalNode: Node): void {
         // 使用Constant中的游戏宽度

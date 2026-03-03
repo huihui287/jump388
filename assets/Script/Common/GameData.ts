@@ -1,6 +1,5 @@
 import { _decorator, Component, Node, sys } from 'cc';
 import { DEV } from 'cc/env';
-import { Bomb } from '../Tools/enumConst';
 import { App } from '../Controller/app';
 const { ccclass, property } = _decorator;
 

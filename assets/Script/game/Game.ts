@@ -1,4 +1,4 @@
-import { _decorator, Node, v3, UITransform, instantiate, Vec3, tween, Tween, Prefab, Vec2, Sprite, ParticleSystem2D, Quat, isValid, ProgressBar, Label, Layout } from 'cc';
+import { _decorator, Node, Vec2 } from 'cc';
 // 如果 enumConst.ts 已改名或迁移，请根据实际路径调整
 // 例如：'../../const/EnumConst' 或 '../../const/Enum'
 //import { Advertise } from '../../wx/advertise';//广告
@@ -12,7 +12,7 @@ import {  GameState, Constant } from '../Tools/enumConst';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
-import { JoystickControl } from './JoystickControl';
+// import { JoystickControl } from './JoystickControl';
 import { DownGridManager } from './Manager/DownGridManager';
 import { Hero } from './Hero';
 import { CameraManager } from './CameraManager';
@@ -29,15 +29,15 @@ const { ccclass, property } = _decorator;
 @ccclass('Game')
 export class Game extends BaseNodeCom {
     /*********************************************  游戏核心组件  *********************************************/
-    /** 摇杆控制器组件 */
-    @property(JoystickControl)
-    JoystickControlCom: JoystickControl = null!;
+    // /** 摇杆控制器组件 */
+    // @property(JoystickControl)
+    // JoystickControlCom: JoystickControl = null!;
     /** Hero组件 */
     heroCom: Hero = null!;
     /** 踏板管理组件 */
     pedalManagerCom: pedalManager = null!;  
 
-        /** 相机管理组件 */
+    /** 相机管理组件 */
     @property(CameraManager)
     cameraCom: CameraManager = null!;
     /*********************************************  游戏核心组件  *********************************************/
@@ -99,18 +99,7 @@ export class Game extends BaseNodeCom {
         // this.cameraCom.setOffset(v3(0, 0, -1000));
         // this.cameraCom.setFollowSpeed(10);
     }
-    /**
-     * 更新英雄状态
-     * 根据摇杆输入更新英雄的位置和速度
-     * @description 每帧调用，处理英雄的移动和物理操作
-     */
-    updateHeroState() {
-        if (!this.JoystickControlCom || !this.heroCom) return;
-        const inputVector = this.JoystickControlCom.getInputVector();
-        this.heroCom.setInputVector(inputVector);
-    }
-
-    
+ 
     /**
      * 新手引导入口
      * 用于在进入关卡后决定是否开启教学流程或展示操作提示
@@ -159,19 +148,19 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.Resume, this.evtResume, this);
     
     }
+
     evtPause() {
     
         App.gameCtr.setPause(true);
         // throw new Error('Method not implemented.');
     }
+
     evtResume() {
    
         App.gameCtr.setPause(false);
         // throw new Error('Method not implemented.');
     }
 
-
-    
     /**
      * 加载关卡额外数据
      * 加载关卡配置数据并初始化游戏状态
@@ -185,9 +174,6 @@ export class Game extends BaseNodeCom {
     /*********************************************  UI information *********************************************/
     /*********************************************  UI information *********************************************/
 
-
-    
-
     /**
      * 设置关卡信息
      * 初始化目标消除数量、道具信息和血量
@@ -196,10 +182,6 @@ export class Game extends BaseNodeCom {
     setLevelInfo() {
 
     }
-
-
-
-
 
     /**
      * 每帧更新
@@ -210,7 +192,6 @@ export class Game extends BaseNodeCom {
     protected update(dt: number): void {
         if (App.gameCtr.isPause || this.gameState !== GameState.PLAYING) return;
 
-        this.updateHeroState();
         this.checkHeroPedalCollision();
         this.checkHeroFallDeath();
     }
@@ -273,7 +254,8 @@ export class Game extends BaseNodeCom {
             // 这里可以设置一个小的容错值，避免浮点数误差
             const collisionThreshold = 10; // 允许Hero底部稍微低于踏板顶部一点点
             if (isXOverlap && heroBottomY <= closestPedalTopY + collisionThreshold && heroBottomY >= closestPedalTopY - heroUITransform.height) {
-                this.heroCom.landOnPedal(closestPedal);
+                this.heroCom.setGrounded(true, closestPedalComponent);
+                this.heroCom.performJump(closestPedalComponent);
             }
         }
     }

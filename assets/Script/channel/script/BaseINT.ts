@@ -14,4 +14,14 @@ export interface BaseINT {
      * @param callback 加载完成回调
      */
     loadSubPackages(name: string, callback: Function);
+
+    /**
+     * 启动陀螺仪
+     */
+    startGyroscope();
+
+    /**
+     * 监听陀螺仪数据变化
+     */
+    onGyroscopeChange(callback?: (params: { x: number, y: number, z: number }) => void);
 }

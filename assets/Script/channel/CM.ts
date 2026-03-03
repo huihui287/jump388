@@ -162,6 +162,23 @@ export default class CM {
         }
     }
 
+    /**
+     * 启动陀螺仪
+     */
+    static startGyroscope() {
+        if (CM.mainCH) {
+            CM.mainCH.startGyroscope();
+        }
+    }
+
+    /**
+     * 监听陀螺仪数据变化
+     */
+    static onGyroscopeChange(callback: (params: { x: number, y: number, z: number }) => void) {
+        if (CM.mainCH) {
+            CM.mainCH.onGyroscopeChange(callback);
+        }
+    }
 }
 
 

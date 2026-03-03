@@ -1,5 +1,8 @@
 import { _decorator, Node, Component, Vec3, v3, sp, UITransform, tween, Tween } from 'cc';
 import StateMachine, { IState } from '../Common/StateMachine';
+import CM from '../channel/CM';
+import { JoystickControl } from './JoystickControl';
+import { Pedal } from './Pedal/Pedal';
 const { ccclass, property } = _decorator;
 
 /**
@@ -16,8 +19,6 @@ export enum HeroState {
  */
 interface HeroData {
     hero: Hero;
-    moveSpeed: number;
-    jumpForce: number;
     attackDuration: number;
     isGrounded: boolean;
 }
@@ -35,8 +36,7 @@ class JumpUpState implements IState {
     
     onEnter(fromState: IState | null, params?: any) {
         console.log('Hero进入跳跃向上状态');
-        // 使用全新的 Tween 系统触发上升位移，不再直接给物理初速度
-        this._data.hero.startJumpTween();
+        // 在 JumpUpState 中不再直接触发跳跃，跳跃由 Game.ts 的碰撞检测触发
         // 播放跳跃向上动画
         this._data.hero.playAnimation('jump_up');
     }
@@ -44,9 +44,7 @@ class JumpUpState implements IState {
     onUpdate(dt: number) {
         const inputVector = this._data.hero.getInputVector();
         if (inputVector.length() > 0.1) {
-            // 计算速度因子，基于输入向量的长度
-            const speedFactor = inputVector.length();
-            this._data.hero.moveCharacter(inputVector, speedFactor * dt);
+            this._data.hero.moveCharacter(inputVector, dt);
         }
 
         // 当 Tween 结束（上升完成），切换到下落状态
@@ -90,9 +88,7 @@ class JumpDownState implements IState {
     onUpdate(dt: number) {
         const inputVector = this._data.hero.getInputVector();
         if (inputVector.length() > 0.1) {
-            // 计算速度因子，基于输入向量的长度
-            const speedFactor = inputVector.length();
-            this._data.hero.moveCharacter(inputVector, speedFactor * dt);
+            this._data.hero.moveCharacter(inputVector, dt);
         }
 
         // 当角色落地后，切换回跳跃向上状态，实现循环跳跃
@@ -180,23 +176,36 @@ export class Hero extends Component {
     ////////////////////////////////////////////////////////////////移动
     /** 输入方向向量 */
     private _inputVector: Vec3 = v3();
-        /** 移动速度 */
-    public moveSpeed: number = 600;
-   //////////////////////////////////////////////////////////////////////
+    /** 移动速度 */
+    public moveSpeed: number = 800;
+
+    /** 是否开启触摸摇杆控制 (仅用于调试) */
+    @property
+    public useJoystick: boolean = false;
+
+    /** 摇杆控制器引用 (仅用于调试) */
+    @property(JoystickControl)
+    public joystick: JoystickControl = null;
+
+    /** 陀螺仪当前角速度 X (其实是绕 Y 轴旋转) */
+    private _gyroX: number = 0;
+    /** 陀螺仪累积倾斜量 */
+    private _gyroAngle: number = 0;
+    /** 平滑后的输入 X */
+    private _smoothGyroX: number = 0;
+    /** Tween 跳跃时的当前 Y 坐标 */
+    private _tweenJumpY: number = 0;
+    //////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////跳跃相关
-    /** 是否在地面 */
+    /** 是否在踏板上地面 */
     private _isGrounded: boolean = true;
 
-    /** 跳跃速度 */
+    /** 当前跳跃速度 (Y 轴) */
     private _jumpVelocity: number = 0;
 
-    /** 跳跃力度 */
-    public jumpForce: number = 600;
-
-    /** 重力加速度 */
-    private _gravity: number = 1800; // 提高重力，让下落更有力
-    ////////////////////////////////////////////////////////////////////////
+    /** 当前生效的重力 */
+    private _currentGravity: number = -2000;
 
     /** 是否正在执行 Tween 向上跳跃 */
     private _isTweenJumping: boolean = false;
@@ -210,29 +219,103 @@ export class Hero extends Component {
         this.Refresh();
         this.initStateMachine();
         this._uiTransform = this.getComponent(UITransform);
+        
+        // 如果没有开启调试用的摇杆控制，则启动陀螺仪
+        if (!this.useJoystick) {
+            this.initGyroscope();
+        }
     }
-    
-    start() {
 
+    protected start(): void {
+        // 游戏开始时，为首次跳跃创建一个“虚拟”踏板
+        const initialPedal = new Pedal();
+        initialPedal.jumpForce = 600;
+        initialPedal.jumpSpeed = 1.45;
+        initialPedal.gravity = -2000;
+        
+        this.setGrounded(true, initialPedal);
+        this.performJump(initialPedal);
     }
 
     //刷新数据
     Refresh() {
         this._heroData = {
             hero: this,
-            moveSpeed: this.moveSpeed,
-            jumpForce: this.jumpForce,
             attackDuration: this.attackDuration,
             isGrounded: this._isGrounded
         };
     }
 
+    /**
+     * 初始化陀螺仪
+     */
+    private initGyroscope(): void {
+        // 启动陀螺仪
+        CM.startGyroscope();
+        // 监听陀螺仪数据变化
+        CM.onGyroscopeChange((res) => {
+            // 记录原始 Y 轴角速度 (对应手机左右倾斜)
+            this._gyroX = res.y; 
+        });
+    }
+
     update(deltaTime: number) {
+        // 根据开关选择输入源
+        if (this.useJoystick && this.joystick) {
+            this.updateJoystickMove(deltaTime);
+        } else {
+            this.updateGyroMove(deltaTime);
+        }
+
         // 1. 先更新状态机（确保起跳帧就能将 _isGrounded 置为 false）
         this._stateMachine.update(deltaTime);
         
-        // 2. 处理物理位移
-        this.Dojump(deltaTime);
+        // 2. 处理跳跃位移
+        if (this._isTweenJumping) {
+            // 如果正在 Tween 上升，应用 Tween 计算出的 Y 坐标
+            const pos = this.node.position;
+            this.node.setPosition(pos.x, this._tweenJumpY, pos.z);
+        } else {
+            // 否则处理物理下落逻辑
+            this.Dojump(deltaTime);
+        }
+    }
+
+    /**
+     * 更新摇杆/触摸平滑位移 (调试用)
+     */
+    private updateJoystickMove(dt: number): void {
+        const inputVector = this.joystick.getInputVector();
+        
+        // 同样应用平滑，保持手感一致
+        const targetX = inputVector.x * 2.0; // 这里的系数可以根据调试手感调整
+        this._smoothGyroX += (targetX - this._smoothGyroX) * 0.15;
+        
+        // 更新输入向量
+        this._inputVector.x = this._smoothGyroX;
+    }
+
+    /**
+     * 更新陀螺仪平滑位移
+     */
+    private updateGyroMove(dt: number): void {
+        // 1. 累积角速度 (y 轴通常对应手机左右倾斜)
+        this._gyroAngle += this._gyroX * dt;
+
+        // 2. 限制最大倾斜感知的输入量 (约 30 度)
+        const maxAngle = 0.5;
+        if (this._gyroAngle > maxAngle) this._gyroAngle = maxAngle;
+        if (this._gyroAngle < -maxAngle) this._gyroAngle = -maxAngle;
+
+        // 3. 阻尼回归中心 (如果不晃动，角度会慢慢回到 0)
+        this._gyroAngle *= 0.95;
+
+        // 4. 平滑插值计算目标 X 输入，实现“丝滑”感
+        const targetX = this._gyroAngle * 2.5; 
+        this._smoothGyroX += (targetX - this._smoothGyroX) * 0.2;
+
+        // 5. 更新输入向量
+        this._inputVector.x = this._smoothGyroX;
     }
     
     // 处理跳跃逻辑
@@ -242,7 +325,7 @@ export class Hero extends Component {
 
         // 下落阶段采用物理计算，增加下落速度
         const dt = Math.min(deltaTime, 0.033); 
-        this._jumpVelocity -= this._gravity * dt;
+        this._jumpVelocity += this._currentGravity * dt; // 使用当前踏板的重力
 
         // 应用位移 (本地坐标)
         const pos = this.node.position;
@@ -251,9 +334,10 @@ export class Hero extends Component {
     }
 
     /**
-     * 开始一个基于 Tween 的向上跳跃 (仅 Y 轴动画)
+     * 根据给定的踏板属性，开始一个基于 Tween 的向上跳跃
+     * @param pedal 触发跳跃的踏板
      */
-    public startJumpTween(): void {
+    public performJump(pedal: Pedal): void {
         // 停止之前的 Tween (如果有)
         if (this._currentJumpTween) {
             this._currentJumpTween.stop();
@@ -264,11 +348,12 @@ export class Hero extends Component {
         this._isTweenJumping = true;
         this._jumpVelocity = 0; // 重置速度，让 Tween 接管
 
-        const jumpHeight = this.jumpForce; // 使用已有的 jumpForce 作为高度
-        const duration = 1.45; // 快速上升时间
-
-        this._currentJumpTween = tween(this.node)
-            .by(duration, { position: v3(0, jumpHeight, 0) }, { 
+        const jumpHeight = pedal.jumpForce;
+        const duration = pedal.jumpSpeed;
+        this._tweenJumpY = this.node.position.y;
+        
+        this._currentJumpTween = tween(this as any)
+            .to(duration, { _tweenJumpY: this._tweenJumpY + jumpHeight }, {
                 easing: 'quadOut',
                 onComplete: () => {
                     this._isTweenJumping = false;
@@ -292,11 +377,11 @@ export class Hero extends Component {
     private initStateMachine(): void {
         this._stateMachine.debugMode = true;
         this._stateMachine.onStateChange = this.onStateChange.bind(this);
-        
+
         const jumpUpState = new JumpUpState(this._heroData);
         const jumpDownState = new JumpDownState(this._heroData);
         const attackState = new AttackState(this._heroData);
-        
+
         this._stateMachine.addStates([jumpUpState, jumpDownState, attackState]);
         this._stateMachine.changeState(HeroState.JUMP_UP);
     }
@@ -327,9 +412,13 @@ export class Hero extends Component {
      */
     public moveCharacter(direction: Vec3, speed: number): void {
         this._tempPosition.set(this.node.position);
-        // 输入向量已经包含速度信息，直接使用
         this._tempPosition.x += direction.x * this.moveSpeed * speed;
-        this._tempPosition.z += direction.z * this.moveSpeed * speed;
+        
+        // 限制在屏幕内 (720 宽，中心为 0，即 -360 到 360)
+        const halfWidth = 360; 
+        if (this._tempPosition.x > halfWidth) this._tempPosition.x = halfWidth;
+        if (this._tempPosition.x < -halfWidth) this._tempPosition.x = -halfWidth;
+
         this.node.setPosition(this._tempPosition);
         
         // 调整角色朝向
@@ -397,6 +486,28 @@ export class Hero extends Component {
         return this._isGrounded;
     }
     
+    /**
+     * 设置是否在地面，并根据接触的踏板更新物理属性
+     * @param grounded 是否在地面
+     * @param pedal 接触的踏板 (可选)
+     */
+    public setGrounded(grounded: boolean, pedal: Pedal | null = null): void {
+        this._isGrounded = grounded;
+        this._heroData.isGrounded = grounded;
+
+        if (grounded) {
+            this._jumpVelocity = 0;
+            if (pedal) {
+                // 踩上踏板，使用踏板的重力
+                this._currentGravity = pedal.gravity;
+                console.log(`Landed on pedal with Gravity: ${pedal.gravity}`);
+            } else {
+                // 如果没有提供踏板（例如初始状态），使用默认重力
+                this._currentGravity = -2000; // 默认重力值
+            }
+        }
+    }
+
     /**
      * 获取跳跃速度
      */

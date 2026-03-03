@@ -161,6 +161,16 @@ export default class BaseCH implements BaseINT {
     }
     /**分享*/
     share(callback: Function = null) {}
+
+    /**
+     * 启动陀螺仪
+     */
+    startGyroscope() {}
+
+    /**
+     * 监听陀螺仪数据变化
+     */
+    onGyroscopeChange(callback?: (params: { x: number, y: number, z: number }) => void) {}
     
     /**分包加载*/
     loadSubPackages(name: string, callback: Function, progressCallback?: Function) {

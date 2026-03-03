@@ -77,14 +77,17 @@ export default class TTCH extends BaseCH implements BaseINT {
         this.getLaunchOptions();
         this.onShowAlways();
         this.setShareAppMessage();
-        this.createBannerAd();
-        this.createVideoAd();
-        this.createInterstitialAd();
-        this.getGameRecorderManager();
+        // this.createBannerAd();
+        // this.createVideoAd();
+        // this.createInterstitialAd();
+        // this.getGameRecorderManager();
         this.checkUpdate();
         this.onHide();
         this.checkShortcut();
         this.checkFeedSubscribeStatus();
+
+        this.startGyroscope();
+        this.onGyroscopeChange();
           console.log("头条渠道初始化完成");
     }
     /**登录抖音*/
@@ -931,6 +934,7 @@ export default class TTCH extends BaseCH implements BaseINT {
      */
     startGyroscope() {
         if (!this.ch) return;
+        console.log("启动陀螺仪");
         this.ch.startGyroscope({
             interval: 100,//设置每隔100ms刷新一次陀螺仪数据
             fail(res) {
@@ -963,11 +967,11 @@ export default class TTCH extends BaseCH implements BaseINT {
     }) => void) {
         if (!this.ch) return;
         this.ch.onGyroscopeChange(callback || function (params) {
-            console.log("陀螺仪数据:x ", params.x);
-            console.log("陀螺仪数据:y ", params.y);
-            console.log("陀螺仪数据:z ", params.z);
-            console.log("陀螺仪数据:t ", params.t);
-            console.log("陀螺仪数据:result ", params.result);
+        //    console.log("陀螺仪数据:x ", params.x);
+           // console.log("陀螺仪数据:y ", params.y);
+            // console.log("陀螺仪数据:z ", params.z);
+            // console.log("陀螺仪数据:t ", params.t);
+            // console.log("陀螺仪数据:result ", params.result);
         });
     }
 
