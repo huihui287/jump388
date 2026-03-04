@@ -1,5 +1,5 @@
-import { _decorator, Component, Node, UITransform, Vec3 } from 'cc';
-import { PedalType } from '../../Tools/enumConst';
+import { _decorator, Component, Node, UITransform, Vec3, tween, Tween } from 'cc';
+import { PedalType, PedalSkill, Constant } from '../../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
 
@@ -11,7 +11,7 @@ export class Pedal extends Component {
      * 踏板类型枚举值
      * 与资源命名一致，用于从对象池/预制体映射中取出对应节点
      */
-    private _type: PedalType = PedalType.WOOD;
+    public _type: PedalType = PedalType.WOOD;
     /**
      * UITransform 缓存
      * 用于读取宽高、锚点等数值，避免频繁 getComponent
@@ -30,13 +30,21 @@ export class Pedal extends Component {
     @property
     public _gravity: number = -2000;
     
+    @property
+    public skill: PedalSkill = PedalSkill.NONE;
+    
+    /** 踏板ID 就是层数*/
+    public layer: number = 0;
+
     /**
      * 生命周期：组件加载
      * 缓存 UITransform 组件引用
      */
     onLoad() {
         this._uiTransform = this.getComponent(UITransform);
+
     }   
+
 
     /**
      * 生命周期：首次启用
@@ -93,7 +101,20 @@ export class Pedal extends Component {
         this.jumpForce = jumpForce;
         this.jumpSpeed = jumpSpeed;
         this._gravity = _gravity;
+
     }
+    
+    /**
+     * 开启左右移动
+     * @param speed 移动速度 (像素/秒)
+     * @param time 单程移动时间 (秒)
+     * @param distance 单程移动距离 (像素)
+     */
+    startMove(speed: number, time: number, distance: number) {
+
+    }
+    
+    
     
     /**
      * 获取踏板高度（像素）
@@ -105,6 +126,14 @@ export class Pedal extends Component {
         }
         return this._uiTransform ? this._uiTransform.height : 20; // 默认高度
     }
+    /** 
+* 设置踏板ID
+* @param layer 踏板ID
+*/
+    setLayer(layer: number) {
+        this.layer = layer;
+    }
+
 }
 
 

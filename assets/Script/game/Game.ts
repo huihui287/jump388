@@ -8,7 +8,7 @@ import { BaseNodeCom } from './BaseNodeCom';
 import { App } from '../Controller/app';
 
 import { EventName } from '../Tools/eventName';
-import {  GameState, Constant } from '../Tools/enumConst';
+import {  GameState, Constant, PedalSkill } from '../Tools/enumConst';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
@@ -256,7 +256,7 @@ export class Game extends BaseNodeCom {
             const collisionThreshold = 10; // 允许Hero底部稍微低于踏板顶部一点点
             if (isXOverlap && heroBottomY <= closestPedalTopY + collisionThreshold && heroBottomY >= closestPedalTopY - heroUITransform.height) {
                 this.heroCom.setGrounded(true, closestPedalComponent);
-                this.heroCom.performJump(closestPedalComponent);
+                this.heroCom.applyPedalSkill(closestPedalComponent);
             }
         }
     }

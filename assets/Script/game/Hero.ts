@@ -3,6 +3,9 @@ import StateMachine, { IState } from '../Common/StateMachine';
 import CM from '../channel/CM';
 import { JoystickControl } from './JoystickControl';
 import { Pedal } from './Pedal/Pedal';
+import { PedalSkill } from '../Tools/enumConst';
+import EventManager from '../Common/view/EventManager';
+import { EventName } from '../Tools/eventName';
 const { ccclass, property } = _decorator;
 
 /**
@@ -20,7 +23,8 @@ export enum HeroState {
 interface HeroData {
     hero: Hero;
     attackDuration: number;
-    isGrounded: boolean;
+    /** 是否踩中踏板上 */
+    isTouchingPedal: boolean;
 }
 
 /**
@@ -92,7 +96,7 @@ class JumpDownState implements IState {
         }
 
         // 当角色落地后，切换回跳跃向上状态，实现循环跳跃
-        if (this._data.isGrounded) {
+        if (this._data.isTouchingPedal) {
             this._data.hero.changeState(HeroState.JUMP_UP);
         }
     }
@@ -198,8 +202,8 @@ export class Hero extends Component {
     //////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////跳跃相关
-    /** 是否在踏板上地面 */
-    private _isGrounded: boolean = true;
+    /** 是否踩中踏板上 */
+    private _isTouchingPedal: boolean = false;
 
     /** 当前跳跃速度 (Y 轴) */
     private _jumpVelocity: number = 0;
@@ -214,6 +218,7 @@ export class Hero extends Component {
 
     /** 复用的位置向量 */
     private _tempPosition: Vec3 = v3();
+    private _pendingJumpBoost: number = 0;
     
     protected onLoad(): void {
         this.Refresh();
@@ -242,7 +247,8 @@ export class Hero extends Component {
         this._heroData = {
             hero: this,
             attackDuration: this.attackDuration,
-            isGrounded: this._isGrounded
+            /** 是否踩中踏板上 */
+            isTouchingPedal: this._isTouchingPedal
         };
     }
 
@@ -267,7 +273,7 @@ export class Hero extends Component {
             this.updateGyroMove(deltaTime);
         }
 
-        // 1. 先更新状态机（确保起跳帧就能将 _isGrounded 置为 false）
+        // 1. 先更新状态机（确保起跳帧就能将 _isTouchingPedal 置为 false）
         this._stateMachine.update(deltaTime);
         
         // 2. 处理跳跃位移
@@ -320,8 +326,8 @@ export class Hero extends Component {
     
     // 处理跳跃逻辑
     Dojump(deltaTime: number) {
-        // 如果在地面或者正在执行向上跳跃的 Tween，则不执行物理下落逻辑
-        if (this._isGrounded || this._isTweenJumping) return;
+        // 如果踩中踏板或者正在执行向上跳跃的 Tween，则不执行物理下落逻辑
+        if (this._isTouchingPedal || this._isTweenJumping) return;
 
         // 下落阶段采用物理计算，增加下落速度
         const dt = Math.min(deltaTime, 0.033); 
@@ -343,15 +349,27 @@ export class Hero extends Component {
             this._currentJumpTween.stop();
         }
 
-        this._isGrounded = false;
-        this._heroData.isGrounded = false;
+        this._isTouchingPedal = false;
+        this._heroData.isTouchingPedal = false;
         this._isTweenJumping = true;
         this._jumpVelocity = 0; // 重置速度，让 Tween 接管
 
-        const jumpHeight = pedal.jumpForce;
-        const duration = pedal.jumpSpeed;
+        let jumpHeight = pedal.jumpForce + this._pendingJumpBoost;
+        let duration = pedal.jumpSpeed;
+        this._pendingJumpBoost = 0;
         this._tweenJumpY = this.node.position.y;
+
         
+        this.JumpAnimation(duration, jumpHeight);
+
+    }
+
+    /**
+     * 跳跃动画
+     * @param duration 跳跃持续时间
+     * @param jumpHeight 跳跃高度
+     */
+    JumpAnimation(duration: number, jumpHeight: number) {
         this._currentJumpTween = tween(this as any)
             .to(duration, { _tweenJumpY: this._tweenJumpY + jumpHeight }, {
                 easing: 'quadOut',
@@ -362,6 +380,28 @@ export class Hero extends Component {
                 }
             })
             .start();
+    }
+    
+    /**
+     * 应用踏板技能
+     * @param pedal 触发的踏板
+     */
+    public applyPedalSkill(pedal: Pedal): void {
+        if (pedal.skill === PedalSkill.BOOST) {
+            this._pendingJumpBoost = 300;
+        }
+        if (pedal.skill === PedalSkill.LOW_GRAVITY) {
+            this._currentGravity = pedal._gravity * 0.5;
+        } else {
+            this._currentGravity = pedal._gravity;
+        }
+
+        this.performJump(pedal);
+        
+        if (pedal.skill === PedalSkill.BREAK) {
+            EventManager.emit(EventName.Game.ReleaseObject, pedal.node);
+        }
+
     }
 
     /**
@@ -471,22 +511,22 @@ export class Hero extends Component {
     }
     
     /**
-     * 获取是否在地面
+     * 获取是否踩中踏板
      */
-    public getIsGrounded(): boolean {
-        return this._isGrounded;
+    public getIsTouchingPedal(): boolean {
+        return this._isTouchingPedal;
     }
     
     /**
-     * 设置是否在地面，并根据接触的踏板更新物理属性
-     * @param grounded 是否在地面
+     * 设置是否踩中踏板，并根据接触的踏板更新物理属性
+     * @param isTouchingPedal 是否踩中踏板
      * @param pedal 接触的踏板 (可选)
      */
-    public setGrounded(grounded: boolean, pedal: Pedal | null = null): void {
-        this._isGrounded = grounded;
-        this._heroData.isGrounded = grounded;
+    public setGrounded(isTouchingPedal: boolean, pedal: Pedal | null = null): void {
+        this._isTouchingPedal = isTouchingPedal;
+        this._heroData.isTouchingPedal = isTouchingPedal;
 
-        if (grounded) {
+        if (isTouchingPedal) {
             this._jumpVelocity = 0;
             if (pedal) {
                 // 踩上踏板，使用踏板的重力
@@ -501,7 +541,7 @@ export class Hero extends Component {
      */
     public isFalling(): boolean {
         // 只有不在 Tween 上升且物理速度为负时才是下落阶段
-        return !this._isTweenJumping && this._jumpVelocity < 0 && !this._isGrounded;
+        return !this._isTweenJumping && this._jumpVelocity < 0 && !this._isTouchingPedal;
     }
 
     getUiTransform(): UITransform {
@@ -519,8 +559,8 @@ export class Hero extends Component {
         }
         this._isTweenJumping = false;
 
-        this._isGrounded = true;
-        this._heroData.isGrounded = true;
+        this._isTouchingPedal = true;
+        this._heroData.isTouchingPedal = true;
         this._jumpVelocity = 0;
 
         // 获取组件

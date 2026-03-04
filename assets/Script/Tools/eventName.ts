@@ -32,6 +32,7 @@ export namespace EventName {
         /** 桌面快捷方式添加成功 */
         ShortcutAdded = "ShortcutAdded",
 
+        ReleaseObject = "ReleaseObject",
     }
 
 }

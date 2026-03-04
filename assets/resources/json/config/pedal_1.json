@@ -1,16 +1,18 @@
 {
-  "RiceS": [
+  "layerS": [
     {
-      "Rice": [
-        10,
-        20,
-        30,
-        100
+      "layer": [
+        1,
+        2,
+        3,
+        4,
+        5
       ],
       "pedalSype": [
-        "woodPedal",
+        "pedal1",
+        "movePedal",
         "cloudPedal",
-        "woodPedal",
+        "fracturePedal",
         "woodPedal"
       ]
     }

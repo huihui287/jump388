@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "woodPedal",
+    "_name": "fracturePedal",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "woodPedal",
+    "_name": "fracturePedal",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -158,9 +158,9 @@
     "_dstBlendFactor": 4,
     "_color": {
       "__type__": "cc.Color",
-      "r": 255,
+      "r": 0,
       "g": 255,
-      "b": 255,
+      "b": 0,
       "a": 255
     },
     "_spriteFrame": {
@@ -228,7 +228,7 @@
     "fileId": "2eEmWnxhJCxYzrvUZeuYkH"
   },
   {
-    "__type__": "d90e7zLPndHk7D38UfEwBD+",
+    "__type__": "2eef6YR45JBcLv9i0PAfTpt",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -247,7 +247,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "f6K+B5/s9M7rLX+5zCFcNT"
+    "fileId": "f08l21jxNPYLr52C6vWChJ"
   },
   {
     "__type__": "cc.PrefabInfo",

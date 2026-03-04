@@ -3,11 +3,11 @@ import { Pedal } from './Pedal';
 import { PedalType } from '../../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
-@ccclass('cloudPedal')
-export class cloudPedal extends Pedal {
+@ccclass('Pedal1')  
+export class Pedal1 extends Pedal {
     onLoad(): void {
         super.onLoad();
-        this.setType(PedalType.CLOUD);
+        this.setType(PedalType.PEDAL1);
     }
     start() {
 

@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "woodPedal",
+    "_name": "pedal1",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "woodPedal",
+    "_name": "pedal1",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -127,7 +127,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 150,
+      "width": 800,
       "height": 30
     },
     "_anchorPoint": {
@@ -159,8 +159,8 @@
     "_color": {
       "__type__": "cc.Color",
       "r": 255,
-      "g": 255,
-      "b": 255,
+      "g": 0,
+      "b": 0,
       "a": 255
     },
     "_spriteFrame": {
@@ -213,7 +213,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 150,
+      "width": 800,
       "height": 30
     },
     "_anchorPoint": {
@@ -228,7 +228,7 @@
     "fileId": "2eEmWnxhJCxYzrvUZeuYkH"
   },
   {
-    "__type__": "d90e7zLPndHk7D38UfEwBD+",
+    "__type__": "09ca7WubrhI2Km/kl+i5ZGA",
     "_name": "",
     "_objFlags": 0,
     "__editorExtras__": {},
@@ -247,7 +247,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "f6K+B5/s9M7rLX+5zCFcNT"
+    "fileId": "7bNDQhNbBIxKHOUwmS00xF"
   },
   {
     "__type__": "cc.PrefabInfo",
