@@ -909,8 +909,8 @@
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
-      "x": 0.40695506992857094,
-      "y": 0.04669711494052724
+      "x": 0.5,
+      "y": 0.5
     },
     "_id": "2cNdiJEUFAF46p9BD41fLN"
   },
@@ -939,7 +939,7 @@
       "__expectedType__": "sp.SkeletonData"
     },
     "defaultSkin": "default",
-    "defaultAnimation": "",
+    "defaultAnimation": "<None>",
     "_premultipliedAlpha": true,
     "_timeScale": 1,
     "_preCacheMode": 0,
@@ -971,7 +971,7 @@
     "_anchorPoint": {
       "__type__": "cc.Vec2",
       "x": 0.5,
-      "y": 0.5
+      "y": 0
     },
     "_id": "edugI9tLRAnZK2nV08LdSj"
   },

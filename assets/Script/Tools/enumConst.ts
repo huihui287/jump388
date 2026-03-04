@@ -92,8 +92,8 @@ export const PedalDefaults: Record<PedalType, { jumpForce: number;
     jumpSpeed: number; _gravity: number; minYInterval: number; maxYInterval: number; skill: PedalSkill;
      moveSpeed: number; moveTime: number; moveDistance: number; }> = {
     [PedalType.PEDAL1]: {
-        jumpForce: 500,
-        jumpSpeed: 2,
+        jumpForce: 200,
+        jumpSpeed: 5,
         _gravity: -2000,
         minYInterval: 100,
         maxYInterval: 200,
