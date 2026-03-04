@@ -205,7 +205,7 @@ export class Hero extends Component {
     private _jumpVelocity: number = 0;
 
     /** 当前生效的重力 */
-    private _currentGravity: number = -2000;
+    private _currentGravity: number = 0;
 
     /** 是否正在执行 Tween 向上跳跃 */
     private _isTweenJumping: boolean = false;
@@ -231,7 +231,7 @@ export class Hero extends Component {
         const initialPedal = new Pedal();
         initialPedal.jumpForce = 600;
         initialPedal.jumpSpeed = 1.45;
-        initialPedal.gravity = -2000;
+        initialPedal._gravity = -2000;
         
         this.setGrounded(true, initialPedal);
         this.performJump(initialPedal);
@@ -429,15 +429,6 @@ export class Hero extends Component {
     }
     
     /**
-     * 应用跳跃力
-     */
-    public applyJumpForce(force: Vec3): void {
-        this._jumpVelocity = force.y;
-        this._isGrounded = false;
-        this._heroData.isGrounded = false;
-    }
-    
-    /**
      * 执行攻击
      */
     public performAttack(): void {
@@ -499,20 +490,10 @@ export class Hero extends Component {
             this._jumpVelocity = 0;
             if (pedal) {
                 // 踩上踏板，使用踏板的重力
-                this._currentGravity = pedal.gravity;
-                console.log(`Landed on pedal with Gravity: ${pedal.gravity}`);
-            } else {
-                // 如果没有提供踏板（例如初始状态），使用默认重力
-                this._currentGravity = -2000; // 默认重力值
+                this._currentGravity = pedal._gravity;
+                console.log(`Landed on pedal with Gravity: ${pedal._gravity}`);
             }
         }
-    }
-
-    /**
-     * 获取跳跃速度
-     */
-    public getJumpVelocity(): number {
-        return this._jumpVelocity;
     }
 
     /**

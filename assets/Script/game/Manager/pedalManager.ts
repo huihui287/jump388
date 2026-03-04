@@ -1,6 +1,6 @@
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
-import { PedalType, Constant } from '../../Tools/enumConst';
+import { PedalType, Constant, PedalDefaults } from '../../Tools/enumConst';
 import { Pedal } from '../Pedal/Pedal';
 import GameData from '../../Common/GameData';
 
@@ -25,23 +25,55 @@ export class pedalManager extends Component {
     
     /** 上一个踏板的位置 */
     private _lastPedalPosition: Vec3 = v3(0, -700, 0);
-    
-    /** Y轴间隔最小值 */
-    private minYInterval: number = 10;
-    
-    /** Y轴间隔最大值 */
-    private maxYInterval: number = 11;
 
-    protected  onLoad(){
+    /** 米 *////这个米是虚拟屏幕橡树的
+    private HeroRice: number = 0;
+    /**生成pedal一共的高度 */
+    private PedalRice: number = 0;
+
+    /** 所有Rice的比例 */
+    private AllRiceBei: number = 100;
+    /** 踏板生成的里程碑数组 (对应米数) */
+    private Rice: number[] = []; 
+    
+    /** 对应 Rice 里程碑的踏板类型数组（字符串，来源于 JSON） */
+    private pedalSype: string[] = [];
+
+    /** Hero 引用，用于计算 AllRice */
+    private hero: Node | null = null;
+    /** 起始 Y 坐标，用于计算偏移 */
+    private startY: number = 0;
+    private _configReady: boolean = false;
+
+    /**
+     * 设置 Hero 引用
+     * @param heroNode 
+     */
+    public setHero(heroNode: Node) {
+        this.hero = heroNode;
+        this.startY = heroNode.position.y;
+    }
+
+    protected onLoad(){
 
     }
 
     start() {
 
     }
+    /** 临时变量，用于存储上一次的 AllRice 值 */
+    private tempAllRice: number = 0;
 
     update(deltaTime: number) {
+        if (this._configReady && this.hero) {
+            // 计算当前高度差 (AllRice)
+            // 假设 1 像素 = 1 米 (或者按需缩放，例如 / 10)
+            this.tempAllRice = this.hero.position.y - this.startY;
+            this.HeroRice = this.tempAllRice >= this.HeroRice ? this.tempAllRice :this.HeroRice;
 
+            // 检查是否需要生成新的踏板
+            this.checkAndSpawnPedals();
+        }
     }
     /**
      * 加载游戏数据并从 JSON 配置生成踏板
@@ -59,32 +91,77 @@ export class pedalManager extends Component {
         try {
             console.log(`Loading pedal config for level ${level} from ${configPath}...`);
             const config = await LoaderManeger.instance.loadJSON(configPath) as any;
-            if (config && config.json.pedals && config.json.pedals.length > 0) {
-                console.log(`Successfully loaded ${config.json.pedals.length} pedals from JSON config.`);
-                for (const pedalData of config.json.pedals) {
-                    // 从 JSON 读取 jumpForce, jumpSpeed 和 gravity，如果没有则使用 Pedal 默认值
-                    const jumpForce = pedalData.jumpForce !== undefined ? pedalData.jumpForce : 600;
-                    const jumpSpeed = pedalData.jumpSpeed !== undefined ? pedalData.jumpSpeed : 1.45;
-                    const gravity = pedalData.gravity !== undefined ? pedalData.gravity : -2000;
-                    this.spawnPedalAt(pedalData.type as PedalType, v3(pedalData.x, pedalData.y, 0), jumpForce, jumpSpeed, gravity);
-                }
+            
+            // 解析 RiceS 配置
+            if (config && config.json.RiceS && config.json.RiceS.length > 0) {
+                const riceData = config.json.RiceS[0];
+                this.Rice = riceData.Rice || [];
+                this.pedalSype = riceData.pedalSype || [];
+                console.log("Loaded Rice config:", this.Rice, this.pedalSype);
             } else {
-                console.warn(`Pedal config at ${configPath} is empty or invalid. Spawning default random pedals.`);
-                this.spawnDefaultPedals();
+                console.warn("RiceS config not found or empty, using defaults.");
+                this.Rice = [1000, 2000];
+                this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
             }
+
+            // 开始初始生成
+            this._configReady = true;
+
         } catch (error) {
             console.error(`Failed to load pedal config for level ${level}:`, error);
-            this.spawnDefaultPedals();
+            // Fallback
+            this.Rice = [1000, 2000];
+            this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
+
+            this._configReady = true;
         }
     }
 
     /**
-     * 生成默认踏板 (用于回退逻辑)
+     * 检查并生成新踏板
+     * 当最后一个踏板距离 Hero 不够远时，继续生成
      */
-    private spawnDefaultPedals(): void {
-        for (let i = 0; i < 8; i++) {
-            this.spawnPedal(PedalType.WOOD, 600, 1.45, -2000); // 默认踏板也带上默认物理属性
+    private checkAndSpawnPedals() {
+        // HeroRice 与 PedalRice 对比，判断是否需要生成新的踏板
+        const spawnThreshold = Constant.Height * 1;
+        if (this.hero && this.PedalRice - this.hero.position.y < spawnThreshold) {
+            this.spawnNextPedal();
         }
+    }
+
+    /**
+     * 生成下一个踏板，根据 AllRice 和 Rice 数组决定类型
+     */
+    private spawnNextPedal() {
+        // 确定当前应该使用的类型名称（字符串）
+        let targetTypeName: string = PedalType.WOOD; // 默认类型名
+
+        // 遍历 Rice 数组找到匹配的区间
+        // 规则：AllRice < Rice[i] 时，使用 pedalSype[i]
+        // 如果超过了所有 Rice，则使用最后一个配置
+        let found = false;
+        for (let i = 0; i < this.Rice.length; i++) {
+            if (this.HeroRice < this.Rice[i] * this.AllRiceBei) {
+                targetTypeName = this.pedalSype[i];
+                found = true;
+                break;
+            }
+        }
+
+        if (!found && this.pedalSype.length > 0) {
+            // 超过最大里程，使用最后一个配置
+            targetTypeName = this.pedalSype[this.pedalSype.length - 1];
+        }
+
+        // 将字符串类型名解析为 PedalType 枚举
+        const targetType: PedalType = this.resolvePedalType(targetTypeName);
+        // 使用枚举常量中的默认物理参数
+        const def = PedalDefaults[targetType];
+        const jumpForce = def.jumpForce;
+        const jumpSpeed = def.jumpSpeed;
+        const _gravity = def._gravity;
+
+        this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity);
     }
 
     /**
@@ -93,9 +170,9 @@ export class pedalManager extends Component {
      * @param position 踏板位置
      * @param jumpForce 提供的跳跃力度
      * @param jumpSpeed 提供的跳跃速度 (上升时间)
-     * @param gravity 提供的重力加速度
+     * @param _gravity 提供的重力加速度
      */
-    public spawnPedalAt(type: PedalType, position: Vec3, jumpForce: number, jumpSpeed: number, gravity: number): Node | null {
+    public spawnPedalAt(type: PedalType, position: Vec3, jumpForce: number, jumpSpeed: number, _gravity: number): Node | null {
         const pedalNode = this.getPedalFromPool(type);
         if (!pedalNode) return null;
         
@@ -106,7 +183,12 @@ export class pedalManager extends Component {
         // 初始化踏板的物理属性
         const pedalComponent = pedalNode.getComponent(Pedal);
         if (pedalComponent) {
-            pedalComponent.init(position, jumpForce, jumpSpeed, gravity);
+            pedalComponent.init(position, jumpForce, jumpSpeed, _gravity);
+        }
+
+        const deltaY = position.y - this._lastPedalPosition.y;
+        if (deltaY > 0) {
+            this.PedalRice += deltaY;
         }
 
         // 更新上一个踏板位置记录
@@ -121,9 +203,9 @@ export class pedalManager extends Component {
      * @param type 踏板类型
      * @param jumpForce 提供的跳跃力度
      * @param jumpSpeed 提供的跳跃速度 (上升时间)
-     * @param gravity 提供的重力加速度
+     * @param _gravity 提供的重力加速度
      */
-    public spawnPedal(type: PedalType, jumpForce: number, jumpSpeed: number, gravity: number): Node | null {
+    public spawnPedal(type: PedalType, jumpForce: number, jumpSpeed: number, _gravity: number): Node | null {
         const pedalNode = this.getPedalFromPool(type);
         if (!pedalNode) return null;
         
@@ -134,7 +216,7 @@ export class pedalManager extends Component {
         // 初始化踏板的物理属性
         const pedalComponent = pedalNode.getComponent(Pedal);
         if (pedalComponent) {
-            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, gravity);
+            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, _gravity);
         }
 
         pedalNode.active = true;
@@ -230,6 +312,14 @@ export class pedalManager extends Component {
     }
     
     /**
+     * 将字符串类型名解析为 PedalType 枚举值
+     */
+    private resolvePedalType(typeName: string): PedalType {
+        if (typeName === PedalType.CLOUD) return PedalType.CLOUD;
+        return PedalType.WOOD;
+    }
+    
+    /**
      * 设置踏板位置 (随机逻辑)
      */
     private setPedalPosition(pedalNode: Node): void {
@@ -238,6 +328,7 @@ export class pedalManager extends Component {
         
         // 获取踏板宽度
         const pedalWidth = this.getPedalWidth(pedalNode);
+        const type = pedalNode.getComponent(Pedal).getType();
         
         // 计算X坐标范围，支持居中对齐的坐标系 (origin at center)
         // 范围从 -360 到 360 (假设屏幕宽度 720)
@@ -257,11 +348,13 @@ export class pedalManager extends Component {
         }
         
         // 计算Y坐标，基于上一个踏板的位置加上随机间隔
-        const randomInterval = this.minYInterval + Math.random() * (this.maxYInterval - this.minYInterval);
+        const randomInterval = PedalDefaults[type].minYInterval + Math.random() * (PedalDefaults[type].maxYInterval - PedalDefaults[type].minYInterval);
         const newY = this._lastPedalPosition.y + randomInterval;
         
         // 设置踏板位置
         pedalNode.position = v3(randomX, newY, 0);
+        
+        this.PedalRice += randomInterval;
         
         // 更新上一个踏板的位置
         this._lastPedalPosition.set(randomX, newY, 0);

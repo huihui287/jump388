@@ -2,10 +2,20 @@ import { _decorator, Component, Node, UITransform, Vec3 } from 'cc';
 import { PedalType } from '../../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
+
+  
 @ccclass('Pedal')
 export class Pedal extends Component {
     
+    /**
+     * 踏板类型枚举值
+     * 与资源命名一致，用于从对象池/预制体映射中取出对应节点
+     */
     private _type: PedalType = PedalType.WOOD;
+    /**
+     * UITransform 缓存
+     * 用于读取宽高、锚点等数值，避免频繁 getComponent
+     */
     private _uiTransform: UITransform = null!;
 
     /** 踏板提供的跳跃力度 (决定跳跃高度) */
@@ -18,28 +28,51 @@ export class Pedal extends Component {
 
     /** 踏板提供的重力加速度 */
     @property
-    public gravity: number = -2000;
+    public _gravity: number = -2000;
     
+    /**
+     * 生命周期：组件加载
+     * 缓存 UITransform 组件引用
+     */
     onLoad() {
         this._uiTransform = this.getComponent(UITransform);
     }   
 
+    /**
+     * 生命周期：首次启用
+     */
     start() {
 
     }
 
+    /**
+     * 生命周期：逐帧更新
+     * @param deltaTime 帧间隔（秒）
+     */
     update(deltaTime: number) {
         
     }
 
+    /**
+     * 设置踏板类型
+     * @param type 踏板类型（PedalType）
+     */
     setType(type: PedalType) {
         this._type = type;
     }
     
+    /**
+     * 获取踏板类型
+     * @returns 踏板类型（PedalType）
+     */
     getType(): PedalType {
         return this._type;
     }
 
+    /**
+     * 获取踏板宽度（像素）
+     * @returns 宽度
+     */
     getPedalWidth(): number {
         if (!this._uiTransform) {
             this._uiTransform = this.getComponent(UITransform)!;
@@ -52,16 +85,20 @@ export class Pedal extends Component {
      * @param position 初始位置
      * @param jumpForce 提供的跳跃力度
      * @param jumpSpeed 提供的跳跃速度 (上升时间)
-     * @param gravity 提供的重力加速度
+     * @param _gravity 提供的重力加速度
      */
-    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, gravity: number = -2000) {
+    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, _gravity: number = -2000) {
         this.node.position = position;
         this.node.active = true;
         this.jumpForce = jumpForce;
         this.jumpSpeed = jumpSpeed;
-        this.gravity = gravity;
+        this._gravity = _gravity;
     }
     
+    /**
+     * 获取踏板高度（像素）
+     * @returns 高度
+     */
     getPedalHeight(): number {
         if (!this._uiTransform) {
             this._uiTransform = this.getComponent(UITransform)!;

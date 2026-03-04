@@ -31,13 +31,7 @@ export let Constant = {
     Height: 1334,
 }
 
-/**
- * 踏板类型枚举
- */
-export enum PedalType {
-    WOOD = 'woodPedal',
-    CLOUD = 'cloudPedal'
-}
+
 
 
 /** 页面跳转索引 */
@@ -60,3 +54,44 @@ export enum GameState {
     /** 游戏暂停 */
     PAUSED = 3,
 }
+/**
+ * 踏板类型枚举
+ */
+export enum PedalType {
+    WOOD = 'woodPedal',
+    CLOUD = 'cloudPedal'
+}
+// /** 踏板类型字符串标识 */
+// type: string;
+// /** 跳跃力度 */
+// jumpForce: number;
+// /** 跳跃速度 */
+// jumpSpeed: number;
+// /** 重力加速度 */
+// _gravity: number;
+/** Y轴间隔最小值 */
+//  minYInterval: number ;
+// /** Y轴间隔最大值 */
+//  maxYInterval: number ;
+/**
+ * 导出：按枚举值组织的踏板默认参数映射
+ * 供运行时在创建踏板节点后快速设置其物理属性
+ */
+export const PedalDefaults: Record<PedalType, { jumpForce: number; 
+    jumpSpeed: number; _gravity: number; minYInterval: number; maxYInterval: number }> = {
+    [PedalType.WOOD]: {
+        jumpForce: 600,
+        jumpSpeed: 1.45,
+        _gravity: -2000,
+        minYInterval: 150,
+        maxYInterval: 250,
+
+    },
+    [PedalType.CLOUD]: {
+        jumpForce: 1200,
+        jumpSpeed: 5.45,
+        _gravity: -2000,
+        minYInterval: 200,
+        maxYInterval: 300,
+    },
+};

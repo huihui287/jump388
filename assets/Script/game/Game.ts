@@ -79,9 +79,10 @@ export class Game extends BaseNodeCom {
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
         //this.JoystickControlCom = this.viewList.get('JoystickControl').getComponent(JoystickControl);
         this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
+        
         this.pedalManagerCom = this.viewList.get('center/pedalManager').getComponent(pedalManager);
-        // 踏板管理组件初始化
-         this.pedalManagerCom.initializePedalGeneration();
+        this.pedalManagerCom.setHero(this.heroCom.node);
+        this.pedalManagerCom.initializePedalGeneration();
         
         this.setCameraTarget();
         this.loadExtraData(GameData.getCurLevel());

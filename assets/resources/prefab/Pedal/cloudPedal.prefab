@@ -159,8 +159,8 @@
     "_color": {
       "__type__": "cc.Color",
       "r": 255,
-      "g": 255,
-      "b": 255,
+      "g": 0,
+      "b": 0,
       "a": 255
     },
     "_spriteFrame": {
@@ -239,6 +239,9 @@
     "__prefab": {
       "__id__": 11
     },
+    "jumpForce": 600,
+    "jumpSpeed": 1.45,
+    "_gravity": -2000,
     "_id": ""
   },
   {

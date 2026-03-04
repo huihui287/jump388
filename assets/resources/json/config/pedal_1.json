@@ -1,10 +1,18 @@
 {
-  "pedals": [
-    {"type": "woodPedal", "x": 0, "y": -500, "jumpForce": 600, "jumpSpeed": 1.45, "gravity": -2000},
-    {"type": "woodPedal", "x": 100, "y": -300, "jumpForce": 700, "jumpSpeed": 1.2, "gravity": -2200},
-    {"type": "woodPedal", "x": -100, "y": -100, "jumpForce": 600, "jumpSpeed": 1.45, "gravity": -2000},
-    {"type": "woodPedal", "x": 50, "y": 100, "jumpForce": 800, "jumpSpeed": 1.0, "gravity": -1800},
-    {"type": "cloudPedal", "x": -50, "y": 300, "jumpForce": 600, "jumpSpeed": 1.45, "gravity": -2000},
-    {"type": "woodPedal", "x": 0, "y": 500, "jumpForce": 1000, "jumpSpeed": 0.8, "gravity": -1500}
+  "RiceS": [
+    {
+      "Rice": [
+        10,
+        20,
+        30,
+        100
+      ],
+      "pedalSype": [
+        "woodPedal",
+        "cloudPedal",
+        "woodPedal",
+        "woodPedal"
+      ]
+    }
   ]
 }
