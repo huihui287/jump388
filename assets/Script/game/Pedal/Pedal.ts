@@ -201,6 +201,7 @@ export class Pedal extends Component {
         // 释放后清空技能（一次性效果）
         this.skills = [];
     }
+    
     //尖刺 效果 玩家死亡游戏结束
     applySpikeEffect() {
         // 玩家死亡

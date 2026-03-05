@@ -1,4 +1,4 @@
-import { _decorator, Node, Component, Vec3, v3, sp, UITransform, tween, Tween } from 'cc';
+import { _decorator, Node, Component, Vec3, v3, sp, UITransform, tween, Tween, resources } from 'cc';
 import { App } from '../Controller/app';
 import StateMachine, { IState } from '../Common/StateMachine';
 import CM from '../channel/CM';
@@ -7,6 +7,8 @@ import { Pedal } from './Pedal/Pedal';
 import { PedalSkill } from '../Tools/enumConst';
 import EventManager from '../Common/view/EventManager';
 import { EventName } from '../Tools/eventName';
+import { SkinManager } from './Skin/SkinManager';
+import { getSkinConfig } from './Skin/SkinConfig';
 const { ccclass, property } = _decorator;
 
 /**
@@ -620,6 +622,90 @@ export class Hero extends Component {
         if (this.SkeletonAnimation) {
             this.SkeletonAnimation.setAnimation(0, animationName, false);
         }
+    }
+
+    /** 当前加载的 Spine 资源路径 */
+    private _currentSpinePath: string = "";
+
+    /**
+     * 加载当前装备的皮肤
+     */
+    private loadCurrentSkin(): void {
+        const skinId = SkinManager.getInstance().getCurrentSkinId();
+        this.changeSkin(skinId);
+    }
+
+    /**
+     * 更换皮肤
+     * @param skinId 皮肤ID
+     */
+    public changeSkin(skinId: number): void {
+        const skinConfig = getSkinConfig(skinId);
+        if (!skinConfig) {
+            console.warn(`Skin config not found for ID: ${skinId}`);
+            return;
+        }
+
+        console.log(`Request to change skin: ${skinConfig.name}`);
+
+        // 1. 如果是同一个 Spine 文件，直接切换 Skin
+        if (this._currentSpinePath === skinConfig.spinePath && this.SkeletonAnimation.skeletonData) {
+            console.log(`Spine asset match, setting skin directly to: ${skinConfig.spineSkinName}`);
+            this.setSkeletonSkin(skinConfig.spineSkinName);
+            return;
+        }
+
+        // 2. 如果是不同的 Spine 文件，重新加载资源
+        console.log(`Loading new spine asset: ${skinConfig.spinePath}`);
+        resources.load(skinConfig.spinePath, sp.SkeletonData, (err, skeletonData) => {
+            if (!this.isValid) return; 
+            
+            if (err) {
+                console.error(`Failed to load spine data: ${err}`);
+                return;
+            }
+
+            if (!this.SkeletonAnimation) {
+                console.warn("SkeletonAnimation component is null!");
+                return;
+            }
+
+            // 更新当前路径记录
+            this._currentSpinePath = skinConfig.spinePath;
+
+            // 设置新的骨骼数据
+            this.SkeletonAnimation.skeletonData = skeletonData;
+
+            // 设置皮肤
+            this.setSkeletonSkin(skinConfig.spineSkinName);
+        });
+    }
+
+    /**
+     * 设置骨骼皮肤并刷新状态
+     * @param skinName 皮肤名称
+     */
+    private setSkeletonSkin(skinName: string) {
+        if (!this.SkeletonAnimation) return;
+
+        // 如果 skinName 有效且不是默认值，尝试切换
+        if (skinName && skinName !== 'default') {
+            // 注意：setSkin 内部会查找皮肤是否存在，如果不存在通常会报错或无效果
+            // 建议确保配置表中的 skinName 与 Spine 资源一致
+            try {
+                this.SkeletonAnimation.setSkin(skinName);
+                // 必须调用 setToSetupPose 来应用新皮肤的附件，并清除旧皮肤的影响
+                this.SkeletonAnimation.setSlotsToSetupPose();
+            } catch (e) {
+                console.warn(`Failed to set skin: ${skinName}`, e);
+            }
+        }
+
+        // 重新播放当前动画以刷新状态
+        // 切换 skeletonData 或 setSkin 后，动画状态可能会重置，需要重新触发
+        const currentState = this._stateMachine.currentStateName || 'jump_down';
+        // 使用 setAnimation 强制刷新
+        this.SkeletonAnimation.setAnimation(0, currentState, false);
     }
 }
 
