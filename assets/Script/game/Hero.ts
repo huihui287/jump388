@@ -288,8 +288,36 @@ export class Hero extends Component {
     }
 
     /**
-     * 更新摇杆/触摸平滑位移 (调试用)
+     * 重置 Hero 状态
      */
+    public reset(): void {
+        // 重置位置
+        this.node.setPosition(0, 0, 0);
+        
+        // 重置物理状态
+        this._jumpVelocity = 0;
+        this._currentGravity = -2000; // 恢复默认重力
+        this._isTweenJumping = false;
+        this._isTouchingPedal = false;
+        
+        // 停止当前 Tween
+        if (this._currentJumpTween) {
+            this._currentJumpTween.stop();
+            this._currentJumpTween = null;
+        }
+
+        // 重置陀螺仪/输入状态
+        this._gyroX = 0;
+        this._gyroAngle = 0;
+        this._smoothGyroX = 0;
+        this._inputVector.set(0, 0);
+        
+        // 切换到初始状态 (通常是下落或者待机，这里假设先下落或者直接跳起)
+        // 如果想让 Hero 开局就跳起，可以模拟踩中一个虚拟踏板，或者直接设为下落
+        this._stateMachine.changeState(HeroState.JUMP_DOWN);
+        this.playAnimation('jump_down');
+    }
+    
     private updateJoystickMove(dt: number): void {
         const inputVector = this.joystick.getInputVector();
         

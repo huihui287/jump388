@@ -14,8 +14,8 @@ import ViewManager from '../Common/view/ViewManager';
 import LoaderManeger from '../sysloader/LoaderManeger';
 const { ccclass, property } = _decorator;
 
-@ccclass('resultViewCmpt')
-export class ResultViewCmpt extends BaseDialog  {
+@ccclass('gameOver')
+export class gameOver extends BaseDialog  {
     private isWin: boolean = false;
     private level: number = 0;
     private goldnum: number = 0;

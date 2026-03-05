@@ -92,8 +92,8 @@ export const PedalDefaults: Record<PedalType, { jumpForce: number;
     jumpSpeed: number; _gravity: number; minYInterval: number; maxYInterval: number; skill: PedalSkill;
      moveSpeed: number; moveTime: number; moveDistance: number; }> = {
     [PedalType.PEDAL1]: {
-        jumpForce: 200,
-        jumpSpeed: 5,
+        jumpForce: 500,
+        jumpSpeed: 2,
         _gravity: -2000,
         minYInterval: 100,
         maxYInterval: 200,
@@ -114,7 +114,7 @@ export const PedalDefaults: Record<PedalType, { jumpForce: number;
         moveDistance: 0,
     },
     [PedalType.CLOUD]: {
-        jumpForce: 500,
+        jumpForce: 600,
         jumpSpeed: 1.45,
         _gravity: -2000,
         minYInterval: 500,
@@ -125,7 +125,7 @@ export const PedalDefaults: Record<PedalType, { jumpForce: number;
         moveDistance: 0,
     },
     [PedalType.FRACTURE_PEDAL]: {
-        jumpForce: 500,
+        jumpForce: 600,
         jumpSpeed: 1.45,
         _gravity: -2000,
         minYInterval: 250,
@@ -136,7 +136,7 @@ export const PedalDefaults: Record<PedalType, { jumpForce: number;
         moveDistance: 0,
     },
     [PedalType.MOVE_PEDAL]: {
-        jumpForce: 500,
+        jumpForce: 600,
         jumpSpeed: 1.45,
         _gravity: -2000,
         minYInterval: 250,

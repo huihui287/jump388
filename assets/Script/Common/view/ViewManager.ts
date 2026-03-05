@@ -22,6 +22,7 @@ import CM from "../../channel/CM";
 import EventManager from "./EventManager";
 import { GameState } from "../../Tools/enumConst";
 import { EventName } from "../../Tools/eventName";
+import LoaderManeger from "../../sysloader/LoaderManeger";
 // 原始导入语句
 // import { _decorator, Component, Node, EventTouch, isValid, Rect, Vec2 } from 'cc';
 
@@ -491,4 +492,14 @@ export default class ViewManager extends Component {
         });
     }
 
+    static showGameOver() {
+        // 金币不足
+        LoaderManeger.instance.loadPrefab('prefab/ui/gameOver').then((prefab) => {
+            let gameOver = instantiate(prefab);
+            ViewManager.show({
+                node: gameOver,
+                name: "GameOver"
+            });
+        });
+    }
 }

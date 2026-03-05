@@ -18,6 +18,7 @@ import { Hero } from './Hero';
 import { CameraManager } from './CameraManager';
 import { pedalManager } from './Manager/pedalManager';
 import { Pedal } from './Pedal/Pedal';
+import ViewManager from '../Common/view/ViewManager';
 
 const { ccclass, property } = _decorator;
 
@@ -77,12 +78,12 @@ export class Game extends BaseNodeCom {
         AudioManager.getInstance().playMusic('background1', true);
 
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
-        //this.JoystickControlCom = this.viewList.get('JoystickControl').getComponent(JoystickControl);
         this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
         
         this.pedalManagerCom = this.viewList.get('center/pedalManager').getComponent(pedalManager);
         this.pedalManagerCom.setHero(this.heroCom.node);
-        this.pedalManagerCom.initializePedalGeneration();
+        this.pedalManagerCom.loadtPools();
+        this.pedalManagerCom.loadPedalConfig();
         
         this.setCameraTarget();
         this.loadExtraData(GameData.getCurLevel());
@@ -147,7 +148,8 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.Pause, this.evtPause, this);
         /** 恢复游戏 */
         EventManager.on(EventName.Game.Resume, this.evtResume, this);
-    
+        /** 重新开始游戏 */
+        EventManager.on(EventName.Game.RestartGame, this.evtRestartGame, this);
     }
 
     evtPause() {
@@ -161,6 +163,7 @@ export class Game extends BaseNodeCom {
         App.gameCtr.setPause(false);
         // throw new Error('Method not implemented.');
     }
+
 
     /**
      * 加载关卡额外数据
@@ -204,12 +207,29 @@ export class Game extends BaseNodeCom {
         if (!this.heroCom) return;
 
         const heroNode = this.heroCom.node;
-        const heroPos = heroNode.position;
+        const heroPos = heroNode.worldPosition; // 使用世界坐标
         const halfScreenHeight = Constant.Height / 2;
 
-        // 如果Hero的Y坐标小于屏幕下边界（带一点偏移）
-        if (heroPos.y < -halfScreenHeight - 100) {
-            console.log('Hero掉出屏幕，游戏结束');
+        // 获取最底部的踏板
+        const lowestPedal = this.pedalManagerCom.getLowestPedal();
+        
+        let deathY = -halfScreenHeight - 100; // 默认死亡线：屏幕下方
+
+        if (lowestPedal) {
+            // 如果有踏板，死亡线设为最低踏板下方一定距离
+            // 只要 Hero 掉得比最低踏板还低，且不可挽回，就结束游戏
+            // 比如低于最低踏板 200 像素
+            deathY = lowestPedal.worldPosition.y - 200;
+        } else {
+             // 如果没有踏板（可能是还没生成，或者全被回收了），使用摄像机下方作为死亡线
+             // 获取摄像机位置
+             const cameraPos = this.cameraCom.node.worldPosition;
+             deathY = cameraPos.y - halfScreenHeight - 100;
+        }
+
+        // 如果Hero的Y坐标小于死亡线
+        if (heroPos.y < deathY) {
+            console.log('Hero掉出边界（低于最低踏板或屏幕），游戏结束');
             this.GameOver();
         }
     }
@@ -306,9 +326,12 @@ export class Game extends BaseNodeCom {
         this.gameState = GameState.GAME_OVER;
         console.log('GameOver logic called');
         // 这里可以弹出结算界面，如 ViewManager.showView(ViewName.GameOver)
+        ViewManager.showGameOver();
+        // 暂停游戏
+        EventManager.emit(EventName.Game.Pause);
     }
 
-
+    
     /*********************************************  gameLogic *********************************************/
     /*********************************************  gameLogic *********************************************/
     /*********************************************  gameLogic *********************************************/
@@ -344,4 +367,50 @@ export class Game extends BaseNodeCom {
         if (App.gameCtr.isPause) return;
 
     }
+
+
+    
+    /**
+     * 重新开始游戏
+     */
+    async evtRestartGame() {
+        console.log('Restarting game...');
+        
+        // 1. 重置游戏状态
+        this.gameState = GameState.PLAYING;
+        App.gameCtr.setPause(false);
+        
+        // 2. 清理踏板
+        if (this.pedalManagerCom) {
+            this.pedalManagerCom.recycleAllPedals();
+            // 重新初始化踏板生成状态
+            await this.pedalManagerCom.loadPedalConfig();
+        }
+        
+        // 3. 重置 Hero
+        if (this.heroCom) {
+            this.heroCom.reset(); 
+            // 如果希望开局自动跳跃，可以给 Hero 施加一个初始向上速度或状态
+            // 但根据 pedalManager 逻辑，初始位置 0 会生成踏板在脚下，Hero 下落会踩中
+        }
+        
+        // 4. 重置摄像机
+        if (this.cameraCom) {
+            this.cameraCom.setTarget(this.heroCom.node);
+            // 可能需要重置摄像机位置到初始状态
+            this.cameraCom.node.setPosition(0, 0, this.cameraCom.node.position.z);
+        }
+        
+        // 5. 重新加载关卡数据（如果有需要）
+        await this.loadExtraData(GameData.getCurLevel());
+        
+        // 6. 重新绑定 Hero 给 PedalManager (如果需要)
+        if (this.pedalManagerCom && this.heroCom) {
+            this.pedalManagerCom.setHero(this.heroCom.node);
+        }
+
+        // 7. 播放背景音乐（如果停止了）
+        AudioManager.getInstance().playMusic('background1', true);
+    }
+
 }

@@ -71,6 +71,14 @@ export class pedalManager extends Component {
         EventManager.on(EventName.Game.ReleaseObject, this.onReleaseObject, this);
     }
 
+    init() {
+        this.NewlayerS = 0;
+        this.setHero(this.hero);
+        this.HeroRice = 0;
+        this.PedalRice = 0;
+        this._lastPedalType = PedalType.WOOD;
+    }
+    
     start() {
 
     }
@@ -86,17 +94,60 @@ export class pedalManager extends Component {
 
             // 检查是否需要生成新的踏板
             this.checkAndSpawnPedals();
+
+            // 检查并回收屏幕下方的踏板
+            this.checkAndRecyclePedals();
+        }
+    }
+    
+    /**
+     * 检查并回收屏幕下方的踏板
+     */
+    private checkAndRecyclePedals() {
+        if (!this.hero) return;
+
+        // 计算屏幕下边界
+        const recycleThreshold = this.hero.position.y - Constant.Height / 2 - 200;
+
+        // 创建一个副本进行遍历，避免在遍历过程中修改数组导致的问题
+        // 或者使用倒序遍历
+        // 既然是从前往后回收（最下面的先回收），使用 while 循环是可行的，但为了避免潜在的死循环（例如 recyclePedal 失败没有移除）
+        // 我们改用一次遍历处理
+        
+        // 收集需要回收的节点
+        const toRecycle: Node[] = [];
+        
+        // 假设 activePedals 是按 Y 轴排序的（从低到高），因为是按顺序生成的
+        // 所以一旦遇到不需要回收的，后面的都不需要回收
+        for (let i = 0; i < this._activePedals.length; i++) {
+            const pedalNode = this._activePedals[i];
+            if (pedalNode.position.y < recycleThreshold) {
+                toRecycle.push(pedalNode);
+            } else {
+                // 遇到第一个在屏幕内的，后面的肯定也在（假设有序）
+                // 如果不能保证完全有序（例如随机位置可能导致错乱），则去掉 break
+                break; 
+            }
+        }
+
+        // 执行回收
+        if (toRecycle.length > 0) {
+            for (const node of toRecycle) {
+                this.recyclePedal(node);
+            }
+        }
+    }
+    async loadtPools() {
+      // 确保对象池已初始化
+        if (this._pedalPools.size === 0) {
+            await this.initPools();
         }
     }
     /**
      * 加载游戏数据并从 JSON 配置生成踏板
      */
-    public async initializePedalGeneration(): Promise<void> {
-        // 确保对象池已初始化
-        if (this._pedalPools.size === 0) {
-            await this.initPools();
-        }
-
+    public async loadPedalConfig(): Promise<void> {
+   
         // 加载当前关卡的踏板配置
         const level = GameData.getCurLevel(); 
         const configPath = `json/config/pedal_${level}`;
@@ -464,11 +515,23 @@ export class pedalManager extends Component {
      * 清理所有对象池
      */
     public clearPools(): void {
+        this.recycleAllPedals(); // 先回收所有活跃的
         this._pedalPools.forEach(pool => {
             pool.clear();
         });
-        this._activePedals.length = 0; // 清空活跃踏板列表
         console.log("All pedal pools cleared.");
+    }
+
+    /**
+     * 回收所有活跃踏板
+     */
+    public recycleAllPedals(): void {
+        // 创建副本以防在遍历时修改数组
+        const activePedals = [...this._activePedals];
+        for (const pedal of activePedals) {
+            this.recyclePedal(pedal);
+        }
+        this._activePedals = []; // 确保清空
     }
 
     /**
@@ -479,6 +542,18 @@ export class pedalManager extends Component {
         return this._activePedals;
     }
 
+    /**
+     * 获取最底部的活跃踏板
+     * @returns 最底部的活跃踏板节点，如果没有活跃踏板则返回 null
+     */
+    public getLowestPedal(): Node | null {
+        if (this._activePedals.length === 0) return null;
+
+        // activePedals 是按生成顺序添加的，通常 index 0 就是最底部的
+        // 但为了保险，可以遍历一次找 Y 最小的，或者直接返回第一个
+        // 考虑到性能和逻辑一致性，这里假设第一个就是最低的
+        return this._activePedals[0];
+    }
     /**
      * 获取离目标节点最近的踏板
      * @param targetNode 目标节点

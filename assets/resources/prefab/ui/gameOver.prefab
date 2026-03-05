@@ -1,7 +1,7 @@
 [
   {
     "__type__": "cc.Prefab",
-    "_name": "resultView",
+    "_name": "gameOver",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_native": "",
@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "resultView",
+    "_name": "gameOver",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": null,
@@ -6193,7 +6193,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 720,
-      "height": 1333.9999999999998
+      "height": 1334
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
