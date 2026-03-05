@@ -1,6 +1,6 @@
 import { _decorator, Component, Node } from 'cc';
 import { Pedal } from './Pedal';
-import { PedalType } from '../../Tools/enumConst';
+import { PedalSkill, PedalType } from '../../Tools/enumConst';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
 const { ccclass, property } = _decorator;
@@ -11,6 +11,8 @@ export class fracturePedal extends Pedal {
     onLoad() {
         super.onLoad();
         this.setType(PedalType.FRACTURE_PEDAL);
+
+        this.addSkill([PedalSkill.FRACTURE]);
     }   
     
     start() {
@@ -21,22 +23,6 @@ export class fracturePedal extends Pedal {
         
     }
 
-    /** 释放技能
- * @param pedal 踏板
- */
-    releaseSkill() {
-        // 延迟一秒后释放技能（发送释放对象消息）
-        this.scheduleOnce(this.releaseObject, 1.0);
-    }
-
-    private releaseObject() {
-        if (!this.node || !this.node.isValid) return;
-        EventManager.emit(EventName.Game.ReleaseObject, this.node);
-    }
-
-    protected onDisable(): void {
-        this.unschedule(this.releaseObject);
-    }
 }
 
 

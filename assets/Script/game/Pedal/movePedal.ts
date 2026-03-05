@@ -1,8 +1,9 @@
 import { _decorator, Component, Node, tween, Tween, Vec3 } from 'cc';
 import { Pedal } from './Pedal';
-import { Constant, PedalDefaults } from '../../Tools/enumConst';
+import { Constant, PedalDefaults, PedalType } from '../../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
+// 移动踏板
 @ccclass('movePedal')
 export class movePedal extends Pedal {
 
@@ -43,8 +44,8 @@ export class movePedal extends Pedal {
     /**
      * 初始化踏板
      */
-    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, _gravity: number = -2000) {
-        super.init(position, jumpForce, jumpSpeed, _gravity);
+    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, _gravity: number = -2000, type: PedalType = PedalType.WOOD) {
+        super.init(position, jumpForce, jumpSpeed, _gravity, type);
         
         this._isMoving = false;
         const defaults = PedalDefaults[this.getType()];

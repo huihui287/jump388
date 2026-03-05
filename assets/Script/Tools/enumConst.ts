@@ -61,9 +61,6 @@ export enum PedalType {
     CLOUD = 'cloudPedal',          // 云踏板：偏向强化跳跃
     FRACTURE_PEDAL = 'fracturePedal', // 断裂踏板：偏向特殊/易碎行为
     MOVE_PEDAL = 'movePedal', // 移动踏板：偏向移动
-    GOLD_PEDAL = 'goldPedal', // 金币踏板：偏向金币收集
-    SPIKE_PEDAL = 'spikePedal', // 尖刺踏板：偏向伤害
-    SPRING_PEDAL = 'springPedal' // 弹簧踏板：偏向跳跃高度增加
 }
 /**
  * 踏板技能枚举
@@ -74,6 +71,10 @@ export enum PedalSkill {
     SPRING = 'spring',               // 弹簧跳跃高度
     LOW_GRAVITY = 'low_gravity',   // 降低重力，下落更慢
     FRACTURE = 'fracture',                // 断裂效果（预留，待接入具体逻辑）
+    //尖刺
+    SPIKE = 'spike',
+    //金币堆
+    GOLD = 'goldPedal',
 }
 // /** 踏板类型字符串标识 */
 // type: string;
@@ -102,7 +103,7 @@ export const PedalDefaults: Record<PedalType, {
     minYInterval: number; 
     /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
     maxYInterval: number; 
-    skill: PedalSkill;
+    skill: PedalSkill[];
      moveSpeed: number; moveTime: number; moveDistance: number; }> = {
         // 基础踏板PEDAL1
     [PedalType.PEDAL1]: {
@@ -117,7 +118,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 200,
         /** 技能 */
-        skill: PedalSkill.NONE,
+        skill: [PedalSkill.NONE],
         /** 移动速度 */
         moveSpeed: 0,
         /** 移动时间 */
@@ -138,7 +139,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 250,
         /** 技能 */
-        skill: PedalSkill.NONE,
+        skill: [PedalSkill.NONE],
         /** 移动速度 */
         moveSpeed: 0,
         /** 移动时间 */
@@ -159,7 +160,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 600,
         /** 技能 */
-        skill: PedalSkill.NONE,
+        skill: [PedalSkill.NONE],
         /** 移动速度 */
         moveSpeed: 0,
         /** 移动时间 */
@@ -180,7 +181,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 350,
         /** 技能 */
-        skill: PedalSkill.FRACTURE,
+        skill: [PedalSkill.FRACTURE],
         /** 移动速度 */
         moveSpeed: 0,
         /** 移动时间 */
@@ -201,75 +202,12 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 350,
         /** 技能 */
-        skill: PedalSkill.NONE,
+        skill: [PedalSkill.NONE],
         /** 移动速度 */
         moveSpeed: 100,
         /** 移动时间 */
         moveTime: 1,
         /** 移动距离 */         
         moveDistance: 200,
-    },
-    // 金币踏板GOLD_PEDAL
-    [PedalType.GOLD_PEDAL]: {
-        /** 跳跃力度 */
-        jumpForce: 600,
-        /** 跳跃速度 */
-        jumpSpeed: 1.45,
-        /** 重力加速度 */
-        _gravity: -2000,
-        /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 250,
-        /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 350,
-        /** 技能 */
-        skill: PedalSkill.NONE,
-        /** 移动速度 */
-        moveSpeed: 0,
-        /** 移动时间 */
-        moveTime: 0,
-        /** 移动距离 */     
-        moveDistance: 0,
-    },
-    // 尖刺踏板SPIKE_PEDAL
-    [PedalType.SPIKE_PEDAL]: {
-        /** 跳跃力度 */
-        jumpForce: 600,
-        /** 跳跃速度 */
-        jumpSpeed: 1.45,
-        /** 重力加速度 */
-        _gravity: -2000,
-        /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 250,
-        /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 350,
-        /** 技能 */
-        skill: PedalSkill.NONE,
-        /** 移动速度 */
-        moveSpeed: 0,
-        /** 移动时间 */
-        moveTime: 0,
-        /** 移动距离 */ 
-        moveDistance: 0,
-    },
-    // 弹簧踏板SPRING_PEDAL
-    [PedalType.SPRING_PEDAL]: {
-        /** 跳跃力度 */
-        jumpForce: 1000,
-        /** 跳跃速度 */
-        jumpSpeed: 0.5,
-        /** 重力加速度 */
-        _gravity: -2000,
-        /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 600,
-        /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 800,
-        /** 技能 */
-        skill: PedalSkill.SPRING,
-        /** 移动速度 */
-        moveSpeed: 0,
-        /** 移动时间 */
-        moveTime: 0,
-        /** 移动距离 */     
-        moveDistance: 0,
     },
 };

@@ -64,6 +64,8 @@ export class Game extends BaseNodeCom {
         EventManager.off(EventName.Game.ContinueGame, this.evtContinueGame, this);
         EventManager.off(EventName.Game.Pause, this.evtPause, this);
         EventManager.off(EventName.Game.Resume, this.evtResume, this);
+        EventManager.off(EventName.Game.GameOver, this.GameOver, this);
+        EventManager.off(EventName.Game.RestartGame, this.evtRestartGame, this);
 
     }
     /**
@@ -150,6 +152,8 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.Resume, this.evtResume, this);
         /** 重新开始游戏 */
         EventManager.on(EventName.Game.RestartGame, this.evtRestartGame, this);
+        /** 游戏结束 */
+        EventManager.on(EventName.Game.GameOver, this.GameOver, this);
     }
 
     evtPause() {
@@ -251,8 +255,9 @@ export class Game extends BaseNodeCom {
             const pedalComponent = bestPedal.getComponent(Pedal);
             if (pedalComponent) {
                 this.heroCom.setGrounded(true, pedalComponent);
-                this.heroCom.performJump(pedalComponent);
                 pedalComponent.releaseSkill();
+                this.heroCom.performJump(pedalComponent);
+                
             }
         }
     }
@@ -270,9 +275,6 @@ export class Game extends BaseNodeCom {
         this.loadExtraData(GameData.nextLevel());
         
     }
-
-
-
 
     /**
      * 继续游戏
@@ -353,7 +355,7 @@ export class Game extends BaseNodeCom {
         
         // 2. 清理踏板
         if (this.pedalManagerCom) {
-            this.pedalManagerCom.recycleAllPedals();
+            this.pedalManagerCom.init();
             // 重新初始化踏板生成状态
             await this.pedalManagerCom.loadPedalConfig();
         }
@@ -374,11 +376,6 @@ export class Game extends BaseNodeCom {
         
         // 5. 重新加载关卡数据（如果有需要）
         await this.loadExtraData(GameData.getCurLevel());
-        
-        // 6. 重新绑定 Hero 给 PedalManager (如果需要)
-        if (this.pedalManagerCom && this.heroCom) {
-            this.pedalManagerCom.setHero(this.heroCom.node);
-        }
 
         // 7. 播放背景音乐（如果停止了）
         AudioManager.getInstance().playMusic('background1', true);

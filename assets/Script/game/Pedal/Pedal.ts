@@ -1,9 +1,11 @@
-import { _decorator, Component, Node, UITransform, Vec3, tween, Tween } from 'cc';
-import { PedalType, PedalSkill, Constant } from '../../Tools/enumConst';
+import { _decorator, Component, Node, UITransform, Vec3, Enum } from 'cc';
+import { PedalType, PedalSkill } from '../../Tools/enumConst';
+import EventManager from '../../Common/view/EventManager';
+import { EventName } from '../../Tools/eventName';
+import GameData from '../../Common/GameData';
+
 const { ccclass, property } = _decorator;
 
-
-  
 @ccclass('Pedal')
 export class Pedal extends Component {
     
@@ -30,11 +32,16 @@ export class Pedal extends Component {
     @property
     public _gravity: number = -2000;
     
-    @property
-    public skill: PedalSkill = PedalSkill.NONE;
+    @property({ type: [Enum(PedalSkill)] })
+    public skills: PedalSkill[] = [PedalSkill.NONE];
     
     /** 踏板ID 就是层数*/
     public layer: number = 0;
+
+    /** 原始跳跃力度（无技能） */
+    private _originalJumpForce: number = 0;
+    /** 原始重力加速度（无技能） */
+    private _originalGravity: number = 0;
 
     /**
      * 生命周期：组件加载
@@ -42,9 +49,7 @@ export class Pedal extends Component {
      */
     onLoad() {
         this._uiTransform = this.getComponent(UITransform);
-
     }   
-
 
     /**
      * 生命周期：首次启用
@@ -95,13 +100,23 @@ export class Pedal extends Component {
      * @param jumpSpeed 提供的跳跃速度 (上升时间)
      * @param _gravity 提供的重力加速度
      */
-    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, _gravity: number = -2000) {
+    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, _gravity: number = -2000, type: PedalType = PedalType.WOOD) {
         this.node.position = position;
         this.node.active = true;
         this.jumpForce = jumpForce;
         this.jumpSpeed = jumpSpeed;
         this._gravity = _gravity;
+        this.setType(type);
+        
+        // 记录原始属性（因为后续可能会被技能修改）
+        this._originalJumpForce = jumpForce;
+        this._originalGravity = _gravity;
 
+        // 初始化技能
+        this.skills = [];
+        if (this._type === PedalType.FRACTURE_PEDAL) {
+            this.addSkill([PedalSkill.FRACTURE]);
+        }
     }
     
     /**
@@ -114,7 +129,16 @@ export class Pedal extends Component {
 
     }
     
-    
+    /** 添加技能
+     * @param skill 技能
+     */
+    addSkill(skill: PedalSkill[]) {
+        for (const s of skill) {
+            if (this.skills.indexOf(s) === -1) {
+                this.skills.push(s);
+            }
+        }
+    }
     
     /**
      * 获取踏板高度（像素）
@@ -134,11 +158,75 @@ export class Pedal extends Component {
         this.layer = layer;
     }
    /** 释放技能
-    * @param pedal 踏板
-    */
+     * @param pedal 踏板
+     */
     releaseSkill() {
+        if (!this.skills || this.skills.length === 0) return;
+
+        for (const skill of this.skills) {
+            
+            switch (skill) {
+                case PedalSkill.SPRING:
+                    // 弹簧跳跃高度
+                    console.log("Triggered SPRING skill");
+                    this.applySpringEffect();
+                    break;
+                case PedalSkill.LOW_GRAVITY:
+                    // 降低重力
+                    console.log("Triggered LOW_GRAVITY skill");
+                    // 恢复原始重力
+                    this._gravity = this._originalGravity;
+                    break;
+                case PedalSkill.FRACTURE:
+                    // 断裂效果
+                    console.log("Triggered FRACTURE skill");
+                    // 延迟一秒后释放技能（发送释放对象消息）
+                    this.scheduleOnce(this.releaseObject, 1.0);
+                    break;
+                case PedalSkill.GOLD:
+                    // 金币效果
+                    console.log("Triggered GOLD skill");
+                    this.getGoldSkill();
+                case PedalSkill.SPIKE:
+                    // 尖刺效果
+                    console.log("Triggered SPIKE skill");
+                    this.applySpikeEffect();
+                    break;
+                case PedalSkill.NONE:
+                default:
+                    break;
+            }
+        }
+        
+        // 释放后清空技能（一次性效果）
+        this.skills = [];
+    }
+    //尖刺 效果 玩家死亡游戏结束
+    applySpikeEffect() {
+        // 玩家死亡
+        EventManager.emit(EventName.Game.GameOver);
     }
 
+    //获得金币技能
+    private getGoldSkill() {
+        // 增加金币数量
+        GameData.addGold(100);
+    }
+
+    // 弹簧跳跃一次
+    private applySpringEffect() {
+        // 增加跳跃力度
+        this.jumpForce *= 6.5;
+        // 增加跳跃速度
+        this.jumpSpeed *= 0.8;
+    }
+
+    private releaseObject() {
+        if (!this.node || !this.node.isValid) return;
+        EventManager.emit(EventName.Game.ReleaseObject, this.node);
+    }
+
+    protected onDisable(): void {
+        this.unschedule(this.releaseObject);
+    }
 }
-
-

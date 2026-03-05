@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat, UITransform } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { App } from '../../Controller/app';
-import { PedalType, Constant, PedalDefaults } from '../../Tools/enumConst';
+import { PedalType, Constant, PedalDefaults, PedalSkill } from '../../Tools/enumConst';
 import { Pedal } from '../Pedal/Pedal';
 import GameData from '../../Common/GameData';
 import EventManager from '../../Common/view/EventManager';
@@ -74,11 +74,18 @@ export class pedalManager extends Component {
     }
 
     init() {
+        this.recycleAllPedals();
+
         this.NewlayerS = 0;
-        this.setHero(this.hero);
+        this.HerolayerS = 0;
         this.HeroRice = 0;
         this.PedalRice = 0;
+        this.tempAllRice = 0;
         this._lastPedalType = PedalType.WOOD;
+        
+        if (this.hero) {
+            this.setHero(this.hero);
+        }
     }
     
     start() {
@@ -239,42 +246,19 @@ export class pedalManager extends Component {
         this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity);
     }
 
-    /**
-     * 在指定位置生成踏板
-     * @param type 踏板类型
-     * @param position 踏板位置
-     * @param jumpForce 提供的跳跃力度
-     * @param jumpSpeed 提供的跳跃速度 (上升时间)
-     * @param _gravity 提供的重力加速度
-     */
-    public spawnPedalAt(type: PedalType, position: Vec3, jumpForce: number, jumpSpeed: number, _gravity: number): Node | null {
-        const pedalNode = this.getPedalFromPool(type);
-        if (!pedalNode) return null;
+    /**随机pedal的skill
+    * @param type 踏板类型
+    */
+    private RandomSkill(): PedalSkill[] {
+        // 获取所有技能值
+        const skillValues = Object.keys(PedalSkill).map(k => (PedalSkill as any)[k]);
         
-        this.node.addChild(pedalNode);
-        pedalNode.setPosition(position);
-        pedalNode.active = true;
+        // 过滤掉 FRACTURE 技能
+        const filteredSkills = skillValues.filter(skill => skill !== PedalSkill.FRACTURE);
         
-        // 初始化踏板的物理属性
-        const pedalComponent = pedalNode.getComponent(Pedal);
-        if (pedalComponent) {
-            pedalComponent.init(position, jumpForce, jumpSpeed, _gravity);
-            pedalComponent.skill = PedalDefaults[type].skill;
-        }
-
-        const deltaY = position.y - this._lastPedalPosition.y;
-        if (deltaY > 0) {
-            this.PedalRice += deltaY;
-        }
-
-        // 更新上一个踏板位置记录
-        this._lastPedalPosition.set(position);
-        this._lastPedalType = type;
-        
-        this._activePedals.push(pedalNode);
-        return pedalNode;
+        const randomIndex = Math.floor(Math.random() * filteredSkills.length);
+        return [filteredSkills[randomIndex]];
     }
-
     /**
      * 添加踏板到管理器 (随机位置)
      * @param type 踏板类型
@@ -291,8 +275,11 @@ export class pedalManager extends Component {
         // 初始化踏板的物理属性
         const pedalComponent = pedalNode.getComponent(Pedal);
         if (pedalComponent) {
-            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, _gravity);
-            pedalComponent.skill = PedalDefaults[type].skill;
+            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, _gravity,type);
+            // 随机生成技能
+            const skills = this.RandomSkill();
+            pedalComponent.addSkill(skills);
+            
             pedalComponent.setLayer(this.NewlayerS);
             // 如果是移动踏板，启动移动 (在位置设置后调用，这里先准备参数，实际在 setPedalPosition 后生效可能更好，
             // 但 startMove 使用的是当前位置作为基准，所以必须在 setPedalPosition 之后调用)
@@ -324,7 +311,7 @@ export class pedalManager extends Component {
      */
     public async initPools(): Promise<void> {
         // 加载所有踏板预制体
-        const pedalTypes = Object.values(PedalType).filter(value => typeof value === 'string') as PedalType[];
+        const pedalTypes = Object.keys(PedalType).map(key => PedalType[key as keyof typeof PedalType]);
         for (const type of pedalTypes) {
             const prefabPath = `prefab/Pedal/${type}`; // 踏板类型与预制体名称一致
             const prefab = await LoaderManeger.instance.loadPrefab(prefabPath);
@@ -343,7 +330,7 @@ export class pedalManager extends Component {
                 const pedalComponent = pedalNode.getComponent(Pedal);
                 if (pedalComponent) {
                     pedalComponent.setType(type);
-                    pedalComponent.init(v3(0, 0, 0));
+                    pedalComponent.init(v3(0, 0, 0), 600, 1.45, -2000, type);
                 }
                 pool.put(pedalNode);
             }
@@ -411,7 +398,7 @@ export class pedalManager extends Component {
         const pedalComponent = pedalNode.getComponent(Pedal);
         if (pedalComponent) {
             pedalComponent.setType(type);
-            pedalComponent.init(v3(0, 0, 0));
+            pedalComponent.init(v3(0, 0, 0), 600, 1.45, -2000, type);
         }
 
         return pedalNode;
@@ -426,9 +413,6 @@ export class pedalManager extends Component {
         if (typeName === PedalType.CLOUD) return PedalType.CLOUD;
         if (typeName === PedalType.FRACTURE_PEDAL) return PedalType.FRACTURE_PEDAL;
         if (typeName === PedalType.MOVE_PEDAL) return PedalType.MOVE_PEDAL;
-        if (typeName === PedalType.SPIKE_PEDAL) return PedalType.SPIKE_PEDAL;
-        if (typeName === PedalType.GOLD_PEDAL) return PedalType.GOLD_PEDAL;
-        if (typeName === PedalType.SPRING_PEDAL) return PedalType.SPRING_PEDAL;
         return PedalType.WOOD;  
     }
     
