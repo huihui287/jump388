@@ -133,6 +133,11 @@ export class Pedal extends Component {
     setLayer(layer: number) {
         this.layer = layer;
     }
+   /** 释放技能
+    * @param pedal 踏板
+    */
+    releaseSkill() {
+    }
 
 }
 

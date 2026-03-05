@@ -1,5 +1,6 @@
-import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat } from 'cc';
+import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat, UITransform } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
+import { App } from '../../Controller/app';
 import { PedalType, Constant, PedalDefaults } from '../../Tools/enumConst';
 import { Pedal } from '../Pedal/Pedal';
 import GameData from '../../Common/GameData';
@@ -56,6 +57,7 @@ export class pedalManager extends Component {
     /** 起始 Y 坐标，用于计算偏移 */
     private startY: number = 0;
     private _configReady: boolean = false;
+    private _poolsReady: boolean = false;
 
     /**
      * 设置 Hero 引用
@@ -86,7 +88,8 @@ export class pedalManager extends Component {
     private tempAllRice: number = 0;
 
     update(deltaTime: number) {
-        if (this._configReady && this.hero) {
+        if (App.gameCtr.isPause) return;
+        if (this._configReady && this._poolsReady && this.hero) {
             // 计算当前高度差 (AllRice)
             // 假设 1 像素 = 1 米 (或者按需缩放，例如 / 10)
             this.tempAllRice = this.hero.position.y - this.startY;
@@ -140,7 +143,14 @@ export class pedalManager extends Component {
     async loadtPools() {
       // 确保对象池已初始化
         if (this._pedalPools.size === 0) {
-            await this.initPools();
+            try {
+                await this.initPools();
+                this._poolsReady = true;
+            } catch (error) {
+                console.error("Failed to initialize pools:", error);
+            }
+        } else {
+            this._poolsReady = true;
         }
     }
     /**
@@ -416,6 +426,9 @@ export class pedalManager extends Component {
         if (typeName === PedalType.CLOUD) return PedalType.CLOUD;
         if (typeName === PedalType.FRACTURE_PEDAL) return PedalType.FRACTURE_PEDAL;
         if (typeName === PedalType.MOVE_PEDAL) return PedalType.MOVE_PEDAL;
+        if (typeName === PedalType.SPIKE_PEDAL) return PedalType.SPIKE_PEDAL;
+        if (typeName === PedalType.GOLD_PEDAL) return PedalType.GOLD_PEDAL;
+        if (typeName === PedalType.SPRING_PEDAL) return PedalType.SPRING_PEDAL;
         return PedalType.WOOD;  
     }
     
@@ -555,42 +568,62 @@ export class pedalManager extends Component {
         return this._activePedals[0];
     }
     /**
-     * 获取离目标节点最近的踏板
+     * 获取与目标节点发生碰撞的最佳踏板
      * @param targetNode 目标节点
-     * @returns 离目标节点最近的踏板节点，如果没有活跃踏板则返回 null
+     * @returns 碰撞的踏板节点，如果没有则返回 null
      */
-    public getClosestPedal(targetNode: Node): Node | null {
-        if (!targetNode) {
-            console.warn("getClosestPedal: targetNode is null.");
-            return null;
-        }
+    public getCollisionPedal(targetNode: Node): Node | null {
+        if (!targetNode) return null;
 
         const activePedals = this.getAllActivePedals();
-        if (activePedals.length === 0) {
-            return null;
-        }
-
-        let closestPedal: Node  = null;
-        let minDistanceSqr = Infinity;
         const targetPos = targetNode.worldPosition;
+        const targetUI = targetNode.getComponent(UITransform);
+        if (!targetUI) return null;
+
+        const targetBottomY = targetPos.y - targetUI.height * targetUI.anchorY;
+        const targetLeftX = targetPos.x - targetUI.width * targetUI.anchorX;
+        const targetRightX = targetPos.x + targetUI.width * (1 - targetUI.anchorX);
+
+        let bestPedal: Node | null = null;
+        let bestPedalY = -Infinity;
+
+        const collisionThreshold = 10;
+        const maxPenetration = targetUI.height;
 
         for (const pedalNode of activePedals) {
             const pedalPos = pedalNode.worldPosition;
             
-            // 优化性能：排除在目标节点上方的踏板
-            if (pedalPos.y >= targetPos.y) {
-                continue;
-            }
+            // 快速 Y 轴过滤
+            if (pedalPos.y > targetPos.y + collisionThreshold) continue;
+            if (pedalPos.y < targetPos.y - maxPenetration - 100) continue;
 
-            const distanceSqr = Vec3.distance(targetPos, pedalPos);
+            const pedalUI = pedalNode.getComponent(UITransform);
+            if (!pedalUI) continue;
 
-            if (distanceSqr < minDistanceSqr) {
-                minDistanceSqr = distanceSqr;
-                closestPedal = pedalNode;
+            // 精确 Y 轴判定 (基于踏板顶部)
+            // 默认锚点 0.5，如锚点不同需 pedalUI.anchorY 参与计算
+            // 此处沿用 Game.ts 中的假设：pedalTopY = y + height/2
+            const pedalTopY = pedalPos.y + pedalUI.height * (1 - pedalUI.anchorY);
+
+            if (targetBottomY > pedalTopY + collisionThreshold) continue;
+            if (targetBottomY < pedalTopY - maxPenetration) continue;
+
+            // X 轴重叠检测
+            const pedalLeftX = pedalPos.x - pedalUI.width * pedalUI.anchorX;
+            const pedalRightX = pedalPos.x + pedalUI.width * (1 - pedalUI.anchorX);
+
+            const isXOverlap = Math.max(targetLeftX, pedalLeftX) < Math.min(targetRightX, pedalRightX);
+
+            if (isXOverlap) {
+                // 优先选择位置最高的踏板 (最先接触)
+                if (pedalTopY > bestPedalY) {
+                    bestPedalY = pedalTopY;
+                    bestPedal = pedalNode;
+                }
             }
         }
 
-        return closestPedal;
+        return bestPedal;
     }
 
 }

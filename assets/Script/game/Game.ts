@@ -71,7 +71,7 @@ export class Game extends BaseNodeCom {
      * 初始化UI引用、绑定事件、加载游戏数据
      * @description 游戏启动时的初始化方法，设置游戏状态和加载必要资源
      */
-    onLoad() {
+    async onLoad() {
         // 调用父类的onLoad方法
         super.onLoad();
         // 播放背景音乐
@@ -79,11 +79,11 @@ export class Game extends BaseNodeCom {
 
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
         this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
-        
+
         this.pedalManagerCom = this.viewList.get('center/pedalManager').getComponent(pedalManager);
         this.pedalManagerCom.setHero(this.heroCom.node);
-        this.pedalManagerCom.loadtPools();
-        this.pedalManagerCom.loadPedalConfig();
+        await this.pedalManagerCom.loadtPools();
+        await this.pedalManagerCom.loadPedalConfig();
         
         this.setCameraTarget();
         this.loadExtraData(GameData.getCurLevel());
@@ -244,44 +244,15 @@ export class Game extends BaseNodeCom {
         if (!this.heroCom.isFalling()) return;
 
         const heroNode = this.heroCom.node;
-        const heroPos = heroNode.worldPosition;
-        const heroUITransform = this.heroCom.getUiTransform();
-        if (!heroUITransform) return;
+        // 获取最佳碰撞踏板
+        const bestPedal = this.pedalManagerCom.getCollisionPedal(heroNode);
 
-        const heroBottomY = heroPos.y - heroUITransform.height * heroUITransform.anchorY;
-
-        // 使用pedalManager的getClosestPedal方法获取最近的踏板
-        const closestPedal: Node = this.pedalManagerCom.getClosestPedal(heroNode);
-
-        if (closestPedal) {
-            const closestPedalPos = closestPedal.worldPosition;
-            const closestPedalComponent = closestPedal.getComponent(Pedal);
-            if (!closestPedalComponent) return;
-
-            const closestPedalWidth = closestPedalComponent.getPedalWidth();
-            const closestPedalHeight = closestPedalComponent.getPedalHeight();
-            
-            // 默认踏板锚点为 (0.5, 0.5)
-            const closestPedalTopY = closestPedalPos.y + closestPedalHeight / 2;
-
-            // 简单的AABB碰撞检测（只考虑Y轴和X轴重叠）
-            // 计算 Hero 的左右边界 (考虑锚点)
-            const heroAnchorX = heroUITransform.anchorX;
-            const heroLeftX = heroPos.x - heroUITransform.width * heroAnchorX;
-            const heroRightX = heroPos.x + heroUITransform.width * (1 - heroAnchorX);
-
-            // 计算踏板的左右边界 (默认锚点 0.5)
-            const pedalLeftX = closestPedalPos.x - closestPedalWidth / 2;
-            const pedalRightX = closestPedalPos.x + closestPedalWidth / 2;
-
-            const isXOverlap = Math.max(heroLeftX, pedalLeftX) < Math.min(heroRightX, pedalRightX);
-
-            // 如果Hero底部即将接触到踏板顶部，并且X轴有重叠
-            // 这里可以设置一个小的容错值，避免浮点数误差
-            const collisionThreshold = 1; // 允许Hero底部稍微低于踏板顶部一点点
-            if (isXOverlap && heroBottomY <= closestPedalTopY + collisionThreshold && heroBottomY >= closestPedalTopY - heroUITransform.height) {
-                this.heroCom.setGrounded(true, closestPedalComponent);
-                this.heroCom.applyPedalSkill(closestPedalComponent);
+        if (bestPedal) {
+            const pedalComponent = bestPedal.getComponent(Pedal);
+            if (pedalComponent) {
+                this.heroCom.setGrounded(true, pedalComponent);
+                this.heroCom.performJump(pedalComponent);
+                pedalComponent.releaseSkill();
             }
         }
     }

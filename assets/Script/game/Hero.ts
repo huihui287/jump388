@@ -1,4 +1,5 @@
 import { _decorator, Node, Component, Vec3, v3, sp, UITransform, tween, Tween } from 'cc';
+import { App } from '../Controller/app';
 import StateMachine, { IState } from '../Common/StateMachine';
 import CM from '../channel/CM';
 import { JoystickControl } from './JoystickControl';
@@ -266,6 +267,7 @@ export class Hero extends Component {
     }
 
     update(deltaTime: number) {
+        if (App.gameCtr.isPause) return;
         // 根据开关选择输入源
         if (this.useJoystick && this.joystick) {
             this.updateJoystickMove(deltaTime);
@@ -359,11 +361,25 @@ export class Hero extends Component {
 
         // 下落阶段采用物理计算，增加下落速度
         const dt = Math.min(deltaTime, 0.033); 
+        
+        // 增加下落速度限制 (Terminal Velocity)
+        // 假设 Hero 高度约 50-100，每帧最大位移不应超过这个值
+        // -2000 的重力下，速度可能达到 -1000 以上
+        // 限制最大下落速度为 -1500 (约 45px/帧 @ 30fps)，防止穿透
+        const MAX_FALL_SPEED = -1500;
+        
         this._jumpVelocity += this._currentGravity * dt; // 使用当前踏板的重力
+        
+        if (this._jumpVelocity < MAX_FALL_SPEED) {
+            this._jumpVelocity = MAX_FALL_SPEED;
+        }
 
         // 应用位移 (本地坐标)
         const pos = this.node.position;
-        this._tempPosition.set(pos.x, pos.y + this._jumpVelocity * dt, pos.z);
+        // 计算这一帧的位移
+        const deltaY = this._jumpVelocity * dt;
+        
+        this._tempPosition.set(pos.x, pos.y + deltaY, pos.z);
         this.node.setPosition(this._tempPosition);
     }
 
@@ -410,28 +426,6 @@ export class Hero extends Component {
             .start();
     }
     
-    /**
-     * 应用踏板技能
-     * @param pedal 触发的踏板
-     */
-    public applyPedalSkill(pedal: Pedal): void {
-        if (pedal.skill === PedalSkill.BOOST) {
-            this._pendingJumpBoost = 300;
-        }
-        if (pedal.skill === PedalSkill.LOW_GRAVITY) {
-            this._currentGravity = pedal._gravity * 0.5;
-        } else {
-            this._currentGravity = pedal._gravity;
-        }
-
-        this.performJump(pedal);
-        
-        if (pedal.skill === PedalSkill.BREAK) {
-            EventManager.emit(EventName.Game.ReleaseObject, pedal.node);
-        }
-
-    }
-
     /**
      * 判断是否正在执行向上跳跃的 Tween
      */
