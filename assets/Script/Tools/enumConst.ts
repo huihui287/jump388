@@ -103,6 +103,8 @@ export enum PedalSkill {
     SPIKE = 'spike',
     //金币堆
     GOLD = 'goldPedal',
+    //护盾
+    SHIELD = 'shieldPedal'
 }
 
 /** 技能权重配置 (可在代码中灵活修改) */
@@ -113,6 +115,7 @@ export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.SPIKE]: 1,         // 尖刺
     [PedalSkill.GOLD]: 20,         // 金币
     [PedalSkill.FRACTURE]: 0,      // 断裂通常不通过随机生成，而是由踏板类型决定
+    [PedalSkill.SHIELD]: 500,      // 护盾
 };
 
 // /** 踏板类型字符串标识 */

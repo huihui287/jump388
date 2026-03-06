@@ -38,17 +38,20 @@ export class pedalManager extends Component {
 
     /** 所有Rice的比例 */
     private AllRiceBei: number = 100;
+
+
+    ///////////////////////////////////////////////////////////////////////////
     
     /** 对应 Rice 里程碑的踏板类型数组（字符串，来源于 JSON） */
     private pedalSype: string[] = [];
-
-    ///////////////////////////////////////////////////////////////////////////
-
     /** 层数配置 */
     private layer: number[] = [];
 
     /** 生成了的层数 */
     private NewlayerS: number = 0;
+
+    /** 需要生成所有层的数量 */
+    private AlllayerNum: number = 0;
     /////////////////////////////////////////////////////////////////////////////////
     /** Hero 引用，用于计算 AllRice */
     private hero: Node | null = null;
@@ -76,6 +79,7 @@ export class pedalManager extends Component {
 
     init() {
         this.recycleAllPedals();
+        this._configReady = false;
 
         this.NewlayerS = 0;
         this.HeroRice = 0;
@@ -178,11 +182,13 @@ export class pedalManager extends Component {
                 const layerData = config.json.layerS[0];
                 this.layer = layerData.layer || [];
                 this.pedalSype = layerData.pedalSype || [];
-                console.log("Loaded layer config:", this.layer, this.pedalSype); 
+                this.AlllayerNum = layerData.AlllayerNum || 0;
+                console.log("Loaded layer config:", this.layer, this.pedalSype, this.AlllayerNum); 
             } else {
                 console.warn("layerS config not found or empty, using defaults.");
                 this.layer = [1000, 2000];
                 this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
+                this.AlllayerNum = 2;
             }
 
             // 开始初始生成
@@ -193,6 +199,7 @@ export class pedalManager extends Component {
             // Fallback
             this.layer = [1000, 2000];
             this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
+            this.AlllayerNum = 2;
 
             this._configReady = true;
         }
@@ -203,6 +210,11 @@ export class pedalManager extends Component {
      * 当最后一个踏板距离 屏幕上面的距离 不够远时，继续生成
      */
     private checkAndSpawnPedals() {
+        // 如果生成的层数已经达到总层数，停止生成
+        if (this.NewlayerS >= this.AlllayerNum) {
+            return;
+        }
+
         const spawnThreshold = Constant.Height * 0.8;
         if (!this.hero) return;
         const visibleTopY = this.hero.position.y + Constant.Height / 2;
@@ -654,6 +666,29 @@ export class pedalManager extends Component {
         return bestPedal;
     }
 
+    /**
+     * 获取最后一个生成的踏板（最上面的踏板）
+     * @returns 最后一个活跃踏板节点，如果没有活跃踏板则返回 null
+     */
+    public getLastPedal(): Node | null {
+        if (this._activePedals.length === 0) return null;
+        return this._activePedals[this._activePedals.length - 1];
+    }
+
+    /**
+     * 检查是否已完成所有踏板的生成
+     */
+    public isFinished(): boolean {
+        return this._configReady && this.NewlayerS >= this.AlllayerNum;
+    }
+
+    /**
+     * 获取所有踏板的层数
+     * @returns 所有踏板的层数
+     */
+    public getAlllayerNum(): number {
+        return this.AlllayerNum;
+    }
 }
 
 

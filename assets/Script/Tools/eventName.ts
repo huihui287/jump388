@@ -33,6 +33,10 @@ export namespace EventName {
         ShortcutAdded = "ShortcutAdded",
 
         ReleaseObject = "ReleaseObject",
-    }
 
+        /** 获得护盾 */
+        GetShield = "GetShield",
+        /** 触发尖刺 */
+        HitSpike = "HitSpike",
+    }
 }

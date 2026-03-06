@@ -193,6 +193,11 @@ export class Pedal extends Component {
                     console.log("Triggered SPIKE skill");
                     this.applySpikeEffect();
                     break;
+                case PedalSkill.SHIELD:
+                    // 护盾效果
+                    console.log("Triggered SHIELD skill");
+                    this.applyShieldEffect();
+                    break;
                 case PedalSkill.NONE:
                 default:
                     break;
@@ -203,10 +208,17 @@ export class Pedal extends Component {
         this.skills = [];
     }
     
+    // 获得护盾
+    applyShieldEffect() {
+        EventManager.emit(EventName.Game.GetShield);
+    }
+    
     //尖刺 效果 玩家死亡游戏结束
     applySpikeEffect() {
         // 玩家死亡
-        EventManager.emit(EventName.Game.GameOver);
+        // EventManager.emit(EventName.Game.GameOver);
+        // 改为发送 HitSpike 消息，由 Game 判断是否有护盾
+        EventManager.emit(EventName.Game.HitSpike);
     }
 
     //获得金币技能

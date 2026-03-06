@@ -492,13 +492,28 @@ export default class ViewManager extends Component {
         });
     }
 
-    static showGameOver() {
+    static showGameOver(data?: any) {
         // 金币不足
         LoaderManeger.instance.loadPrefab('prefab/ui/gameOver').then((prefab) => {
             let gameOver = instantiate(prefab);
             ViewManager.show({
                 node: gameOver,
-                name: "GameOver"
+                name: "GameOver",
+                data: data // 传递数据
+            });
+        });
+    }
+
+    /**
+     * 显示游戏胜利界面
+     */
+    static showGameWinView() {
+        // 金币不足
+        LoaderManeger.instance.loadPrefab('prefab/ui/gameWin').then((prefab) => {
+            let gameWin = instantiate(prefab);
+            ViewManager.show({
+                node: gameWin,
+                name: "GameWin"
             });
         });
     }

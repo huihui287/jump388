@@ -14,12 +14,11 @@ import ViewManager from '../Common/view/ViewManager';
 import LoaderManeger from '../sysloader/LoaderManeger';
 const { ccclass, property } = _decorator;
 
+// 游戏胜利界面
 @ccclass('gameOver')
-export class gameOver extends BaseDialog  {
-    private isWin: boolean = false;
+export class gameOver extends BaseDialog {
     private level: number = 0;
     private goldnum: number = 0;
-    private rewardBombs: {type: number, count: number}[] = [];
 
     goldnumlb: Node = null;
     onLoad() {
@@ -33,7 +32,7 @@ export class gameOver extends BaseDialog  {
 
     setData(data: any) {
         super.setData(data);
-        
+
         // 如果 viewList 已经初始化，立即处理数据
         if (this.viewList.size > 0) {
             this.handleData();
@@ -42,52 +41,17 @@ export class gameOver extends BaseDialog  {
 
     private handleData() {
         if (!this._data) return;
-        
-        let { level, isWin, rewardBombs } = this._data;
-        this.level = level;
-        this.rewardBombs = rewardBombs || [];
-        this.isWin = isWin;
-        
-        if (isWin) {
-            AudioManager.getInstance().playSound('win');
-        } else {
-            AudioManager.getInstance().playSound('lose');
-        }
-        
-        this.viewList.get('animNode/win').active = isWin;
-        this.viewList.get('animNode/lose').active = !isWin;
-        this.goldnumlb = this.viewList.get('animNode/win/coin8/goldnumlb');
-        if (isWin) {
-            if (CM.mainCH) {
-                CM.mainCH.setImRankData_Num(GameData.getCurLevel());
-            }
-            if (CM.mainCH) {
-                CM.mainCH.setUserCloudStorage(GameData.getCurLevel());
-            }
-            this.handleWin(this.rewardBombs);
-        } else {
-            this.handleLose();
-        }
-    }
-    
-    showgoldnum() {
-        // 2026-01-22: 利用 MaxLevel 判断首通奖励
-        // 逻辑：如果当前通关的等级 >= 历史最大解锁等级，说明是首通（因为结算时尚未更新 MaxLevel）
-        const maxLv = GameData.getMaxLevel();
-        if (this.level >= maxLv) {
-            // 首通奖励
-            this.goldnum = 200;
-        } else {
-            // 重复通关奖励（根据需求设为0）
-            this.goldnum = 1;
-        }
-        
-        // this.goldnum = 100 * GameData.loadData(GameData.Level, 1);
-        this.goldnumlb.getComponent(Label).string = this.goldnum.toString();
-    }
 
-    handleLose() {
-        // 失败处理逻辑
+        this.level = GameData.getCurLevel();
+
+        AudioManager.getInstance().playSound('win');
+
+        if (CM.mainCH) {
+            CM.mainCH.setImRankData_Num(GameData.getCurLevel());
+        }
+        if (CM.mainCH) {
+            CM.mainCH.setUserCloudStorage(GameData.getCurLevel());
+        }
     }
     
     onClick_NextLevelBtn() {
@@ -95,10 +59,6 @@ export class gameOver extends BaseDialog  {
         // 发送事件
         EventManager.emit(EventName.Game.NextLevel);
         this.dismiss();
-    }
-
-    handleWin(rewardBombs: {type: number, count: number}[]) {
-        this.showgoldnum();
     }
 
     onClick_continueVideoBtn() {
@@ -140,14 +100,15 @@ export class gameOver extends BaseDialog  {
     }
 
     onClick_guanbiBtn() {
-        if (this.isWin) {
-            if (this.level == GameData.getCurLevel()) {
-                GameData.nextLevel();
-            }
+
+        if (this.level == GameData.getCurLevel()) {
+            GameData.nextLevel();
         }
+
         GameData.addGold(this.goldnum);
         this.dismiss();
     }
+
     onClick_RestartGameBtn() {
         AudioManager.getInstance().playSound('button_click');
         EventManager.emit(EventName.Game.RestartGame);

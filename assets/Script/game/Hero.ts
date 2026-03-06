@@ -224,13 +224,25 @@ export class Hero extends Component {
     private _pendingJumpBoost: number = 0;
     ///////////////////////////////////////////////////////////////////////////
 
-
+ /** 出生位置 */
+    private _spawnPosition: Vec3 = v3();
         //////////////////////////////////////////////////////////////////////
     /** Hero已经踩多少层数 */
     private HerolayerS: number = 0;
     //////////////////////////////////////////////////////////////////////
     
+    /////////////////////////////////////////////
+    //护盾技能Icon
+    @property(Node)
+    private ShieldSkillIcon: Node = null;
+   
+    /** 是否有护盾技能 */
+    private isShieldSkill: boolean = false;
+
+    //////////////////////////////////////////////
     protected onLoad(): void {
+        this.setSpawnPosition(this.node.position);
+        this.reset();
         this.Refresh();
         this.initStateMachine();
         this._uiTransform = this.getComponent(UITransform);
@@ -239,6 +251,33 @@ export class Hero extends Component {
         if (!this.useJoystick) {
             this.initGyroscope();
         }
+
+        // 监听获得护盾事件
+        EventManager.on(EventName.Game.GetShield, this.onGetShield, this);
+    }
+
+    protected onDestroy(): void {
+        EventManager.off(EventName.Game.GetShield, this.onGetShield, this);
+    }
+
+    private onGetShield() {
+        if (this.isShieldSkill) return;
+        this.triggerShieldSkill();
+        console.log("Hero obtained SHIELD!");
+    }
+
+    /**
+     * 消耗护盾
+     * @returns 是否成功消耗
+     */
+    public consumeShield(): boolean {
+        if (this.isShieldSkill) {
+            this.isShieldSkill = false;
+            this.setShieldSkillIconActive(false);
+            console.log("Hero consumed SHIELD!");
+            return true;
+        }
+        return false;
     }
 
     protected start(): void {
@@ -270,7 +309,7 @@ export class Hero extends Component {
      */
     public reset(): void {
         // 重置位置
-        this.node.setPosition(0, 0, 0);
+        this.node.setPosition(this._spawnPosition);
         
         // 重置物理状态
         this._jumpVelocity = 0;
@@ -297,6 +336,10 @@ export class Hero extends Component {
         // 如果当前已经在 JUMP_DOWN 状态，changeState 会返回 false，但这符合预期
         this._stateMachine.changeState(HeroState.JUMP_UP);
         this.playAnimation('jump_down');
+
+        // 刷新护盾技能Icon
+        this.setShieldSkillIconActive(false);
+        this.isShieldSkill = false;
     }
     
     /**
@@ -405,7 +448,13 @@ export class Hero extends Component {
     private updateLayer(layer: number): void {
         if (layer > this.HerolayerS) {
             this.HerolayerS = layer;
+            console.log(`Hero reached layer: ${this.HerolayerS}`);
         }
+    }
+
+    //  获得玩家层数
+    getHerolayerS(): number {
+        return this.HerolayerS;
     }
 
     /**
@@ -707,6 +756,24 @@ export class Hero extends Component {
         }
     }
 
+    //设置出生位置
+    setSpawnPosition(position: Vec3) {
+        this._spawnPosition.set(position);
+    }
+
+    //触发护盾技能
+    triggerShieldSkill() {
+        this.isShieldSkill = true;
+        // 刷新护盾技能Icon
+        this.setShieldSkillIconActive(true);
+    }
+
+    setShieldSkillIconActive(active: boolean) {
+        // 刷新护盾技能Icon
+        
+        this.ShieldSkillIcon.active = active;
+    }
+    
 }
 
 

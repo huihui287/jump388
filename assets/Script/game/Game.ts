@@ -56,6 +56,7 @@ export class Game extends BaseNodeCom {
         EventManager.off(EventName.Game.Resume, this.evtResume, this);
         EventManager.off(EventName.Game.GameOver, this.GameOver, this);
         EventManager.off(EventName.Game.RestartGame, this.evtRestartGame, this);
+        EventManager.off(EventName.Game.HitSpike, this.onHitSpike, this);
 
     }
     /**
@@ -144,6 +145,21 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.RestartGame, this.evtRestartGame, this);
         /** 游戏结束 */
         EventManager.on(EventName.Game.GameOver, this.GameOver, this);
+        /** 触发尖刺 */
+        EventManager.on(EventName.Game.HitSpike, this.onHitSpike, this);
+    }
+
+    /**
+     * 触发尖刺事件
+     * 处理玩家与尖刺的碰撞逻辑
+     * @description 当玩家与尖刺碰撞时触发，判断是否有护盾消耗，无护盾则游戏结束
+     */
+    onHitSpike() {
+        if (this.heroCom && this.heroCom.consumeShield()) {
+            console.log("Shield blocked spike damage!");
+            return;
+        }
+        this.GameOver();
     }
 
     evtPause() {
@@ -192,6 +208,49 @@ export class Game extends BaseNodeCom {
 
         this.checkHeroPedalCollision();
         this.checkHeroFallDeath();
+        this.checkGameWin();
+    }
+
+    /**
+     * 检查游戏胜利条件
+     */
+    private checkGameWin(): void {
+        if (!this.heroCom || !this.pedalManagerCom) return;
+
+        // 必须所有踏板生成完毕
+        if (!this.pedalManagerCom.isFinished()) return;
+
+        const lastPedal = this.pedalManagerCom.getLastPedal();
+        
+        // 如果没有活跃踏板了，说明都回收了，且 Hero 还在（没死），则判定胜利
+        if (!lastPedal) {
+             this.GameWin();
+             return;
+        }
+
+        const heroY = this.heroCom.node.worldPosition.y;
+        const lastPedalY = lastPedal.worldPosition.y;
+
+        // 只要超过最后一个踏板一定距离，就赢了
+        if (heroY > lastPedalY + 50) {
+            this.GameWin();
+        }
+    }
+
+    /**
+     * 游戏胜利逻辑
+     */
+    GameWin() {
+        if (this.gameState === GameState.WIN) return;
+        this.gameState = GameState.WIN;
+        console.log('GameWin!');
+        
+        // 暂停游戏逻辑更新
+        App.gameCtr.setPause(true);
+        
+        // 显示结算界面
+        ViewManager.showGameWinView();
+        
     }
 
     /**
@@ -252,18 +311,54 @@ export class Game extends BaseNodeCom {
         }
     }
 
-
     /**
      * 过关，处理奖励炸弹
      * 进入下一关并发放奖励
      * @returns {Promise<void>} 异步操作，完成后进入下一关
      */
     async evtNextLevel() {
-        // 恢复游戏
-        EventManager.emit(EventName.Game.Resume);
-        // 加载下一关
-        this.loadExtraData(GameData.nextLevel());
+        console.log('Loading next level...');
         
+        // 1. 获取下一关关卡号
+        const nextLv = GameData.nextLevel();
+        console.log(`Next Level: ${nextLv}`);
+
+        // 保持暂停状态，直到初始化完成
+        App.gameCtr.setPause(true);
+
+        // 2. 清理并重新初始化踏板
+        if (this.pedalManagerCom) {
+            this.pedalManagerCom.init();
+            // 加载新关卡的配置
+            await this.pedalManagerCom.loadPedalConfig();
+        }
+
+        // 3. 重置 Hero
+        if (this.heroCom) {
+            this.heroCom.reset();
+        }
+
+        // 4. 重置摄像机
+        if (this.cameraCom) {
+            this.cameraCom.setTarget(this.heroCom.node);
+            this.cameraCom.node.setPosition(0, 0, this.cameraCom.node.position.z);
+        }
+
+        // 5. 加载关卡额外数据（如果需要）
+        await this.loadExtraData(nextLv);
+
+        // 6. 更新 UI (例如关卡显示)
+        this.setLevelInfo();
+
+        // 7. 重置游戏状态并开始
+        this.gameState = GameState.PLAYING;
+        App.gameCtr.setPause(false);
+
+        // 8. 恢复游戏逻辑
+        EventManager.emit(EventName.Game.Resume);
+
+        // 9. 播放背景音乐
+        AudioManager.getInstance().playMusic('background1', true);
     }
 
     /**
@@ -289,7 +384,10 @@ export class Game extends BaseNodeCom {
         this.gameState = GameState.GAME_OVER;
         console.log('GameOver logic called');
         // 这里可以弹出结算界面，如 ViewManager.showView(ViewName.GameOver)
-        ViewManager.showGameOver();
+        ViewManager.showGameOver({
+            currentLayer: this.heroCom.getHerolayerS(),
+            totalLayer: this.pedalManagerCom.getAlllayerNum()
+        });
         // 暂停游戏
         EventManager.emit(EventName.Game.Pause);
     }
