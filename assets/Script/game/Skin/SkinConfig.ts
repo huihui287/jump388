@@ -5,7 +5,6 @@
 export interface SkinConfig {
     id: number;
     name: string;
-    spinePath: string;      // Spine 资源路径
     spineSkinName: string;  // Spine 皮肤名称
     price: number;
 }
@@ -15,14 +14,21 @@ export interface SkinConfig {
  * @param id 皮肤ID
  */
 export function getSkinConfig(id: number): SkinConfig | null {
-    // 这里可以返回默认配置或从配置表中查找
-    // 示例默认配置
+    // 示例配置
     if (id === 1001) {
         return {
             id: 1001,
             name: "Default Hero",
-            spinePath: "spine/hero/hero_default",
-            spineSkinName: "default",
+            spineSkinName: "famugong", // 请根据实际Spine资源中的皮肤名称修改
+            price: 0
+        };
+    }
+    // 添加更多皮肤...
+    if (id === 1002) {
+        return {
+            id: 1002,
+            name: "Default Hero",
+            spineSkinName: "jianzhugong", // 请根据实际Spine资源中的皮肤名称修改
             price: 0
         };
     }

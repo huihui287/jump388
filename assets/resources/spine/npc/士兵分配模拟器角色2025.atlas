@@ -1,0 +1,384 @@
+
+士兵分配模拟器角色2025.png
+size: 1024,128
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+famugong/beidai_01f
+  rotate: true
+  xy: 403, 46
+  size: 14, 28
+  orig: 14, 28
+  offset: 0, 0
+  index: -1
+famugong/futou_01f
+  rotate: true
+  xy: 338, 43
+  size: 84, 64
+  orig: 84, 64
+  offset: 0, 0
+  index: -1
+famugong/jiao_L01f
+  rotate: false
+  xy: 751, 51
+  size: 30, 37
+  orig: 30, 37
+  offset: 0, 0
+  index: -1
+famugong/jiao_R01f
+  rotate: false
+  xy: 774, 90
+  size: 28, 37
+  orig: 28, 37
+  offset: 0, 0
+  index: -1
+famugong/qunzi_01f
+  rotate: true
+  xy: 471, 1
+  size: 59, 22
+  orig: 59, 22
+  offset: 0, 0
+  index: -1
+famugong/shenti_01f
+  rotate: true
+  xy: 591, 71
+  size: 56, 46
+  orig: 56, 46
+  offset: 0, 0
+  index: -1
+famugong/shou_L01f
+  rotate: false
+  xy: 341, 1
+  size: 42, 41
+  orig: 42, 41
+  offset: 0, 0
+  index: -1
+famugong/shou_R01f
+  rotate: false
+  xy: 681, 89
+  size: 31, 38
+  orig: 31, 38
+  offset: 0, 0
+  index: -1
+famugong/shouzi_L01f
+  rotate: false
+  xy: 832, 7
+  size: 22, 25
+  orig: 22, 25
+  offset: 0, 0
+  index: -1
+famugong/shouzi_R01f
+  rotate: true
+  xy: 834, 64
+  size: 28, 20
+  orig: 28, 20
+  offset: 0, 0
+  index: -1
+famugong/tou_01f
+  rotate: true
+  xy: 1, 20
+  size: 107, 79
+  orig: 107, 79
+  offset: 0, 0
+  index: -1
+famugong/weijin_01f
+  rotate: false
+  xy: 190, 1
+  size: 70, 36
+  orig: 70, 36
+  offset: 0, 0
+  index: -1
+famugong/xiouzi_R01f
+  rotate: true
+  xy: 803, 19
+  size: 32, 28
+  orig: 32, 28
+  offset: 0, 0
+  index: -1
+jianzhugong/cuizi_01j
+  rotate: true
+  xy: 403, 61
+  size: 66, 52
+  orig: 66, 52
+  offset: 0, 0
+  index: -1
+jianzhugong/jiao_L01j
+  rotate: false
+  xy: 713, 89
+  size: 31, 38
+  orig: 31, 38
+  offset: 0, 0
+  index: -1
+jianzhugong/jiao_R01j
+  rotate: true
+  xy: 703, 1
+  size: 30, 38
+  orig: 30, 38
+  offset: 0, 0
+  index: -1
+jianzhugong/juzi_01j
+  rotate: true
+  xy: 492, 64
+  size: 63, 55
+  orig: 63, 55
+  offset: 0, 0
+  index: -1
+jianzhugong/qunzhi_01j
+  rotate: true
+  xy: 549, 5
+  size: 58, 22
+  orig: 58, 22
+  offset: 0, 0
+  index: -1
+jianzhugong/shenti_01j
+  rotate: true
+  xy: 572, 6
+  size: 57, 50
+  orig: 57, 50
+  offset: 0, 0
+  index: -1
+jianzhugong/shou_L01j
+  rotate: false
+  xy: 261, 1
+  size: 40, 39
+  orig: 40, 39
+  offset: 0, 0
+  index: -1
+jianzhugong/shou_R01j
+  rotate: false
+  xy: 742, 12
+  size: 31, 37
+  orig: 31, 37
+  offset: 0, 0
+  index: -1
+jianzhugong/shouzi_L01j
+  rotate: false
+  xy: 855, 7
+  size: 22, 25
+  orig: 22, 25
+  offset: 0, 0
+  index: -1
+jianzhugong/shouzi_R01j
+  rotate: false
+  xy: 647, 1
+  size: 28, 22
+  orig: 28, 22
+  offset: 0, 0
+  index: -1
+jianzhugong/tou_01j
+  rotate: true
+  xy: 254, 41
+  size: 86, 83
+  orig: 86, 83
+  offset: 0, 0
+  index: -1
+xingchunzhe/erduo_01x
+  rotate: false
+  xy: 809, 63
+  size: 24, 29
+  orig: 24, 29
+  offset: 0, 0
+  index: -1
+xingchunzhe/jiao_L01x
+  rotate: false
+  xy: 719, 50
+  size: 31, 38
+  orig: 31, 38
+  offset: 0, 0
+  index: -1
+xingchunzhe/jiao_R01x
+  rotate: false
+  xy: 745, 89
+  size: 28, 38
+  orig: 28, 38
+  offset: 0, 0
+  index: -1
+xingchunzhe/meimao_L01x
+  rotate: false
+  xy: 623, 1
+  size: 23, 13
+  orig: 23, 13
+  offset: 0, 0
+  index: -1
+xingchunzhe/meimao_L02x
+  rotate: false
+  xy: 54, 2
+  size: 21, 17
+  orig: 21, 17
+  offset: 0, 0
+  index: -1
+xingchunzhe/meimao_R01x
+  rotate: false
+  xy: 681, 74
+  size: 23, 14
+  orig: 23, 14
+  offset: 0, 0
+  index: -1
+xingchunzhe/meimao_R02x
+  rotate: false
+  xy: 76, 2
+  size: 21, 17
+  orig: 21, 17
+  offset: 0, 0
+  index: -1
+xingchunzhe/qunzhi_01x
+  rotate: false
+  xy: 98, 1
+  size: 61, 23
+  orig: 61, 23
+  offset: 0, 0
+  index: -1
+xingchunzhe/shou_L01x
+  rotate: false
+  xy: 678, 32
+  size: 40, 40
+  orig: 40, 40
+  offset: 0, 0
+  index: -1
+xingchunzhe/shou_R01x
+  rotate: false
+  xy: 643, 24
+  size: 34, 48
+  orig: 34, 48
+  offset: 0, 0
+  index: -1
+xingchunzhe/shouzhi_01x
+  rotate: false
+  xy: 705, 74
+  size: 13, 14
+  orig: 13, 14
+  offset: 0, 0
+  index: -1
+xingchunzhe/shouzhi_02x
+  rotate: false
+  xy: 32, 1
+  size: 21, 18
+  orig: 21, 18
+  offset: 0, 0
+  index: -1
+xingchunzhe/tou_01x
+  rotate: true
+  xy: 169, 38
+  size: 89, 84
+  orig: 89, 84
+  offset: 0, 0
+  index: -1
+xingchunzhe/yanjing_01x
+  rotate: true
+  xy: 623, 15
+  size: 55, 19
+  orig: 55, 19
+  offset: 0, 0
+  index: -1
+xingchunzhe/yanjing_02x
+  rotate: false
+  xy: 160, 1
+  size: 29, 23
+  orig: 29, 23
+  offset: 0, 0
+  index: -1
+xingchunzhe/yanjing_03x
+  rotate: true
+  xy: 832, 33
+  size: 29, 23
+  orig: 29, 23
+  offset: 0, 0
+  index: -1
+xingchunzhe/yifu_01x
+  rotate: true
+  xy: 494, 3
+  size: 60, 54
+  orig: 60, 54
+  offset: 0, 0
+  index: -1
+xingchunzhe/zuiba_01x
+  rotate: false
+  xy: 1, 1
+  size: 30, 18
+  orig: 30, 18
+  offset: 0, 0
+  index: -1
+xingchunzhe/zuiba_02x
+  rotate: true
+  xy: 443, 1
+  size: 59, 27
+  orig: 59, 27
+  offset: 0, 0
+  index: -1
+yiliaobin/jiao_L01
+  rotate: false
+  xy: 782, 52
+  size: 26, 37
+  orig: 26, 37
+  offset: 0, 0
+  index: -1
+yiliaobin/jiao_R01
+  rotate: false
+  xy: 774, 13
+  size: 28, 37
+  orig: 28, 37
+  offset: 0, 0
+  index: -1
+yiliaobin/qunzi_01
+  rotate: true
+  xy: 456, 61
+  size: 66, 35
+  orig: 66, 35
+  offset: 0, 0
+  index: -1
+yiliaobin/shenti_01
+  rotate: true
+  xy: 548, 64
+  size: 63, 42
+  orig: 63, 42
+  offset: 0, 0
+  index: -1
+yiliaobin/shou_L01
+  rotate: true
+  xy: 302, 1
+  size: 39, 38
+  orig: 39, 38
+  offset: 0, 0
+  index: -1
+yiliaobin/shou_R01
+  rotate: false
+  xy: 803, 93
+  size: 31, 34
+  orig: 31, 34
+  offset: 0, 0
+  index: -1
+yiliaobin/shouzi_L01
+  rotate: false
+  xy: 835, 103
+  size: 19, 24
+  orig: 19, 24
+  offset: 0, 0
+  index: -1
+yiliaobin/shouzi_R01
+  rotate: false
+  xy: 676, 1
+  size: 26, 22
+  orig: 26, 22
+  offset: 0, 0
+  index: -1
+yiliaobin/tou_01
+  rotate: true
+  xy: 81, 25
+  size: 102, 87
+  orig: 102, 87
+  offset: 0, 0
+  index: -1
+yiliaobin/weiqun_01
+  rotate: false
+  xy: 384, 2
+  size: 58, 40
+  orig: 58, 40
+  offset: 0, 0
+  index: -1
+yiliaobin/yiliaoxiang
+  rotate: true
+  xy: 638, 73
+  size: 54, 42
+  orig: 54, 42
+  offset: 0, 0
+  index: -1

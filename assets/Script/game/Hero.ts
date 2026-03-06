@@ -235,6 +235,7 @@ export class Hero extends Component {
     }
 
     protected start(): void {
+        this.refreshSkin();
         // 游戏开始时，为首次跳跃创建一个“虚拟”踏板
         const initialPedal = new Pedal();
         initialPedal.jumpForce = 600;
@@ -624,17 +625,6 @@ export class Hero extends Component {
         }
     }
 
-    /** 当前加载的 Spine 资源路径 */
-    private _currentSpinePath: string = "";
-
-    /**
-     * 加载当前装备的皮肤
-     */
-    private loadCurrentSkin(): void {
-        const skinId = SkinManager.getInstance().getCurrentSkinId();
-        this.changeSkin(skinId);
-    }
-
     /**
      * 更换皮肤
      * @param skinId 皮肤ID
@@ -648,37 +638,12 @@ export class Hero extends Component {
 
         console.log(`Request to change skin: ${skinConfig.name}`);
 
-        // 1. 如果是同一个 Spine 文件，直接切换 Skin
-        if (this._currentSpinePath === skinConfig.spinePath && this.SkeletonAnimation.skeletonData) {
-            console.log(`Spine asset match, setting skin directly to: ${skinConfig.spineSkinName}`);
+        if (this.SkeletonAnimation) {
+            console.log(`Setting skin directly to: ${skinConfig.spineSkinName}`);
             this.setSkeletonSkin(skinConfig.spineSkinName);
-            return;
+        } else {
+            console.warn("SkeletonAnimation component is null!");
         }
-
-        // 2. 如果是不同的 Spine 文件，重新加载资源
-        console.log(`Loading new spine asset: ${skinConfig.spinePath}`);
-        resources.load(skinConfig.spinePath, sp.SkeletonData, (err, skeletonData) => {
-            if (!this.isValid) return; 
-            
-            if (err) {
-                console.error(`Failed to load spine data: ${err}`);
-                return;
-            }
-
-            if (!this.SkeletonAnimation) {
-                console.warn("SkeletonAnimation component is null!");
-                return;
-            }
-
-            // 更新当前路径记录
-            this._currentSpinePath = skinConfig.spinePath;
-
-            // 设置新的骨骼数据
-            this.SkeletonAnimation.skeletonData = skeletonData;
-
-            // 设置皮肤
-            this.setSkeletonSkin(skinConfig.spineSkinName);
-        });
     }
 
     /**
@@ -707,6 +672,16 @@ export class Hero extends Component {
         // 使用 setAnimation 强制刷新
         this.SkeletonAnimation.setAnimation(0, currentState, false);
     }
+
+    refreshSkin() {
+        // 加载并应用当前皮肤
+        const skinId = SkinManager.getInstance().getCurrentSkinId();
+        const skinConfig = getSkinConfig(skinId);
+        if (skinConfig) {
+            this.setSkeletonSkin(skinConfig.spineSkinName);
+        }
+    }
+
 }
 
 
