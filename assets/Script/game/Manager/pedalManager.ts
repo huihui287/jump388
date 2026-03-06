@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat, UITransform } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { App } from '../../Controller/app';
-import { PedalType, Constant, PedalDefaults, PedalSkill } from '../../Tools/enumConst';
+import { PedalType, Constant, PedalDefaults, PedalSkill, SkillWeights } from '../../Tools/enumConst';
 import { Pedal } from '../Pedal/Pedal';
 import GameData from '../../Common/GameData';
 import EventManager from '../../Common/view/EventManager';
@@ -43,8 +43,6 @@ export class pedalManager extends Component {
     private pedalSype: string[] = [];
 
     ///////////////////////////////////////////////////////////////////////////
-    /** Hero已经踩多少层数 */
-    private HerolayerS: number = 0;
 
     /** 层数配置 */
     private layer: number[] = [];
@@ -58,6 +56,9 @@ export class pedalManager extends Component {
     private startY: number = 0;
     private _configReady: boolean = false;
     private _poolsReady: boolean = false;
+
+    /** 上一次生成的技能 */
+    private _lastSkill: PedalSkill = PedalSkill.NONE;
 
     /**
      * 设置 Hero 引用
@@ -77,7 +78,6 @@ export class pedalManager extends Component {
         this.recycleAllPedals();
 
         this.NewlayerS = 0;
-        this.HerolayerS = 0;
         this.HeroRice = 0;
         this.PedalRice = 0;
         this.tempAllRice = 0;
@@ -249,15 +249,59 @@ export class pedalManager extends Component {
     /**随机pedal的skill
     * @param type 踏板类型
     */
+    /**随机pedal的skill
+    * @param type 踏板类型
+    */
     private RandomSkill(): PedalSkill[] {
-        // 获取所有技能值
-        const skillValues = Object.keys(PedalSkill).map(k => (PedalSkill as any)[k]);
-        
-        // 过滤掉 FRACTURE 技能
-        const filteredSkills = skillValues.filter(skill => skill !== PedalSkill.FRACTURE);
-        
-        const randomIndex = Math.floor(Math.random() * filteredSkills.length);
-        return [filteredSkills[randomIndex]];
+        // 候选技能列表
+        const candidates: { skill: PedalSkill; weight: number }[] = [];
+        let totalWeight = 0;
+
+        // 1. 构建候选池（过滤掉不符合条件的技能）
+        for (const key in SkillWeights) {
+            const skill = key as PedalSkill;
+            const weight = SkillWeights[skill];
+
+            // 过滤条件：
+            // - 权重必须大于 0
+            // - 不能是 FRACTURE (通常由踏板类型决定)
+            // - 不能与上一次技能相同，除非是 NONE (允许连续无技能)
+            if (weight > 0 && skill !== PedalSkill.FRACTURE) {
+                if (skill === PedalSkill.NONE || skill !== this._lastSkill) {
+                    candidates.push({ skill, weight });
+                    totalWeight += weight;
+                }
+            }
+        }
+
+        // 2. 如果没有有效候选（理论上不应发生），强制返回 NONE
+        if (candidates.length === 0 || totalWeight <= 0) {
+            this._lastSkill = PedalSkill.NONE;
+            return [PedalSkill.NONE];
+        }
+
+        // 3. 执行加权随机
+        const randomVal = Math.random() * totalWeight;
+        let accumulatedWeight = 0;
+        let selectedSkill = PedalSkill.NONE;
+
+        for (const candidate of candidates) {
+            accumulatedWeight += candidate.weight;
+            if (randomVal < accumulatedWeight) {
+                selectedSkill = candidate.skill;
+                break;
+            }
+        }
+
+        // 4. 最终结果处理（如果循环结束仍未选中，理论上不会发生，默认取最后一个候选）
+        // 这一步是为了防止浮点数精度问题导致的 randomVal === totalWeight 边界情况
+        if (randomVal >= totalWeight) {
+             selectedSkill = candidates[candidates.length - 1].skill;
+        }
+
+        // 5. 更新状态并返回
+        this._lastSkill = selectedSkill;
+        return [selectedSkill];
     }
     /**
      * 添加踏板到管理器 (随机位置)

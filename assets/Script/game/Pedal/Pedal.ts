@@ -187,6 +187,7 @@ export class Pedal extends Component {
                     // 金币效果
                     console.log("Triggered GOLD skill");
                     this.getGoldSkill();
+                    break; // 添加 break
                 case PedalSkill.SPIKE:
                     // 尖刺效果
                     console.log("Triggered SPIKE skill");

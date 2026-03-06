@@ -30,9 +30,6 @@ const { ccclass, property } = _decorator;
 @ccclass('Game')
 export class Game extends BaseNodeCom {
     /*********************************************  游戏核心组件  *********************************************/
-    // /** 摇杆控制器组件 */
-    // @property(JoystickControl)
-    // JoystickControlCom: JoystickControl = null!;
     /** Hero组件 */
     heroCom: Hero = null!;
     /** 踏板管理组件 */
@@ -42,16 +39,9 @@ export class Game extends BaseNodeCom {
     @property(CameraManager)
     cameraCom: CameraManager = null!;
     /*********************************************  游戏核心组件  *********************************************/
-    /*********************************************  游戏核心组件  *********************************************/
-
-    /*********************************************  UI引用  *********************************************/
-    /*********************************************  UI引用  *********************************************/
-    /*********************************************  UI引用  *********************************************/
-
 
     /** 游戏状态 */
     private gameState: GameState = GameState.PLAYING;
-
    
     onDestroy(): void {
         App.gameCtr.setPause(false);

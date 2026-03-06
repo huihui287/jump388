@@ -193,7 +193,7 @@ export class Hero extends Component {
     /** 摇杆控制器引用 (仅用于调试) */
     @property(JoystickControl)
     public joystick: JoystickControl = null;
-
+///////////////////////////////////////////////////////////////////////////
     /** 陀螺仪当前角速度 X (其实是绕 Y 轴旋转) */
     private _gyroX: number = 0;
     /** 陀螺仪累积倾斜量 */
@@ -222,6 +222,13 @@ export class Hero extends Component {
     /** 复用的位置向量 */
     private _tempPosition: Vec3 = v3();
     private _pendingJumpBoost: number = 0;
+    ///////////////////////////////////////////////////////////////////////////
+
+
+        //////////////////////////////////////////////////////////////////////
+    /** Hero已经踩多少层数 */
+    private HerolayerS: number = 0;
+    //////////////////////////////////////////////////////////////////////
     
     protected onLoad(): void {
         this.Refresh();
@@ -270,6 +277,9 @@ export class Hero extends Component {
         this._currentGravity = -2000; // 恢复默认重力
         this._isTweenJumping = false;
         this._isTouchingPedal = false;
+        
+        // 重置层数
+        this.HerolayerS = 0;
         
         // 停止当前 Tween
         if (this._currentJumpTween) {
@@ -389,13 +399,28 @@ export class Hero extends Component {
     }
 
     /**
-     * 根据给定的踏板属性，开始一个基于 Tween 的向上跳跃
+     * 更新玩家层数
+     * @param layer 新层数
+     */
+    private updateLayer(layer: number): void {
+        if (layer > this.HerolayerS) {
+            this.HerolayerS = layer;
+        }
+    }
+
+    /**
+     * 执行跳跃
      * @param pedal 触发跳跃的踏板
      */
     public performJump(pedal: Pedal): void {
         // 停止之前的 Tween (如果有)
         if (this._currentJumpTween) {
             this._currentJumpTween.stop();
+        }
+
+        // 更新层数
+        if (pedal && (pedal as any).layer > 0) {
+            this.updateLayer((pedal as any).layer);
         }
 
         this._isTouchingPedal = false;
