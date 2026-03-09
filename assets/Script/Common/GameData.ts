@@ -1,6 +1,9 @@
 import { _decorator, Component, Node, sys } from 'cc';
 import { DEV } from 'cc/env';
 import { App } from '../Controller/app';
+import { SkinManager } from '../game/Skin/SkinManager';
+import { getSkinConfig } from '../game/Skin/SkinConfig';
+import { HeroSkillType } from '../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
 @ccclass
@@ -129,6 +132,29 @@ static loadData(key: string, defaultValue: any): any {
 
     static addGold(goldReward: number) {
         let currentGold = Number(GameData.loadData(GameData.Gold, 0));
+        
+        // 检查是否有金币加成被动技能
+        try {
+            const currentSkinId = SkinManager.getInstance().getCurrentSkinId();
+            const skinConfig = getSkinConfig(currentSkinId);
+            if (skinConfig && skinConfig.passiveSkill) {
+                // 百分比加成
+                if (skinConfig.passiveSkill.type === HeroSkillType.PASSIVE_GOLD_BONUS) {
+                    const bonus = skinConfig.passiveSkill.value || 0;
+                    goldReward = Math.floor(goldReward * (1 + bonus));
+                    DEV && console.log(`Gold Bonus Applied: +${bonus * 100}%, Total: ${goldReward}`);
+                }
+                // 固定数值加成
+                else if (skinConfig.passiveSkill.type === HeroSkillType.PASSIVE_EXTRA_GOLD) {
+                    const extra = skinConfig.passiveSkill.value || 0;
+                    goldReward += extra;
+                    DEV && console.log(`Extra Gold Applied: +${extra}, Total: ${goldReward}`);
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to apply gold bonus", e);
+        }
+
         currentGold += goldReward;
         GameData.saveData(GameData.Gold, currentGold);
     }

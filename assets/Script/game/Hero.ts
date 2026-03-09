@@ -8,7 +8,9 @@ import { PedalSkill } from '../Tools/enumConst';
 import EventManager from '../Common/view/EventManager';
 import { EventName } from '../Tools/eventName';
 import { SkinManager } from './Skin/SkinManager';
-import { getSkinConfig } from './Skin/SkinConfig';
+import { getSkinConfig, SkillInfo } from './Skin/SkinConfig';
+import ViewManager from '../Common/view/ViewManager';
+import { HeroSkillType } from '../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
 /**
@@ -240,6 +242,20 @@ export class Hero extends Component {
     private isShieldSkill: boolean = false;
 
     //////////////////////////////////////////////
+    // 英雄技能数据
+    private _activeSkill: SkillInfo | null = null;
+    private _passiveSkill: SkillInfo | null = null;
+    // 技能冷却
+    private _skillTimer: number = 0;
+    
+    // 被动技能数值
+    private _moveSpeedBonus: number = 0; // 移动速度加成
+    private _destroyTrap: boolean = false; // 是否清除陷阱
+    
+    // 流星充能
+    private _meteorCharge: number = 0;
+    private readonly MAX_METEOR_CHARGE: number = 30;
+
     protected onLoad(): void {
         this.setSpawnPosition(this.node.position);
         this.reset();
@@ -254,30 +270,23 @@ export class Hero extends Component {
 
         // 监听获得护盾事件
         EventManager.on(EventName.Game.GetShield, this.onGetShield, this);
+        // 监听释放主动技能事件
+        EventManager.on(EventName.Game.UseSkill, this.onUseSkill, this);
     }
 
     protected onDestroy(): void {
         EventManager.off(EventName.Game.GetShield, this.onGetShield, this);
+        EventManager.off(EventName.Game.UseSkill, this.onUseSkill, this);
+    }
+    
+    private onUseSkill() {
+        this.useActiveSkill();
     }
 
     private onGetShield() {
         if (this.isShieldSkill) return;
         this.triggerShieldSkill();
         console.log("Hero obtained SHIELD!");
-    }
-
-    /**
-     * 消耗护盾
-     * @returns 是否成功消耗
-     */
-    public consumeShield(): boolean {
-        if (this.isShieldSkill) {
-            this.isShieldSkill = false;
-            this.setShieldSkillIconActive(false);
-            console.log("Hero consumed SHIELD!");
-            return true;
-        }
-        return false;
     }
 
     protected start(): void {
@@ -357,6 +366,12 @@ export class Hero extends Component {
 
     update(deltaTime: number) {
         if (App.gameCtr.isPause) return;
+        
+        // 更新技能冷却
+        if (this._skillTimer > 0) {
+            this._skillTimer -= deltaTime;
+        }
+
         // 根据开关选择输入源
         if (this.useJoystick && this.joystick) {
             this.updateJoystickMove(deltaTime);
@@ -685,6 +700,14 @@ export class Hero extends Component {
             this.node.setWorldPosition(this._tempPosition);
         }
         
+        // 流星蛙充能逻辑
+        if (this._activeSkill && this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
+            if (this._meteorCharge < this.MAX_METEOR_CHARGE) {
+                this._meteorCharge++;
+                // console.log(`Meteor Charge: ${this._meteorCharge}/${this.MAX_METEOR_CHARGE}`);
+            }
+        }
+        
         // 切换到跳跃向上状态，开始新的跳跃循环
         this.changeState(HeroState.JUMP_UP);
     }
@@ -753,7 +776,121 @@ export class Hero extends Component {
         const skinConfig = getSkinConfig(skinId);
         if (skinConfig) {
             this.setSkeletonSkin(skinConfig.spineSkinName);
+            
+            // 初始化技能
+            this._activeSkill = skinConfig.activeSkill || null;
+            this._passiveSkill = skinConfig.passiveSkill || null;
+            this.applyPassiveSkills();
+            
+            // 流星蛙初始赠送一次充能
+            if (this._activeSkill && this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
+                this._meteorCharge = this.MAX_METEOR_CHARGE;
+            }
         }
+    }
+
+    /**
+     * 应用被动技能
+     */
+    private applyPassiveSkills() {
+        this._moveSpeedBonus = 0;
+        this._destroyTrap = false;
+
+        if (!this._passiveSkill) return;
+
+        switch (this._passiveSkill.type) {
+            case HeroSkillType.PASSIVE_MOVE_SPEED:
+                this._moveSpeedBonus = this._passiveSkill.value || 0;
+                this.moveSpeed = 800 * (1 + this._moveSpeedBonus);
+                console.log(`Passive Skill: Move Speed +${this._moveSpeedBonus * 100}%`);
+                break;
+            case HeroSkillType.PASSIVE_DESTROY_TRAP:
+                this._destroyTrap = true;
+                console.log("Passive Skill: Destroy Traps Enabled");
+                break;
+        }
+    }
+
+    /**
+     * 尝试使用主动技能
+     */
+    public useActiveSkill(): boolean {
+        if (!this._activeSkill || this._activeSkill.type === HeroSkillType.NONE) {
+            console.log("No active skill.");
+            return false;
+        }
+
+        // 检查冷却
+        if (this._activeSkill.cooldown && this._skillTimer > 0) {
+            console.log(`Skill on cooldown: ${this._skillTimer.toFixed(1)}s`);
+            ViewManager.toast(`技能冷却中: ${this._skillTimer.toFixed(1)}s`);
+            return false;
+        }
+        
+        // 特殊检查：流星蛙需要充能
+        if (this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
+            if (this._meteorCharge < this.MAX_METEOR_CHARGE) {
+                ViewManager.toast(`充能不足: ${this._meteorCharge}/${this.MAX_METEOR_CHARGE}`);
+                return false;
+            }
+            // 消耗充能
+            this._meteorCharge = 0;
+        }
+
+        // 触发技能效果
+        this.triggerActiveSkillEffect();
+
+        // 设置冷却
+        if (this._activeSkill.cooldown) {
+            this._skillTimer = this._activeSkill.cooldown;
+        }
+        return true;
+    }
+
+    private triggerActiveSkillEffect() {
+        if (!this._activeSkill) return;
+        const val = this._activeSkill.value || 0;
+
+        console.log(`Triggering Active Skill: ${this._activeSkill.description}`);
+        ViewManager.toast(`释放技能: ${this._activeSkill.description}`);
+
+        switch (this._activeSkill.type) {
+            case HeroSkillType.ACTIVE_JETPACK:
+                // 空中跳跃，给予向上速度，但速度较慢
+                this._isTweenJumping = false; // 打断 Tween
+                this._isTouchingPedal = false;
+                this._jumpVelocity = 1000 * 0.7; // 假设正常跳跃力度是1000左右，这里给70%
+                this.playAnimation('jump_up');
+                this.changeState(HeroState.JUMP_UP);
+                break;
+            case HeroSkillType.ACTIVE_METEOR:
+                // 流星冲刺
+                this.meteorRush(val);
+                break;
+        }
+    }
+
+    // 流星冲刺逻辑
+    private meteorRush(layers: number) {
+        // 向上冲刺N层，期间无敌
+        this.triggerShieldSkill(); // 获得护盾保护 (无敌)
+        
+        // 计算目标高度 (假设每层高度200，或者直接让 Game.ts 处理层数跳转，这里简化为位移)
+        const distance = layers * 200; 
+        const targetY = this.node.position.y + distance;
+        
+        this._isTweenJumping = true;
+        this._tweenJumpY = this.node.position.y;
+
+        tween(this as any)
+            .to(1.5, { _tweenJumpY: targetY }, { easing: 'cubicOut' }) // 冲刺动画
+            .call(() => {
+                this._isTweenJumping = false;
+                this._jumpVelocity = 0;
+                // 更新层数
+                this.updateLayer(this.HerolayerS + layers);
+            })
+            .start();
     }
 
     //设置出生位置
@@ -766,6 +903,40 @@ export class Hero extends Component {
         this.isShieldSkill = true;
         // 刷新护盾技能Icon
         this.setShieldSkillIconActive(true);
+        
+        // 重置定时器，如果已经有护盾则重置时间
+        this.unschedule(this.disableShield);
+        // 5秒后护盾消失
+        this.scheduleOnce(this.disableShield, 5.0);
+    }
+    // 禁用护盾
+    disableShield() {
+        if (this.isShieldSkill) {
+            this.isShieldSkill = false;
+            this.setShieldSkillIconActive(false);
+            ViewManager.toast("护盾消失");
+        }
+    }
+
+    /**
+     * 消耗护盾 (检查护盾保护)
+     * @returns 是否有护盾保护
+     */
+    public consumeShield(): boolean {
+        if (this.isShieldSkill) {
+            // 有护盾，返回 true，但不消耗（因为是时间限制）
+            // 如果需要击中后有反馈，可以在这里处理
+            console.log("Shield blocked damage (Immune)!");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 是否拥有清除陷阱的能力
+     */
+    public get canDestroyTrap(): boolean {
+        return this._destroyTrap;
     }
 
     setShieldSkillIconActive(active: boolean) {
@@ -773,6 +944,7 @@ export class Hero extends Component {
         
         this.ShieldSkillIcon.active = active;
     }
+    
     
 }
 

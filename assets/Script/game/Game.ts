@@ -155,10 +155,21 @@ export class Game extends BaseNodeCom {
      * @description 当玩家与尖刺碰撞时触发，判断是否有护盾消耗，无护盾则游戏结束
      */
     onHitSpike() {
-        if (this.heroCom && this.heroCom.consumeShield()) {
+        if (!this.heroCom) return;
+
+        // 1. 检查是否免疫陷阱 (忍者蛙被动)
+        if (this.heroCom.canDestroyTrap) {
+            console.log("Passive Skill: Trap destroyed/ignored!");
+            ViewManager.toast("免疫陷阱！");
+            return;
+        }
+
+        // 2. 检查护盾
+        if (this.heroCom.consumeShield()) {
             console.log("Shield blocked spike damage!");
             return;
         }
+        
         this.GameOver();
     }
 

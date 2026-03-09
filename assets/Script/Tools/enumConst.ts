@@ -107,6 +107,29 @@ export enum PedalSkill {
     SHIELD = 'shieldPedal'
 }
 
+/**
+ * 英雄技能类型
+ */
+export enum HeroSkillType {
+    NONE = 0,
+    
+    // --- 被动技能 ---
+    /** 结算金币加成 (百分比) */
+    PASSIVE_GOLD_BONUS = 1,
+    /** 额外金币获取 (固定数值) */
+    PASSIVE_EXTRA_GOLD = 2,
+    /** 移动速度加成 (百分比) */
+    PASSIVE_MOVE_SPEED = 3,
+    /** 清除陷阱/免疫陷阱 */
+    PASSIVE_DESTROY_TRAP = 4,
+    
+    // --- 主动技能 ---
+    /** 喷气背包 (空中跳跃) */
+    ACTIVE_JETPACK = 101,
+    /** 流星冲刺 (向上冲刺N层) */
+    ACTIVE_METEOR = 102,
+}
+
 /** 技能权重配置 (可在代码中灵活修改) */
 export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 2000,         // 无技能
@@ -115,7 +138,7 @@ export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.SPIKE]: 1,         // 尖刺
     [PedalSkill.GOLD]: 20,         // 金币
     [PedalSkill.FRACTURE]: 0,      // 断裂通常不通过随机生成，而是由踏板类型决定
-    [PedalSkill.SHIELD]: 500,      // 护盾
+    [PedalSkill.SHIELD]: 1000,      // 护盾
 };
 
 // /** 踏板类型字符串标识 */

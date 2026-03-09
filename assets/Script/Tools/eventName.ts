@@ -25,7 +25,6 @@ export namespace EventName {
         /** 重新开始 */
         RestartGame = "RestartGame",
 
-
         /** 侧边栏启动/恢复 */
         LaunchFromSidebar = "LaunchFromSidebar",
 
@@ -38,5 +37,7 @@ export namespace EventName {
         GetShield = "GetShield",
         /** 触发尖刺 */
         HitSpike = "HitSpike",
+        /** 释放主动技能 */
+        UseSkill = "UseSkill",
     }
 }
