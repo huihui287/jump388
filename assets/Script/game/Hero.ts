@@ -4,13 +4,15 @@ import StateMachine, { IState } from '../Common/StateMachine';
 import CM from '../channel/CM';
 import { JoystickControl } from './JoystickControl';
 import { Pedal } from './Pedal/Pedal';
-import { HeroSkillType, PedalSkill } from '../Tools/enumConst';
+
 import EventManager from '../Common/view/EventManager';
 import { EventName } from '../Tools/eventName';
 import { SkinManager } from './Skin/SkinManager';
 import { getSkinConfig, SkillInfo, SkinConfig } from './Skin/SkinConfig';
 import ViewManager from '../Common/view/ViewManager';
 import GameData from '../Common/GameData';
+import { HeroSkillType } from '../Tools/enumHero';
+        
 const { ccclass, property } = _decorator;
 
 /**

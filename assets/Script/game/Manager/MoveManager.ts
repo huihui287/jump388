@@ -1,4 +1,4 @@
-import { _decorator, Node, tween, Vec3, easing } from 'cc';
+import { _decorator, Node, tween, Vec3, easing, isValid } from 'cc';
 
 /**
  * 移动管理器：使用贝塞尔曲线实现节点间平滑移动，每次移动路径随机生成
@@ -211,5 +211,102 @@ export class MoveManager {
         const targetPos = targetNode.worldPosition;
         this.flyItem(item, startPos, targetPos, duration, onComplete);
     }
+
+    /**
+     * 执行物品飞舞动画（支持实时跟随目标节点）
+     * 使节点从起始位置飞舞到目标节点位置，如果目标节点移动，动画终点会随之更新
+     * @param item 要飞舞的节点
+     * @param startNode 起始节点 (用于获取初始位置)
+     * @param targetNode 目标节点 (动态终点)
+     * @param duration 可选，动画持续时间
+     * @param onComplete 可选，动画完成后的回调函数
+     */
+    public flyItemToTarget(item: Node, startNode: Node, targetNode: Node, duration?: number, onComplete?: () => void): void {
+        if (!isValid(item) || !isValid(startNode) || !isValid(targetNode)) {
+            console.warn("flyItemToTarget: Invalid nodes provided");
+            if (onComplete) onComplete();
+            return;
+        }
+
+        // 1. 设置初始状态（使用世界坐标）
+        const startWorldPos = startNode.worldPosition.clone();
+        item.setWorldPosition(startWorldPos);
+       // item.setScale(new Vec3(0.5, 0.5, 0.5));
+
+        // 2. 动画参数
+        const animationTime = duration || (0.5 + Math.random() * 0.5);
+        const tempObj = { progress: 0 };
+        
+        // 3. 执行动画
+        tween(tempObj)
+            .to(animationTime, { progress: 1 }, {
+                easing: 'backIn', // 使用 backIn 保持回弹效果
+                onUpdate: (target: any, ratio: number) => {
+                    // 每一帧都检查节点是否还有效
+                    if (!isValid(item) || !isValid(targetNode)) return;
+
+                    // 获取目标当前的最新世界坐标
+                    let currentTargetWorldPos: Vec3 = targetNode.worldPosition;
+                    // 计算当前插值位置
+                    const currentWorldPos = new Vec3();
+                    Vec3.lerp(currentWorldPos, startWorldPos, currentTargetWorldPos, ratio);
+                    
+                    // 更新 item 位置
+                    item.setWorldPosition(currentWorldPos);
+                }
+            })
+            .call(() => {
+                if (onComplete) {
+                    onComplete();
+                }
+            })
+            .start();
+    }
+
+
+
+    //     /**
+    //  * 执行物品飞舞动画
+    //  * 使节点从起始位置飞舞到目标位置
+    //  * @param item 要飞舞的节点
+    //  * @param startPos 起始位置（世界坐标）
+    //  * @param targetPos 目标位置（世界坐标）
+    //  * @param duration 可选，动画持续时间，默认0.5-1.5秒随机
+    //  * @param onComplete 可选，动画完成后的回调函数
+    //  */
+    // public flyItem(item: Node, startPos: Vec3, targetPos: Vec3, duration?: number, onComplete?: () => void): void {
+    //     // 设置起始位置和初始缩放
+    //     item.setPosition(startPos);
+    //     item.setScale(0.5, 0.5, 0.5);
+        
+    //     // 计算动画持续时间
+    //     const animationTime = duration || (0.5 + Math.random() * 1);
+        
+    //     // 执行飞舞动画
+    //     tween(item)
+    //         .to(animationTime, { position: targetPos }, { easing: 'backIn' })
+    //         .call(() => {
+    //             // 触发回调
+    //             if (onComplete) {
+    //                 onComplete();
+    //             }
+    //         })
+    //         .start();
+    // }
+
+    // /**
+    //  * 执行物品飞舞动画（基于节点）
+    //  * 使节点从起始节点位置飞舞到目标节点位置
+    //  * @param item 要飞舞的节点
+    //  * @param startNode 起始节点
+    //  * @param targetNode 目标节点
+    //  * @param duration 可选，动画持续时间，默认0.5-1.5秒随机
+    //  * @param onComplete 可选，动画完成后的回调函数
+    //  */
+    // public flyItemToNode(item: Node, startNode: Node, targetNode: Node, duration?: number, onComplete?: () => void): void {
+    //     const startPos = startNode.worldPosition;
+    //     const targetPos = targetNode.worldPosition;
+    //     this.flyItem(item, startPos, targetPos, duration, onComplete);
+    // }
 
 }

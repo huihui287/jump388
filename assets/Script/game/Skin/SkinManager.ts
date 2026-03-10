@@ -2,7 +2,7 @@
 import { _decorator } from 'cc';
 import GameData from '../../Common/GameData';
 import { getSkinConfig } from './SkinConfig';
-import { HeroType } from '../../Tools/enumConst';
+import { HeroType } from '../../Tools/enumHero';
 const { ccclass } = _decorator;
 
 /**
@@ -30,15 +30,23 @@ export class SkinManager {
      * 加载已解锁的皮肤
      */
     private loadUnlockedSkins() {
-        const data = GameData.loadData('UnlockedSkins', JSON.stringify([HeroType.Default]));
-        try {
-            this.unlockedSkins = JSON.parse(data);
-        } catch {
-            this.unlockedSkins = [HeroType.Default];
+        const defaultSkins = [HeroType.Default];
+        const data = GameData.loadData(GameData.UnlockedSkins, defaultSkins);
+        
+        if (Array.isArray(data)) {
+            this.unlockedSkins = data;
+        } else if (typeof data === 'string') {
+            try {
+                this.unlockedSkins = JSON.parse(data);
+            } catch {
+                this.unlockedSkins = defaultSkins;
+            }
+        } else {
+            this.unlockedSkins = defaultSkins;
         }
 
         if (!Array.isArray(this.unlockedSkins) || this.unlockedSkins.length === 0) {
-            this.unlockedSkins = [HeroType.Default];
+            this.unlockedSkins = defaultSkins;
         }
 
         if (this.unlockedSkins.indexOf(HeroType.Default) === -1) {
@@ -50,7 +58,7 @@ export class SkinManager {
      * 保存已解锁的皮肤
      */
     private saveUnlockedSkins() {
-        GameData.saveData('UnlockedSkins', JSON.stringify(this.unlockedSkins));
+        GameData.saveData(GameData.UnlockedSkins, this.unlockedSkins);
     }
 
     /**

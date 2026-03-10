@@ -1,4 +1,4 @@
-import { _decorator, Node, Vec2 } from 'cc';
+import { _decorator, Node, Vec2, instantiate, Prefab, tween, Vec3, easing, UITransform } from 'cc';
 // 如果 enumConst.ts 已改名或迁移，请根据实际路径调整
 // 例如：'../../const/EnumConst' 或 '../../const/Enum'
 //import { Advertise } from '../../wx/advertise';//广告
@@ -20,6 +20,8 @@ import { pedalManager } from './Manager/pedalManager';
 import { Pedal } from './Pedal/Pedal';
 import ViewManager from '../Common/view/ViewManager';
 import { getSkinConfig } from './Skin/SkinConfig';
+import LoaderManeger from '../sysloader/LoaderManeger';
+import { MoveManager } from './Manager/MoveManager';
 
 const { ccclass, property } = _decorator;
 
@@ -44,6 +46,15 @@ export class Game extends BaseNodeCom {
     /** 游戏状态 */
     private gameState: GameState = GameState.PLAYING;
    
+    /*********************************************  ui  *********************************************/
+    /** 玩家金币 */
+    @property({ type: Node })
+    ndSelfGold: Node = null!;
+
+    /**MoveNodeMGR */
+    @property({ type: Node })
+    MoveNodeMGR: Node = null!;
+
     onDestroy(): void {
         App.gameCtr.setPause(false);
 
@@ -58,6 +69,7 @@ export class Game extends BaseNodeCom {
         EventManager.off(EventName.Game.GameOver, this.GameOver, this);
         EventManager.off(EventName.Game.RestartGame, this.evtRestartGame, this);
         EventManager.off(EventName.Game.HitSpike, this.onHitSpike, this);
+        EventManager.off(EventName.Game.GetGold, this.onGetGold, this);
 
     }
     /**
@@ -160,6 +172,8 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.GameOver, this.GameOver, this);
         /** 触发尖刺 */
         EventManager.on(EventName.Game.HitSpike, this.onHitSpike, this);
+        /** 获得金币 */
+        EventManager.on(EventName.Game.GetGold, this.onGetGold, this);
     }
 
     /**
@@ -184,6 +198,79 @@ export class Game extends BaseNodeCom {
         }
         
         this.GameOver();
+    }
+
+    private onGetGold(pedalNode: Node) {
+        if (!pedalNode) return;
+
+        // 加载金币飞行预制体
+        LoaderManeger.instance.loadPrefab('prefab/item/flyGold').then((prefab: Prefab) => {
+            const goldCount = 10;
+            const baseDuration = 0.8;
+            const totalGold = this.pedalManagerCom.getPedalGold ? this.pedalManagerCom.getPedalGold() : 100;
+
+            // 获取踏板的世界坐标作为基础起始点
+            const baseStartWorldPos = pedalNode.worldPosition.clone();
+            // 基础目标位置（Hero）在动画开始时获取一次引用即可，动画中会实时获取最新位置
+            const targetNode = this.heroCom.node.children[0];
+
+            // 循环生成多个金币
+            for (let i = 0; i < goldCount; i++) {
+                const flyGold = instantiate(prefab);
+                
+                // 将金币添加到 Hero 的父节点 (center)，确保它们在同一个坐标系下
+                const parentNode = this.heroCom.node.parent;
+                if (!parentNode) {
+                    this.node.addChild(flyGold); // Fallback
+                } else {
+                    parentNode.addChild(flyGold);
+                }
+                
+                // 设置图层与 Hero 一致
+                flyGold.layer = this.heroCom.node.layer;
+
+                // 计算随机偏移起始位置 (X: 0-50, Y: 0-50)
+                // 注意：这里是在世界坐标系下偏移，还是在本地坐标系下偏移？
+                // 通常在世界坐标系下偏移比较直观
+                const offsetX = (Math.random()) * 100; 
+                const offsetY = (Math.random()) * 100;
+                
+                // 也可以考虑负向偏移，使其围绕中心生成：(Math.random() - 0.5) * 50
+                // 按照需求描述 "0-50"，则直接加
+                const startWorldPos = baseStartWorldPos.clone();
+                startWorldPos.x += offsetX;
+                startWorldPos.y += offsetY;
+                
+                // 设置初始位置
+                // 注意：由于 flyItemToTarget 内部会强制重置位置为 pedalNode 的位置，
+                // 我们需要修改 flyItemToTarget 或者在这里创建一个临时的虚拟节点作为起始点
+                // 方案一：修改 flyItemToTarget 支持 Vec3 作为起始点 (推荐)
+                // 方案二：创建临时节点 (繁琐)
+                // 鉴于 MoveManager 是单例且 flyItemToTarget 刚改过，我们再次微调 MoveManager 
+                // 或者，我们利用 flyItemToTarget 的特性：它使用 startNode.worldPosition 作为起始点
+                // 我们可以创建一个临时的 Node，设置好偏移后的坐标，传给 flyItemToTarget
+                
+                // 计算随机飞行时间 (0-0.2 的偏差)
+                const durationOffset = Math.random() * 0.2;
+                const duration = baseDuration + durationOffset;
+
+                const tempStartNode = new Node();
+                tempStartNode.setWorldPosition(startWorldPos);
+                
+                // 使用 MoveManager 的新版 flyItemToTarget 方法
+                MoveManager.getInstance().flyItemToTarget(flyGold, tempStartNode, targetNode, duration, () => {
+                    const addAmount = totalGold;
+                    GameData.addGold(addAmount); 
+                    flyGold.destroy();
+                    // 销毁临时节点
+                    tempStartNode.destroy();
+
+                    if (Math.random() > 0.5) { 
+                      //  AudioManager.getInstance().playSound('gold');
+                    }
+                });
+            }
+        });
     }
 
     evtPause() {

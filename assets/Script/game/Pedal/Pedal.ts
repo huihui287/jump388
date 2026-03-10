@@ -205,7 +205,7 @@ export class Pedal extends Component {
         }
         
         // 释放后清空技能（一次性效果）
-        this.skills = [];
+      //  this.skills = [];
     }
     
     // 获得护盾
@@ -223,8 +223,8 @@ export class Pedal extends Component {
 
     //获得金币技能
     private getGoldSkill() {
-        // 增加金币数量
-        GameData.addGold(100);
+        // 发送获得金币事件，由 Game 处理动画和加金币
+        EventManager.emit(EventName.Game.GetGold, this.node);
     }
 
     // 弹簧跳跃一次

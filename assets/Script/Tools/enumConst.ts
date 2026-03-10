@@ -78,6 +78,9 @@ export const Constant = {
     Height: 1334,
 };
 
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
 /**
  * 踏板类型枚举
  * 与预制体名称一致，用于加载资源与对象池索引
@@ -107,53 +110,13 @@ export enum PedalSkill {
     SHIELD = 'shieldPedal'
 }
 
-export enum HeroType {
-    //小青蛙默认
-    Default = 1000,
-    //草帽蛙
-    StrawHatFrog = 1001,
-    //金蟾
-    GoldenToad = 1002,
-    //滑板蛙
-    SkatingFrog = 1003,
-    //忍者蛙
-    NinjaFrog = 1004,
-    //高达蛙
-    GundamFrog = 1005,
-    //流星蛙
-    MeteorFrog = 1006,
-}
-
-/**
- * 英雄技能类型
- */
-export enum HeroSkillType {
-    NONE = 0,
-    
-    // --- 被动技能 ---
-    /** 结算金币加成 (百分比) */
-    PASSIVE_GOLD_BONUS = 1,
-    /** 额外金币获取 (固定数值) */
-    PASSIVE_EXTRA_GOLD = 2,
-    /** 移动速度加成 (百分比) */
-    PASSIVE_MOVE_SPEED = 3,
-    /** 清除陷阱/免疫陷阱 */
-    PASSIVE_DESTROY_TRAP = 4,
-    
-    // --- 主动技能 ---
-    /** 喷气背包 (空中跳跃) */
-    ACTIVE_JETPACK = 101,
-    /** 流星冲刺 (向上冲刺N层) */
-    ACTIVE_METEOR = 102,
-}
-
 /** 技能权重配置 (可在代码中灵活修改) */
 export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 2000,         // 无技能
     [PedalSkill.SPRING]: 1000,       // 弹簧
     [PedalSkill.LOW_GRAVITY]: 10,  // 低重力
     [PedalSkill.SPIKE]: 1,         // 尖刺
-    [PedalSkill.GOLD]: 20,         // 金币
+    [PedalSkill.GOLD]: 30000,         // 金币
     [PedalSkill.FRACTURE]: 0,      // 断裂通常不通过随机生成，而是由踏板类型决定
     [PedalSkill.SHIELD]: 1000,      // 护盾
 };

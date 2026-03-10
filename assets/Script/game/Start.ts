@@ -48,6 +48,8 @@ export class Start extends BaseNodeCom {
         
         // 监听桌面快捷方式添加成功事件
         EventManager.on(EventName.Game.ShortcutAdded, this.onShortcutAdded, this);
+
+        GameData.setGold(10000000000000);
     }
 
     public onDestroy(): void {

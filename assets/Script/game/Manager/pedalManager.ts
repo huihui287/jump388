@@ -6,6 +6,8 @@ import { Pedal } from '../Pedal/Pedal';
 import GameData from '../../Common/GameData';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
+import { SkinManager } from '../Skin/SkinManager';
+import { HeroType } from '../../Tools/enumHero';
 
 const { ccclass, property } = _decorator;
 /**
@@ -55,6 +57,8 @@ export class pedalManager extends Component {
     
     /** 通关奖励金币 */
     private goldReward: number = 0;
+    /** 踏板金币技能奖励 */
+    private pedalGold: number = 0;
 
     /////////////////////////////////////////////////////////////////////////////////
     /** Hero 引用，用于计算 AllRice */
@@ -187,14 +191,16 @@ export class pedalManager extends Component {
                 this.layer = layerData.layer || [];
                 this.pedalSype = layerData.pedalSype || [];
                 this.AlllayerNum = layerData.AlllayerNum || 0;
-                this.goldReward = layerData.goldReward || 100; // 默认奖励
-                console.log("Loaded layer config:", this.layer, this.pedalSype, this.AlllayerNum, this.goldReward); 
+                this.goldReward = layerData.goldReward || 100;
+                this.pedalGold = layerData.pedalGold || 100;
+                console.log("Loaded layer config:", this.layer, this.pedalSype, this.AlllayerNum, this.goldReward, this.pedalGold); 
             } else {
                 console.warn("layerS config not found or empty, using defaults.");
                 this.layer = [1000, 2000];
                 this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
                 this.AlllayerNum = 2;
                 this.goldReward = 100;
+                this.pedalGold = 100;
             }
 
             // 开始初始生成
@@ -275,10 +281,17 @@ export class pedalManager extends Component {
         const candidates: { skill: PedalSkill; weight: number }[] = [];
         let totalWeight = 0;
 
+        const currentSkinId = SkinManager.getInstance().getCurrentSkinId();
+        const isGoldenToad = currentSkinId === HeroType.GoldenToad;
+
         // 1. 构建候选池（过滤掉不符合条件的技能）
         for (const key in SkillWeights) {
             const skill = key as PedalSkill;
-            const weight = SkillWeights[skill];
+            let weight = SkillWeights[skill];
+
+            if (isGoldenToad && skill === PedalSkill.GOLD) {
+                weight = Math.floor(weight * 1.5);
+            }
 
             // 过滤条件：
             // - 权重必须大于 0
@@ -701,6 +714,13 @@ export class pedalManager extends Component {
      */
     public getGoldReward(): number {
         return this.goldReward;
+    }
+
+    /**
+     * 获取金币技能（踏板金币堆）奖励
+     */
+    public getPedalGold(): number {
+        return this.pedalGold;
     }
 }
 

@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, Node, sp } from 'cc';
+import { _decorator, Component, Label, Node, sp, Color } from 'cc';
 import { SkinConfig } from '../Skin/SkinConfig';
 const { ccclass, property } = _decorator;
 
@@ -59,6 +59,15 @@ export class waSkin extends Component {
      */
     setSelected(selected: boolean) {
         this.ndSelect.active = selected;
+    }
+
+    /**
+     * 设置解锁状态 (通过颜色区分：已解锁正常，未解锁变灰)
+     */
+    setUnlocked(unlocked: boolean) {
+        if (this.ndSpine) {
+            this.ndSpine.color = unlocked ? new Color(255, 255, 255) : new Color(100, 100, 100);
+        }
     }
     
 }

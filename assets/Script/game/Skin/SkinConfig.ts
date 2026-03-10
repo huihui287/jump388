@@ -1,5 +1,7 @@
+import { HeroSkillType, HeroType } from "../../Tools/enumHero";
 
-import { HeroSkillType, HeroType } from "../../Tools/enumConst";
+
+
 
 /**
  * 技能信息
@@ -49,7 +51,7 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 id: HeroType.StrawHatFrog,
                 name: "草帽蛙",
                 spineSkinName: "jianzhugong", 
-                price: 0, // 第一次看完广告解锁 (暂时设为0或通过逻辑判断)
+                price: 1000, 
                 description: "无主动技能，结算金币+5%",
                 activeSkill: { type: HeroSkillType.NONE, description: "无" },
                 passiveSkill: { 

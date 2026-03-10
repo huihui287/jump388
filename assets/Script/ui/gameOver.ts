@@ -12,6 +12,9 @@ import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
 import ViewManager from '../Common/view/ViewManager';
 import LoaderManeger from '../sysloader/LoaderManeger';
+import { SkinManager } from '../game/Skin/SkinManager';
+import { getSkinConfig } from '../game/Skin/SkinConfig';
+import { HeroSkillType } from '../Tools/enumHero';
 const { ccclass, property } = _decorator;
 
 // 游戏失败界面
@@ -56,14 +59,34 @@ export class gameOver extends BaseDialog  {
             finalGoldReward = Math.floor((currentLayer / totalLayer) * winReward);
         }
         
+        // 皮肤加成逻辑
+        try {
+            const currentSkinId = SkinManager.getInstance().getCurrentSkinId();
+            const skinConfig = getSkinConfig(currentSkinId);
+            if (skinConfig && skinConfig.passiveSkill) {
+                // 百分比加成
+                if (skinConfig.passiveSkill.type === HeroSkillType.PASSIVE_GOLD_BONUS) {
+                    const bonus = skinConfig.passiveSkill.value || 0;
+                    finalGoldReward = Math.floor(finalGoldReward * (1 + bonus));
+                } 
+                // 固定数值加成
+                else if (skinConfig.passiveSkill.type === HeroSkillType.PASSIVE_EXTRA_GOLD) {
+                    finalGoldReward += (skinConfig.passiveSkill.value || 0);
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to pre-calculate gold bonus for UI", e);
+        }
+
         this.goldnum = finalGoldReward;
         
         console.log(`GameOver: CurrentLayer=${currentLayer}, TotalLayer=${totalLayer}, BaseReward=${winReward}, FinalReward=${finalGoldReward}`);
         
         // 增加金币到玩家账户
-        if (finalGoldReward > 0) {
-            GameData.addGold(finalGoldReward);
-        }
+        // 注意：这里我们手动计算了加成，所以不能再调用会自动加成的 GameData.addGold
+        // 而是直接修改 Gold 数据
+        let currentGold = Number(GameData.loadData(GameData.Gold, 0));
+        GameData.saveData(GameData.Gold, currentGold + finalGoldReward);
 
         AudioManager.getInstance().playSound('lose');
         

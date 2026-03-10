@@ -4,7 +4,7 @@ import AudioManager from '../Common/AudioManager';
 import CM from '../channel/CM';
 import GameData from '../Common/GameData';
 import ViewManager from '../Common/view/ViewManager';
-import { HeroType } from '../Tools/enumConst';
+import { HeroType } from '../Tools/enumHero';
 import { getSkinConfig } from '../game/Skin/SkinConfig';
 import { waSkin } from '../game/item/waSkin';
 const { ccclass, property } = _decorator;

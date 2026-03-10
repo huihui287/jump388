@@ -16,7 +16,8 @@
         "woodPedal"
       ],
       "AlllayerNum": 20,
-      "goldReward": 50
+      "goldReward": 50,
+      "pedalGold": 100
     }
   ]
 }
