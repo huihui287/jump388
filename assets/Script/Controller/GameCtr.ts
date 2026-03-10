@@ -1,7 +1,5 @@
 import { Node, } from "cc";
 import { SingletonClass } from "./singletonClass";
-import { LevelConfig } from "../Tools/levelConfig";
-import { Bomb, Constant } from "../Tools/enumConst";
 
 export class GameCtr extends SingletonClass<GameCtr> {
     public rewardGold: number = 100;

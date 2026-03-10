@@ -20,7 +20,7 @@
             "_value": false
           },
           "animation": {
-            "_value": false
+            "_value": true
           },
           "skeletal-animation": {
             "_value": false
@@ -198,6 +198,7 @@
         "name": "迁移生成的配置",
         "includeModules": [
           "2d",
+          "animation",
           "audio",
           "base",
           "gfx-webgl",

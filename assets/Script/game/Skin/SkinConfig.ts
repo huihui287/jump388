@@ -1,5 +1,5 @@
 
-import { HeroSkillType } from "../../Tools/enumConst";
+import { HeroSkillType, HeroType } from "../../Tools/enumConst";
 
 /**
  * 技能信息
@@ -34,12 +34,21 @@ export interface SkinConfig {
  */
 export function getSkinConfig(id: number): SkinConfig | null {
     switch (id) {
-        // 1. 草帽蛙
-        case 1001:
+        case HeroType.Default:
             return {
-                id: 1001,
+                id: HeroType.Default,
+                name: "小青蛙",
+                spineSkinName: "famugong",
+                price: 0,
+                description: "无技能",
+                activeSkill: { type: HeroSkillType.NONE, description: "无" },
+            };
+
+        case HeroType.StrawHatFrog:
+            return {
+                id: HeroType.StrawHatFrog,
                 name: "草帽蛙",
-                spineSkinName: "default", 
+                spineSkinName: "jianzhugong", 
                 price: 0, // 第一次看完广告解锁 (暂时设为0或通过逻辑判断)
                 description: "无主动技能，结算金币+5%",
                 activeSkill: { type: HeroSkillType.NONE, description: "无" },
@@ -50,12 +59,11 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 }
             };
         
-        // 2. 金蟾
-        case 1002:
+        case HeroType.GoldenToad:
             return {
-                id: 1002,
+                id: HeroType.GoldenToad,
                 name: "金蟾",
-                spineSkinName: "gold_toad", 
+                spineSkinName: "xingchunzhe", 
                 price: 3000,
                 description: "来财：金币出现概率+50%，额外获得10金币",
                 activeSkill: { type: HeroSkillType.NONE, description: "无" },
@@ -66,12 +74,11 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 }
             };
 
-        // 3. 溜冰蛙
-        case 1003:
+        case HeroType.SkatingFrog:
             return {
-                id: 1003,
+                id: HeroType.SkatingFrog,
                 name: "溜冰蛙",
-                spineSkinName: "skater", 
+                spineSkinName: "yiliaobin", 
                 price: 8000,
                 description: "我可以滑着走：移动速度增加30%",
                 activeSkill: { type: HeroSkillType.NONE, description: "无" },
@@ -82,10 +89,9 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 }
             };
 
-        // 4. 忍者蛙
-        case 1004:
+        case HeroType.NinjaFrog:
             return {
-                id: 1004,
+                id: HeroType.NinjaFrog,
                 name: "忍者蛙",
                 spineSkinName: "ninja", 
                 price: 10000,
@@ -97,10 +103,9 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 }
             };
 
-        // 5. 高达蛙
-        case 1005:
+        case HeroType.GundamFrog:
             return {
-                id: 1005,
+                id: HeroType.GundamFrog,
                 name: "高达蛙",
                 spineSkinName: "mecha", 
                 price: 50000,
@@ -112,10 +117,9 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 }
             };
 
-        // 6. 流星蛙
-        case 1006:
+        case HeroType.MeteorFrog:
             return {
-                id: 1006,
+                id: HeroType.MeteorFrog,
                 name: "流星蛙",
                 spineSkinName: "meteor", 
                 price: 100000,

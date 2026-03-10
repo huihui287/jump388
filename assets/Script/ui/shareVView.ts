@@ -4,10 +4,17 @@ import AudioManager from '../Common/AudioManager';
 import CM from '../channel/CM';
 import GameData from '../Common/GameData';
 import ViewManager from '../Common/view/ViewManager';
+import { HeroType } from '../Tools/enumConst';
+import { getSkinConfig } from '../game/Skin/SkinConfig';
+import { waSkin } from '../game/item/waSkin';
 const { ccclass, property } = _decorator;
 
 @ccclass('shareVView')
 export class shareVView extends BaseDialog {
+
+    //蛙皮肤节点
+    @property({type: Node})
+    ndwaS: Node = null;
 
     start() {
 
@@ -19,6 +26,34 @@ export class shareVView extends BaseDialog {
 
     onLoad() {
         super.onLoad();
+        this.initSkins();
+    }
+
+    initSkins() {
+        if (!this.ndwaS) return;
+        
+        let children = this.ndwaS.children;
+        let index = 0;
+
+        // 遍历 HeroType
+        for (let key in HeroType) {
+            // 过滤掉字符串 key，只保留数字 value
+            if (isNaN(Number(key))) continue;   
+            
+            let heroId = Number(key);
+            let config = getSkinConfig(heroId);
+            
+            if (config && index < children.length) {
+                let item = children[index];
+                item.active = true;
+                
+                let waSkinComp = item.getComponent(waSkin);
+                if (waSkinComp) {
+                    waSkinComp.setSkin(config);
+                }
+                index++;
+            }
+        }
     }
 
     onClick_shareVBtn() {

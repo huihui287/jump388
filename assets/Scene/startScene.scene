@@ -359,7 +359,7 @@
     "_prefab": null,
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 0,
+      "x": 861.824,
       "y": 0,
       "z": 0
     },
@@ -2323,7 +2323,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "uppaotaBtn",
+    "_name": "SkinBtn",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {

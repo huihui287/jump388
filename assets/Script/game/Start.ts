@@ -342,4 +342,15 @@ export class Start extends BaseNodeCom {
         });
     }
 
+    //显示皮肤界面
+    onClick_SkinBtn() {
+        AudioManager.getInstance().playSound('button_click');
+        LoaderManeger.instance.loadPrefab('prefab/ui/skinView').then((prefab) => {
+            let skinView = instantiate(prefab);
+            ViewManager.show({
+                node: skinView,
+                name: "skinView"
+            });
+        });
+    }
 }

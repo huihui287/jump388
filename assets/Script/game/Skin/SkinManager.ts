@@ -2,6 +2,7 @@
 import { _decorator } from 'cc';
 import GameData from '../../Common/GameData';
 import { getSkinConfig } from './SkinConfig';
+import { HeroType } from '../../Tools/enumConst';
 const { ccclass } = _decorator;
 
 /**
@@ -10,7 +11,7 @@ const { ccclass } = _decorator;
 @ccclass
 export class SkinManager {
     private static _instance: SkinManager = null;
-    private currentSkinId: number = 1001; // 默认ID
+    private currentSkinId: number = HeroType.Default;
     private unlockedSkins: number[] = [];
 
     public static getInstance(): SkinManager {
@@ -22,18 +23,26 @@ export class SkinManager {
 
     constructor() {
         this.loadUnlockedSkins();
-        this.currentSkinId = Number(GameData.loadData('CurrentSkinId', 1001));
+        this.currentSkinId = Number(GameData.loadData('CurrentSkinId', HeroType.Default));
     }
 
     /**
      * 加载已解锁的皮肤
      */
     private loadUnlockedSkins() {
-        const data = GameData.loadData('UnlockedSkins', '[1001]');
+        const data = GameData.loadData('UnlockedSkins', JSON.stringify([HeroType.Default]));
         try {
             this.unlockedSkins = JSON.parse(data);
-        } catch (e) {
-            this.unlockedSkins = [1001];
+        } catch {
+            this.unlockedSkins = [HeroType.Default];
+        }
+
+        if (!Array.isArray(this.unlockedSkins) || this.unlockedSkins.length === 0) {
+            this.unlockedSkins = [HeroType.Default];
+        }
+
+        if (this.unlockedSkins.indexOf(HeroType.Default) === -1) {
+            this.unlockedSkins.push(HeroType.Default);
         }
     }
 
@@ -105,9 +114,15 @@ export class SkinManager {
      * 获取所有皮肤配置（包括解锁状态）
      */
     public getAllSkinsInfo() {
-        // 这里假设我们知道所有的ID，或者从配置表中遍历
-        // 简单起见，我们硬编码已知的ID列表
-        const allIds = [1001, 1002, 1003, 1004, 1005, 1006];
+        const allIds = [
+            HeroType.Default,
+            HeroType.StrawHatFrog,
+            HeroType.GoldenToad,
+            HeroType.SkatingFrog,
+            HeroType.NinjaFrog,
+            HeroType.GundamFrog,
+            HeroType.MeteorFrog,
+        ];
         return allIds.map(id => {
             const config = getSkinConfig(id);
             return {

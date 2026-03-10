@@ -107,6 +107,23 @@ export enum PedalSkill {
     SHIELD = 'shieldPedal'
 }
 
+export enum HeroType {
+    //小青蛙默认
+    Default = 1000,
+    //草帽蛙
+    StrawHatFrog = 1001,
+    //金蟾
+    GoldenToad = 1002,
+    //滑板蛙
+    SkatingFrog = 1003,
+    //忍者蛙
+    NinjaFrog = 1004,
+    //高达蛙
+    GundamFrog = 1005,
+    //流星蛙
+    MeteorFrog = 1006,
+}
+
 /**
  * 英雄技能类型
  */
