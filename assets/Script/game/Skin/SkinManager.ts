@@ -23,7 +23,7 @@ export class SkinManager {
 
     constructor() {
         this.loadUnlockedSkins();
-        this.currentSkinId = Number(GameData.loadData('CurrentSkinId', HeroType.Default));
+        this.currentSkinId = Number(GameData.loadData(GameData.CurrentSkin, HeroType.Default));
     }
 
     /**
@@ -66,7 +66,7 @@ export class SkinManager {
     public setCurrentSkinId(id: number): void {
         if (this.isSkinUnlocked(id)) {
             this.currentSkinId = id;
-            GameData.saveData('CurrentSkinId', id);
+            GameData.saveData(GameData.CurrentSkin, id);
         } else {
             console.warn(`Skin ${id} is not unlocked!`);
         }

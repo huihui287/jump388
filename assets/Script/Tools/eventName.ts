@@ -5,7 +5,6 @@
 export namespace EventName {
     /** game */
     export enum Game {
-    
 
         /** 触摸事件 */
         TouchStart = "TouchStart",
@@ -39,5 +38,10 @@ export namespace EventName {
         HitSpike = "HitSpike",
         /** 释放主动技能 */
         UseSkill = "UseSkill",
+
+        //皮肤
+        //////////////////////////
+        /** 皮肤改变 */
+        SkinChanged = "SkinChanged",
     }
 }

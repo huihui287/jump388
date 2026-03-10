@@ -15,15 +15,19 @@ import LoaderManeger from '../sysloader/LoaderManeger';
 const { ccclass, property } = _decorator;
 
 // 游戏胜利界面
-@ccclass('gameOver')
-export class gameOver extends BaseDialog {
+@ccclass('gameWin')
+export class gameWin extends BaseDialog {
     private level: number = 0;
     private goldnum: number = 0;
 
+    // 通过获得金币数更新显示
+    @property(Node)
     goldnumlb: Node = null;
+
     onLoad() {
         super.onLoad();
         // 处理数据
+
         if (this._data) {
             this.handleData();
         }
@@ -34,7 +38,7 @@ export class gameOver extends BaseDialog {
         super.setData(data);
 
         // 如果 viewList 已经初始化，立即处理数据
-        if (this.viewList.size > 0) {
+        if (this.viewList && this.viewList.size > 0) {
             this.handleData();
         }
     }
@@ -43,13 +47,31 @@ export class gameOver extends BaseDialog {
         if (!this._data) return;
 
         this.level = GameData.getCurLevel();
+        this.goldnum = this._data.goldReward || 0;
 
         AudioManager.getInstance().playSound('win');
 
+        // 查找 goldnumlb 节点
+        let goldLabelNode = this.goldnumlb;
+        if (!goldLabelNode && this.viewList) {
+             // 尝试查找名为 goldnumlb 的节点
+             for (let [path, n] of this.viewList) {
+                if (n.name === 'goldnumlb') {
+                    goldLabelNode = n;
+                    break;
+                }
+            }
+        }
+
+        if (goldLabelNode) {
+            const label = goldLabelNode.getComponent(Label);
+            if (label) {
+                label.string = `+${this.goldnum}`;
+            }
+        }
+
         if (CM.mainCH) {
             CM.mainCH.setImRankData_Num(GameData.getCurLevel());
-        }
-        if (CM.mainCH) {
             CM.mainCH.setUserCloudStorage(GameData.getCurLevel());
         }
     }

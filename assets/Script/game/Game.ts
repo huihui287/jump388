@@ -19,6 +19,7 @@ import { CameraManager } from './CameraManager';
 import { pedalManager } from './Manager/pedalManager';
 import { Pedal } from './Pedal/Pedal';
 import ViewManager from '../Common/view/ViewManager';
+import { getSkinConfig } from './Skin/SkinConfig';
 
 const { ccclass, property } = _decorator;
 
@@ -70,14 +71,9 @@ export class Game extends BaseNodeCom {
         // 播放背景音乐
         AudioManager.getInstance().playMusic('background1', true);
 
-        // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
-        this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
+        this.initHero();
+        await this.initpedalManagerCom();
 
-        this.pedalManagerCom = this.viewList.get('center/pedalManager').getComponent(pedalManager);
-        this.pedalManagerCom.setHero(this.heroCom.node);
-        await this.pedalManagerCom.loadtPools();
-        await this.pedalManagerCom.loadPedalConfig();
-        
         this.setCameraTarget();
         this.loadExtraData(GameData.getCurLevel());
         // 添加事件监听器
@@ -85,6 +81,23 @@ export class Game extends BaseNodeCom {
         
     }
     
+    /**
+     * 初始化Hero组件
+     * @description 初始化游戏主角Hero组件，设置其初始状态和属性
+     */
+    initHero() {
+        // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
+        this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
+        this.setHeroSkin();
+    }
+    
+    // 初始化踏板管理组件
+    async initpedalManagerCom() {
+        this.pedalManagerCom = this.viewList.get('center/pedalManager').getComponent(pedalManager);
+        this.pedalManagerCom.setHero(this.heroCom.node);
+        await this.pedalManagerCom.loadtPools();
+        await this.pedalManagerCom.loadPedalConfig();
+    }
     /**
      * 设置相机目标
      * @description 设置相机跟随的目标节点，包括偏移量和跟随速度
@@ -209,6 +222,14 @@ export class Game extends BaseNodeCom {
     }
 
     /**
+     * 设置英雄皮肤
+     * 根据当前皮肤配置更新英雄的外观
+     * @description 根据当前游戏皮肤配置，更新英雄的模型、颜色等外观属性
+     */
+    setHeroSkin() {
+        this.heroCom.setSkin();
+    }
+    /**
      * 每帧更新
      * 检查水果水果位置并显示警告
      * @param {number} dt - 时间间隔
@@ -260,7 +281,9 @@ export class Game extends BaseNodeCom {
         App.gameCtr.setPause(true);
         
         // 显示结算界面
-        ViewManager.showGameWinView();
+        ViewManager.showGameWinView({
+            goldReward: this.pedalManagerCom.getGoldReward()
+        });
         
     }
 
@@ -397,7 +420,8 @@ export class Game extends BaseNodeCom {
         // 这里可以弹出结算界面，如 ViewManager.showView(ViewName.GameOver)
         ViewManager.showGameOver({
             currentLayer: this.heroCom.getHerolayerS(),
-            totalLayer: this.pedalManagerCom.getAlllayerNum()
+            totalLayer: this.pedalManagerCom.getAlllayerNum(),
+            goldReward: this.pedalManagerCom.getGoldReward() // 传递总奖励
         });
         // 暂停游戏
         EventManager.emit(EventName.Game.Pause);

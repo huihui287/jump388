@@ -8,8 +8,9 @@ import { HeroSkillType, PedalSkill } from '../Tools/enumConst';
 import EventManager from '../Common/view/EventManager';
 import { EventName } from '../Tools/eventName';
 import { SkinManager } from './Skin/SkinManager';
-import { getSkinConfig, SkillInfo } from './Skin/SkinConfig';
+import { getSkinConfig, SkillInfo, SkinConfig } from './Skin/SkinConfig';
 import ViewManager from '../Common/view/ViewManager';
+import GameData from '../Common/GameData';
 const { ccclass, property } = _decorator;
 
 /**
@@ -163,6 +164,7 @@ class AttackState implements IState {
  */
 @ccclass('Hero')
 export class Hero extends Component {
+
 
     /** 骨骼动画组件 */
     @property(sp.Skeleton)
@@ -944,7 +946,15 @@ export class Hero extends Component {
         this.ShieldSkillIcon.active = active;
     }
     
-    
+    //////////////////////////////////////////////////////////////////////////////
+    /**
+     * 设置英雄皮肤
+     * 根据当前皮肤配置更新英雄的外观
+     * @description 根据当前游戏皮肤配置，更新英雄的模型、颜色等外观属性
+     */
+    setSkin() {
+        this.refreshSkin();
+    }
 }
 
 

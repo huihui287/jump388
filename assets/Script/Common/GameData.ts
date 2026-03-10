@@ -3,7 +3,7 @@ import { DEV } from 'cc/env';
 import { App } from '../Controller/app';
 import { SkinManager } from '../game/Skin/SkinManager';
 import { getSkinConfig } from '../game/Skin/SkinConfig';
-import { HeroSkillType } from '../Tools/enumConst';
+import { HeroSkillType, HeroType } from '../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
 @ccclass
@@ -21,6 +21,8 @@ export default class GameData {
     /** 侧边栏奖励最后领取日期 */
     public static SidebarRewardDate = 'SidebarRewardDate';
 
+            /** 当前使用的皮肤 */
+            public static CurrentSkin = 'CurrentSkin';
     /**
      * 获取最大解锁关卡
      * @returns 最大解锁关卡
@@ -190,10 +192,17 @@ static loadData(key: string, defaultValue: any): any {
         return GameData.loadData(GameData.Level, 1);
     }
 
- static   setCurLevel(lv: number) {
+    static setCurLevel(lv: number) {
         App.gameCtr.curLevel = lv;
         GameData.saveData(GameData.Level, lv);
         GameData.updateMaxLevel(lv);
     }
-
+    /** 当前使用的皮肤 */
+    static setCurrentSkin(skinId: number) {
+        GameData.saveData(GameData.CurrentSkin, skinId);
+    }
+    /** 当前使用的皮肤 */
+    static getCurrentSkin() {
+        return GameData.loadData(GameData.CurrentSkin, HeroType.Default);
+    }
 }

@@ -43,27 +43,26 @@ export class gameOver extends BaseDialog  {
     private handleData() {
         if (!this._data) return;
         
-        let { currentLayer, totalLayer } = this._data;
+        let { currentLayer, totalLayer, goldReward } = this._data;
         
         // 计算奖励金币
-        // 规则：通关奖励3000，每层奖励 = 3000 / totalLayer
-        // 失败奖励 = currentLayer * 每层奖励
+        // 规则：通关奖励来自配置 goldReward (如果没有则默认1000)
+        // 失败奖励 = (currentLayer / totalLayer) * goldReward
         
-        const winReward = 3000;
-        let goldReward = 0;
+        const winReward = goldReward || 1000;
+        let finalGoldReward = 0;
         
         if (totalLayer > 0) {
-            const rewardPerLayer = winReward / totalLayer;
-            goldReward = Math.floor(currentLayer * rewardPerLayer);
+            finalGoldReward = Math.floor((currentLayer / totalLayer) * winReward);
         }
         
-        this.goldnum = goldReward;
+        this.goldnum = finalGoldReward;
         
-        console.log(`GameOver: CurrentLayer=${currentLayer}, TotalLayer=${totalLayer}, Reward=${goldReward}`);
+        console.log(`GameOver: CurrentLayer=${currentLayer}, TotalLayer=${totalLayer}, BaseReward=${winReward}, FinalReward=${finalGoldReward}`);
         
         // 增加金币到玩家账户
-        if (goldReward > 0) {
-            GameData.addGold(goldReward);
+        if (finalGoldReward > 0) {
+            GameData.addGold(finalGoldReward);
         }
 
         AudioManager.getInstance().playSound('lose');

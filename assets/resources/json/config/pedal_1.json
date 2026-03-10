@@ -15,7 +15,8 @@
         "fracturePedal",
         "woodPedal"
       ],
-      "AlllayerNum": 20
+      "AlllayerNum": 20,
+      "goldReward": 50
     }
   ]
 }

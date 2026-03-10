@@ -7,6 +7,9 @@ import ViewManager from '../Common/view/ViewManager';
 import { HeroType } from '../Tools/enumConst';
 import { getSkinConfig } from '../game/Skin/SkinConfig';
 import { waSkin } from '../game/item/waSkin';
+import EventManager from '../Common/view/EventManager';
+import { EventName } from '../Tools/eventName';
+import { SkinManager } from '../game/Skin/SkinManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('skinView')
@@ -17,6 +20,11 @@ export class skinView extends BaseDialog {
 
     //蛙皮肤技能描述
     private skillDescLabel: Label = null;
+
+
+        // 当前选中的 waSkin 组件
+    private _currentSelectedSkin: waSkin = null;
+
     start() {
 
     }
@@ -41,9 +49,6 @@ export class skinView extends BaseDialog {
             this.skillDescLabel.string = desc;
         }
     }   
-
-    // 当前选中的 waSkin 组件
-    private _currentSelectedSkin: waSkin = null;
 
     initSkins() {
         if (!this.ndwaS) return;
@@ -100,6 +105,15 @@ export class skinView extends BaseDialog {
     onClick_guanbiBtn() {
         AudioManager.getInstance().playSound('button_click');
         this.dismiss();
+    }
+
+    onClick_usebtn() {
+        AudioManager.getInstance().playSound('button_click');
+        if (this._currentSelectedSkin) {
+            SkinManager.getInstance().setCurrentSkinId(this._currentSelectedSkin._skinConfig.id);
+            EventManager.emit(EventName.Game.SkinChanged);//发送更改皮肤的消息
+            this.dismiss();
+        }
     }
 
 }

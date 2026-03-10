@@ -7,6 +7,10 @@ import { App } from '../Controller/app';
 import GameData from '../Common/GameData';
 import AudioManager from '../Common/AudioManager';
 import ViewManager from '../Common/view/ViewManager';
+import EventManager from '../Common/view/EventManager';
+import { EventName } from '../Tools/eventName';
+import { waSkin } from '../game/item/waSkin';
+import { getSkinConfig } from '../game/Skin/SkinConfig';
 const { ccclass, property } = _decorator;
 
 @ccclass('levelSelect')
@@ -21,7 +25,7 @@ export class levelSelect extends BaseDialog {
     /** 当前已加载的关卡数量 */
     private loadedLevelCount: number = 0;
     /** 每页加载的数量，分批加载以优化性能 */
-    private pageSize: number = 24; // 增加每页数量，通常是 3 或 4 的倍数
+    private pageSize: number = 8; // 增加每页数量，通常是 3 或 4 的倍数
     /** 是否正在加载中，防止重复触发 */
     private isLoading: boolean = false;
     /** 滚动视图的内容节点 */
@@ -35,6 +39,16 @@ export class levelSelect extends BaseDialog {
     /** 玩家当前已解锁的最大关卡 */
     private maxUnlockedLevel: number = 1;
     
+    /////////////////////////////////////////////////
+
+    /** 蛙节点 */
+    @property(Node)
+    wanode: Node = null;
+
+    /** 蛙的技能描述标签 */
+    @property(Label)
+    descLabel: Label = null;
+    //////////////////////////////////////
     /**
      * 生命周期：加载时调用
      * 初始化UI引用、布局模式及事件监听
@@ -43,6 +57,8 @@ export class levelSelect extends BaseDialog {
         super.onLoad();
         this.maxUnlockedLevel = GameData.getMaxLevel();
         this.ScrollViewNd = this.viewList.get("ScrollView");
+        this.wanode = this.viewList.get("wanode");
+        this.descLabel = this.viewList.get("wanode/desc").getComponent(Label);
         if (this.ScrollViewNd) {
             this.scrollView = this.ScrollViewNd.getComponent(ScrollView);
             this.contentNd = this.scrollView.content;
@@ -56,8 +72,63 @@ export class levelSelect extends BaseDialog {
             // 监听滚动事件，用于预加载
             this.ScrollViewNd.on(ScrollView.EventType.SCROLLING, this.onScrolling, this);
         }
+
+        this.wanode.on(Node.EventType.TOUCH_END, this.onWanodeClick, this);
+
+        //皮肤
+        EventManager.on(EventName.Game.SkinChanged, this.initSkins, this);
+
     }
 
+    onDestroy(): void {
+        if (this.wanode && this.wanode.isValid) {
+            this.wanode.off(Node.EventType.TOUCH_END, this.onWanodeClick, this);
+        }
+        //皮肤
+        EventManager.off(EventName.Game.SkinChanged, this.initSkins, this);
+        super.onDestroy();
+    }
+
+    //初始化皮肤
+    initSkins() {
+        if (!this.wanode) return;
+        const skinId = GameData.getCurrentSkin();
+        const config = getSkinConfig(skinId);
+        if (!config) return;
+        let children = this.wanode.children;
+        for (let child of children) {
+            let skin = child.getComponent(waSkin);
+            if (skin) {
+                skin.setSkin(config);
+                this.setSkillDesc(config.description);
+            }
+        }
+    }   
+
+    /**
+     * 设置蛙的技能描述
+     * @param desc 技能描述文本
+     */
+    setSkillDesc(desc: string) {
+        if (this.descLabel) {
+            this.descLabel.string = desc;
+        }
+    }
+
+
+    /**
+     * 蛙节点点击事件
+     */
+    onWanodeClick() {
+        AudioManager.getInstance().playSound('button_click');
+        LoaderManeger.instance.loadPrefab('prefab/ui/skinView').then((prefab) => {
+            let skinView = instantiate(prefab);
+            ViewManager.show({
+                node: skinView,
+                name: "skinView"
+            });
+        });
+    }
     /**
      * 生命周期：开始时调用
      * 加载预制体并初始化第一批关卡数据
@@ -75,6 +146,7 @@ export class levelSelect extends BaseDialog {
 
         // 初始加载第一批
         await this.loadMoreLevels();
+        this.initSkins();
     }
 
     /**

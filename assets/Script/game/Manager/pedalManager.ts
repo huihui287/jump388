@@ -52,6 +52,10 @@ export class pedalManager extends Component {
 
     /** 需要生成所有层的数量 */
     private AlllayerNum: number = 0;
+    
+    /** 通关奖励金币 */
+    private goldReward: number = 0;
+
     /////////////////////////////////////////////////////////////////////////////////
     /** Hero 引用，用于计算 AllRice */
     private hero: Node | null = null;
@@ -183,12 +187,14 @@ export class pedalManager extends Component {
                 this.layer = layerData.layer || [];
                 this.pedalSype = layerData.pedalSype || [];
                 this.AlllayerNum = layerData.AlllayerNum || 0;
-                console.log("Loaded layer config:", this.layer, this.pedalSype, this.AlllayerNum); 
+                this.goldReward = layerData.goldReward || 100; // 默认奖励
+                console.log("Loaded layer config:", this.layer, this.pedalSype, this.AlllayerNum, this.goldReward); 
             } else {
                 console.warn("layerS config not found or empty, using defaults.");
                 this.layer = [1000, 2000];
                 this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
                 this.AlllayerNum = 2;
+                this.goldReward = 100;
             }
 
             // 开始初始生成
@@ -688,6 +694,13 @@ export class pedalManager extends Component {
      */
     public getAlllayerNum(): number {
         return this.AlllayerNum;
+    }
+
+    /**
+     * 获取通关金币奖励
+     */
+    public getGoldReward(): number {
+        return this.goldReward;
     }
 }
 

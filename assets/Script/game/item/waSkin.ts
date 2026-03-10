@@ -16,7 +16,7 @@ export class waSkin extends Component {
 
     // 点击回调
     private _clickCallback: (config: SkinConfig) => void = null;
-    private _skinConfig: SkinConfig = null;
+    public _skinConfig: SkinConfig = null;
 
     protected onLoad(): void {
         this.node.on(Node.EventType.TOUCH_END, this.onClick, this);
