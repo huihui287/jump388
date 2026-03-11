@@ -20,6 +20,10 @@ export class pedalManager extends Component {
 
     /** 踏板对象池映射 */
     private _pedalPools: Map<PedalType, NodePool> = new Map();
+    /** 踏板技能预制体映射 */
+    private _skillPrefabs: Map<PedalSkill, Prefab> = new Map();
+    /** 踏板技能对象池映射 */
+    private _skillPools: Map<PedalSkill, NodePool> = new Map();
 
     /** 初始池大小 */
     private initialPoolSize: number = 10;
@@ -353,6 +357,16 @@ export class pedalManager extends Component {
             const skills = this.RandomSkill();
             pedalComponent.addSkill(skills);
             
+            // 为 SPIKE, GOLD, SHIELD 生成预制体
+            for (const skill of skills) {
+                if (skill === PedalSkill.SPIKE || skill === PedalSkill.GOLD || skill === PedalSkill.SHIELD) {
+                    const skillNode = this.getSkillNode(skill);
+                    if (skillNode) {
+                        pedalComponent.addSkillNode(skill, skillNode);
+                    }
+                }
+            }
+            
             pedalComponent.setLayer(this.NewlayerS);
             // 如果是移动踏板，启动移动 (在位置设置后调用，这里先准备参数，实际在 setPedalPosition 后生效可能更好，
             // 但 startMove 使用的是当前位置作为基准，所以必须在 setPedalPosition 之后调用)
@@ -395,6 +409,21 @@ export class pedalManager extends Component {
             }
         }
 
+        // 加载所有技能预制体
+        const skillTypes = [PedalSkill.SPIKE, PedalSkill.GOLD, PedalSkill.SHIELD];
+        for (const skill of skillTypes) {
+            // 假设技能预制体路径为 prefab/PedalSkill/{SkillName}
+            // 或者直接用 skill 枚举值作为名称
+            const prefabPath = `prefab/item/${skill}`+"Skill"; 
+            const prefab = await LoaderManeger.instance.loadPrefab(prefabPath);
+            if (prefab) {
+                this._skillPrefabs.set(skill, prefab);
+            } else {
+                // console.warn(`Failed to load prefab for skill type: ${skill}`);
+                // 暂时不报错，可能还没做完资源
+            }
+        }
+
         // 为每种踏板类型初始化对象池
         this._pedalPrefabs.forEach((prefab, type) => {
             const pool = new NodePool();
@@ -408,6 +437,16 @@ export class pedalManager extends Component {
                 pool.put(pedalNode);
             }
             this._pedalPools.set(type, pool);
+        });
+
+        // 为每种技能类型初始化对象池
+        this._skillPrefabs.forEach((prefab, skill) => {
+            const pool = new NodePool();
+            for (let i = 0; i < 5; i++) { // 技能池可以小一点
+                const skillNode = instantiate(prefab);
+                pool.put(skillNode);
+            }
+            this._skillPools.set(skill, pool);
         });
     }
 
@@ -552,6 +591,43 @@ export class pedalManager extends Component {
     }
 
     /**
+     * 根据技能类型获取预制体
+     */
+    private getSkillPrefab(skill: PedalSkill): Prefab | null {
+        return this._skillPrefabs.get(skill) || null;
+    }
+
+    /**
+     * 从对象池获取技能节点
+     */
+    private getSkillNode(skill: PedalSkill): Node | null {
+        const pool = this._skillPools.get(skill);
+        let node: Node = null;
+        if (pool && pool.size() > 0) {
+            node = pool.get();
+        } else {
+            const prefab = this.getSkillPrefab(skill);
+            if (prefab) {
+                node = instantiate(prefab);
+            }
+        }
+        return node;
+    }
+
+    /**
+     * 回收技能节点
+     */
+    public recycleSkillNode(skill: PedalSkill, node: Node) {
+        if (!node) return;
+        const pool = this._skillPools.get(skill);
+        if (pool) {
+            pool.put(node);
+        } else {
+            node.destroy();
+        }
+    }
+
+    /**
      * 回收踏板到对象池
      */
     public recyclePedal(pedalNode: Node): void {
@@ -563,6 +639,11 @@ export class pedalManager extends Component {
             pedalNode.destroy(); // 如果没有Pedal组件，直接销毁
             return;
         }
+
+        // 回收踏板上的技能节点
+        pedalComponent.recycleSkillNodes((skill, node) => {
+            this.recycleSkillNode(skill, node);
+        });
 
         const type = pedalComponent.getType();
         const pool = this.getPoolByType(type);

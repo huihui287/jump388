@@ -103,7 +103,7 @@ export enum PedalSkill {
     LOW_GRAVITY = 'low_gravity',   // 降低重力，下落更慢
     FRACTURE = 'fracture',                // 断裂效果（预留，待接入具体逻辑）
     //尖刺
-    SPIKE = 'spike',
+    SPIKE = 'spikePedal',
     //金币堆
     GOLD = 'goldPedal',
     //护盾
@@ -113,9 +113,9 @@ export enum PedalSkill {
 /** 技能权重配置 (可在代码中灵活修改) */
 export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 2000,         // 无技能
-    [PedalSkill.SPRING]: 1000,       // 弹簧
+    [PedalSkill.SPRING]: 20,       // 弹簧
     [PedalSkill.LOW_GRAVITY]: 10,  // 低重力
-    [PedalSkill.SPIKE]: 30000,         // 尖刺
+    [PedalSkill.SPIKE]: 11,         // 尖刺
     [PedalSkill.GOLD]: 1,         // 金币
     [PedalSkill.FRACTURE]: 0,      // 断裂通常不通过随机生成，而是由踏板类型决定
     [PedalSkill.SHIELD]: 1000,      // 护盾

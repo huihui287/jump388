@@ -267,6 +267,10 @@ export class Hero extends Component {
     // 流星充能
     private _meteorCharge: number = 0;
     private readonly MAX_METEOR_CHARGE: number = 30;
+
+    // 高达蛙技能状态
+    private _isJetpacking: boolean = false; // 是否处于冲刺飞行状态
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected onLoad(): void {
         this.setSpawnPosition(this.node.position);
@@ -446,6 +450,21 @@ export class Hero extends Component {
     Dojump(deltaTime: number) {
         // 如果踩中踏板或者正在执行向上跳跃的 Tween，则不执行物理下落逻辑
         if (this._isTouchingPedal || this._isTweenJumping) return;
+
+        // 如果处于喷气背包冲刺飞行状态
+        if (this._isJetpacking) {
+            const dashForce = this._activeSkill && this._activeSkill.jetpackDashForce ? this._activeSkill.jetpackDashForce : 1500;
+            // 锁定速度为冲刺速度，不应用重力
+            this._jumpVelocity = dashForce;
+            
+            // 依然需要应用位移
+            const pos = this.node.position;
+            const deltaY = this._jumpVelocity * deltaTime; // 这里可能不需要 min(dt) 限制，因为是恒定速度飞行
+            
+            this._tempPosition.set(pos.x, pos.y + deltaY, pos.z);
+            this.node.setPosition(this._tempPosition);
+            return;
+        }
 
         // 下落阶段采用物理计算，增加下落速度
         const dt = Math.min(deltaTime, 0.033); 
@@ -866,6 +885,11 @@ export class Hero extends Component {
             ViewManager.toast(`技能冷却中: ${this._skillTimer.toFixed(1)}s`);
             return false;
         }
+
+        // 高达蛙：如果已经在冲刺状态，禁止重复触发（虽然有CD限制，但双重保险）
+        if (this._activeSkill.type === HeroSkillType.ACTIVE_JETPACK && this._isJetpacking) {
+            return false;
+        }
         
         // 特殊检查：流星蛙需要充能
         if (this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
@@ -888,35 +912,63 @@ export class Hero extends Component {
         return true;
     }
 
-    /**
-     * 触发主动技能效果
-     */
+    // 触发主动技能效果
     private triggerActiveSkillEffect() {
         if (!this._activeSkill) return;
         const val = this._activeSkill.value || 0;
         const duration = this._activeSkill.duration || 0;
 
         console.log(`Triggering Active Skill: ${this._activeSkill.description}`);
-        ViewManager.toast(`释放技能: ${this._activeSkill.description}`);
-
+        
         switch (this._activeSkill.type) {
             case HeroSkillType.ACTIVE_JETPACK:
-                // 空中跳跃，给予向上速度，但速度较慢
-                this._isTweenJumping = false; // 打断 Tween
-                this._isTouchingPedal = false;
-                this._jumpVelocity = 1000 * 0.7; // 假设正常跳跃力度是1000左右，这里给70%
-                this.playAnimation('jump_up');
-                this.changeState(HeroState.JUMP_UP);
+                ViewManager.toast(`释放技能: ${this._activeSkill.description}`);
+                this.handleJetpackSkill();
                 break;
             case HeroSkillType.ACTIVE_METEOR:
+                ViewManager.toast(`释放技能: ${this._activeSkill.description}`);
                 // 流星冲刺
                 this.meteorRush(val);
                 break;
             case HeroSkillType.PASSIVE_JUMP_SPEED:
+                ViewManager.toast(`释放技能: ${this._activeSkill.description}`);
                 // 极速滑行：临时增加跳跃速度
                 this.activateJumpSpeedBoost(val, duration);
                 break;
         }
+    }
+
+    private handleJetpackSkill() {
+        const jumpForce = this._activeSkill.jetpackJumpForce || 800;
+        // const dashForce = this._activeSkill.jetpackDashForce || 1500; // dashForce 在 update 中使用
+        const duration = this._activeSkill.duration || 5;
+
+        // 1. 立即跳跃
+        this._isTweenJumping = false;
+        this._isTouchingPedal = false;
+        this._jumpVelocity = jumpForce;
+        this.playAnimation('jump_up');
+        this.changeState(HeroState.JUMP_UP);
+        
+        console.log("Jetpack Jump Start!");
+
+        // 2. 延迟后进入冲刺状态 (飞行)
+        this.scheduleOnce(() => {
+            this._isJetpacking = true;
+            this.triggerShieldSkill(); // 获得护盾（无敌）
+            console.log("Jetpack Dash Mode ON!");
+            ViewManager.toast("冲刺飞行！");
+
+            // 持续时间结束后取消飞行
+            this.scheduleOnce(() => {
+                this._isJetpacking = false;
+                console.log("Jetpack Dash Mode OFF");
+                ViewManager.toast("飞行结束");
+                // 飞行结束后可能需要给一个向上的小速度防止直接坠落？
+                this._jumpVelocity = 0; 
+            }, duration);
+
+        }, 0.2); // 0.2秒延迟，让第一段跳跃稍微展示一下
     }
 
     /**
@@ -991,9 +1043,8 @@ export class Hero extends Component {
      * @returns 是否有护盾保护
      */
     public consumeShield(): boolean {
-        if (this.isShieldSkill) {
-            // 有护盾，返回 true，但不消耗（因为是时间限制）
-            // 如果需要击中后有反馈，可以在这里处理
+        if (this.isShieldSkill || this._isJetpacking) {
+            // 有护盾或正在冲刺，返回 true
             console.log("Shield blocked damage (Immune)!");
             return true;
         }

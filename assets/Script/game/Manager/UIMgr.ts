@@ -13,47 +13,80 @@ export class UIMgr extends BaseDialog {
     // 溜冰蛙技能按钮
     SkatingFrogSkillBtn: Node = null;
 
-        // 忍者蛙技能按钮
+    // 忍者蛙技能按钮
     NinjaFrogSkillBtn: Node = null;
 
-     // 溜冰蛙技能按钮冷却时间标签可以成为公用的，忍者蛙也可以使用
+    // 高达蛙技能按钮
+    GundamFrogSkillBtn: Node = null;
+
+    // 溜冰蛙技能按钮冷却时间标签可以成为公用的，忍者蛙也可以使用
     cdLabel: Node = null;
 
     private _cdTime: number = 0;
 
     start() {
-        this.showSkatingFrogSkillBtn();
-        this.showNinjaFrogSkillBtn();
+        this.refreshSkillBtn();
         // 注册事件
         EventManager.on(EventName.Game.SkillCDStart, this.onSkillCDStart, this);
     }
 
-     /**
-     * 显示忍者蛙技能按钮
+    /**
+     * 刷新技能按钮显示及 CD Label 引用
      */
-    showNinjaFrogSkillBtn() {
+    private refreshSkillBtn() {
         const skinId = SkinManager.getInstance().getCurrentSkinId();
-        if (skinId === HeroType.NinjaFrog) {
-            this.NinjaFrogSkillBtn.active = true;
-        } else {
-            this.NinjaFrogSkillBtn.active = false;
+        
+        // 根据英雄类型显示/隐藏按钮
+        if (this.SkatingFrogSkillBtn) {
+            this.SkatingFrogSkillBtn.active = skinId === HeroType.SkatingFrog;
         }
-    }
+        if (this.NinjaFrogSkillBtn) {
+            this.NinjaFrogSkillBtn.active = skinId === HeroType.NinjaFrog;
+        }
+        if (this.GundamFrogSkillBtn) {
+            this.GundamFrogSkillBtn.active = skinId === HeroType.GundamFrog;
+        }
+        
+        // 动态获取当前英雄对应的 CD Label
+        this.cdLabel = null;
+        if (skinId === HeroType.NinjaFrog) {
+            this.cdLabel = this.viewList.get('NinjaFrogSkillBtn/cd');
+        } else if (skinId === HeroType.GundamFrog) {
+            this.cdLabel = this.viewList.get('GundamFrogSkillBtn/cd');
+        } else if (skinId === HeroType.SkatingFrog) {
+            this.cdLabel = this.viewList.get('SkatingFrogSkillBtn/cd');
+        }
 
-     onDestroy(): void {
-        super.onDestroy();
-        EventManager.off(EventName.Game.SkillCDStart, this.onSkillCDStart, this);
-        // 如果 BaseDialog 有 onDestroy，需要调用 super.onDestroy()，但这里不确定，暂时不调用
+        // 初始化隐藏
+        if (this.cdLabel && this._cdTime <= 0) {
+            this.cdLabel.active = false;
+        }
     }
 
     onLoad() {
        super.onLoad();
         this.SkatingFrogSkillBtn = this.viewList.get('SkatingFrogSkillBtn');
         this.NinjaFrogSkillBtn = this.viewList.get('NinjaFrogSkillBtn');
-        this.cdLabel = this.viewList.get('SkatingFrogSkillBtn/cd');
-        if (this.cdLabel) {
-            this.cdLabel.active = false;
-        }
+        this.GundamFrogSkillBtn = this.viewList.get('GundamFrogSkillBtn');
+    }
+
+    /**
+     * 显示忍者蛙技能按钮 (保留方法名供外部调用，但内部逻辑统一)
+     */
+    showNinjaFrogSkillBtn() {
+        this.refreshSkillBtn();
+    }
+
+    /**
+     * 显示溜冰蛙技能按钮 (保留方法名供外部调用，但内部逻辑统一)
+     */
+    showSkatingFrogSkillBtn() {
+        this.refreshSkillBtn();
+    }
+
+    onDestroy(): void {
+        super.onDestroy();
+        EventManager.off(EventName.Game.SkillCDStart, this.onSkillCDStart, this);
     }
     update(deltaTime: number) {
         if (this._cdTime > 0) {
@@ -94,13 +127,6 @@ export class UIMgr extends BaseDialog {
     }
 
     /**
-     * 显示溜冰蛙技能按钮
-     */
-    showSkatingFrogSkillBtn() {
-        const skinId = SkinManager.getInstance().getCurrentSkinId();
-        this.SkatingFrogSkillBtn.active = skinId === HeroType.SkatingFrog;
-    }
-    /**
      * 隐藏溜冰蛙技能按钮
      */
     hideSkatingFrogSkillBtn() {
@@ -118,6 +144,14 @@ export class UIMgr extends BaseDialog {
         
         // 隐藏技能按钮
         // this.hideSkatingFrogSkillBtn();
+    }
+
+    /**
+     * 点击高达蛙技能按钮
+     */
+    onClick_GundamFrogSkillBtn() {
+        // 触发技能
+        EventManager.emit(EventName.Game.UseSkill);
     }
 }
 

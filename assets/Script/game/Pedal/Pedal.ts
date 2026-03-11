@@ -43,6 +43,9 @@ export class Pedal extends Component {
     /** 原始重力加速度（无技能） */
     private _originalGravity: number = 0;
 
+    /** 技能节点映射 */
+    private _skillNodes: Map<PedalSkill, Node> = new Map();
+
     /**
      * 生命周期：组件加载
      * 缓存 UITransform 组件引用
@@ -137,6 +140,24 @@ export class Pedal extends Component {
         const index = this.skills.indexOf(skill);
         if (index > -1) {
             this.skills.splice(index, 1);
+            
+            // 移除并回收对应的技能节点
+            const skillNode = this._skillNodes.get(skill);
+            if (skillNode) {
+                skillNode.removeFromParent();
+                // 暂时不直接销毁，而是隐藏或放回池中
+                // 由于 Pedal 无法直接访问 pedalManager 的对象池，这里我们选择直接销毁或者隐藏
+                // 更好的做法是通知 pedalManager 回收，或者在 removeSkill 时由 pedalManager 处理回收
+                // 为了简单起见，这里先将其隐藏，等待 Pedal 回收时一并处理
+                skillNode.active = false;
+                
+                // 但为了正确回收，我们应该让 pedalManager 来管理
+                // 由于 removeSkill 是被外部调用的，外部应该也负责回收节点
+                // 这里我们仅从 _skillNodes 中移除引用
+                this._skillNodes.delete(skill);
+                // 真正的回收逻辑应该在外部处理，或者使用 destroy
+                skillNode.destroy(); // 临时方案：直接销毁
+            }
         }
     }
 
@@ -149,6 +170,41 @@ export class Pedal extends Component {
                 this.skills.push(s);
             }
         }
+    }
+
+    /**
+     * 添加技能节点
+     */
+    addSkillNode(skill: PedalSkill, node: Node) {
+        if (!node) return;
+        
+        // 如果已经有同类节点，先移除旧的
+        if (this._skillNodes.has(skill)) {
+            const oldNode = this._skillNodes.get(skill);
+            oldNode.destroy();
+        }
+        
+        this._skillNodes.set(skill, node);
+        this.node.addChild(node);
+        node.setPosition(0, 0, 0); // 居中显示，或者根据需要调整偏移
+        
+        // 比如金币可以在上方
+        if (skill === PedalSkill.GOLD) {
+            node.setPosition(0, 50, 0);
+        } else if (skill === PedalSkill.SPIKE) {
+            // 尖刺在踏板表面
+            node.setPosition(0, 20, 0); 
+        }
+    }
+
+    /**
+     * 获取所有技能节点 (用于回收)
+     */
+    recycleSkillNodes(callback: (skill: PedalSkill, node: Node) => void) {
+        this._skillNodes.forEach((node, skill) => {
+            callback(skill, node);
+        });
+        this._skillNodes.clear();
     }
     
     /**

@@ -13,6 +13,10 @@ export interface SkillInfo {
     cooldown?: number; // 冷却时间 (秒)
     duration?: number; // 持续时间 (秒)
     range?: number; // 范围 (像素)
+    // 高达蛙跳跃力度
+    jetpackJumpForce?: number;
+    // 高达蛙冲刺力度
+    jetpackDashForce?: number;
 }
 
 /**
@@ -107,7 +111,7 @@ export function getSkinConfig(id: number): SkinConfig | null {
                     type: HeroSkillType.PASSIVE_DESTROY_TRAP, 
                     description: "接触陷阱时清除之" ,
                     //范围：100像素
-                    range: 100,
+                    range: 500,
                     // 技能CD：5秒
                     cooldown: 5
                 }
@@ -123,8 +127,13 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 // 主动技能配置
                 activeSkill: { 
                     type: HeroSkillType.ACTIVE_JETPACK, 
-                    description: "空中跳跃", 
-                    cooldown: 20 // 技能CD：20秒
+                    description: "空中跳跃：2段跳+冲刺", 
+                    cooldown: 20, // 技能CD：20秒
+                    duration: 5, // 持续 5 秒
+                    // 高达蛙跳跃力度
+                    jetpackJumpForce: 800,
+                    // 高达蛙冲刺力度
+                    jetpackDashForce: 1500,
                 }
             };
 
