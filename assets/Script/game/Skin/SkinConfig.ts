@@ -12,6 +12,7 @@ export interface SkillInfo {
     value?: number; // 技能数值 (如金币加成百分比)
     cooldown?: number; // 冷却时间 (秒)
     duration?: number; // 持续时间 (秒)
+    range?: number; // 范围 (像素)
 }
 
 /**
@@ -88,14 +89,9 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 activeSkill: { 
                     type: HeroSkillType.PASSIVE_JUMP_SPEED, 
                     description: "极速滑行：整个跳跃速度+50%，持续5秒",
-                    value: 0.5, // 额外加速 50%
+                    value: 3.5, // 额外加速 50%
                     duration: 5, // 持续 5 秒
                     cooldown: 20 // 技能CD：20秒
-                },
-                passiveSkill: { 
-                    type: HeroSkillType.PASSIVE_JUMP_SPEED, 
-                    description: "整个跳跃速度+30%", 
-                    value: 0.3 
                 }
             };
 
@@ -103,19 +99,17 @@ export function getSkinConfig(id: number): SkinConfig | null {
             return {
                 id: HeroType.NinjaFrog,
                 name: "忍者蛙",
-                spineSkinName: "ninja", 
+                spineSkinName: "yiliaobin", 
                 price: 10000,
                 description: "居合斩：跳跃期间挥刀清除陷阱",
-                // 主动技能配置
-                activeSkill: { 
-                    type: HeroSkillType.PASSIVE_DESTROY_TRAP, 
-                    description: "隐匿：免疫陷阱，持续5秒",
-                    duration: 5,
-                    cooldown: 10 // 技能CD：10秒
-                },
+                 // 被动技能配置
                 passiveSkill: { 
                     type: HeroSkillType.PASSIVE_DESTROY_TRAP, 
-                    description: "接触陷阱时清除之" 
+                    description: "接触陷阱时清除之" ,
+                    //范围：100像素
+                    range: 100,
+                    // 技能CD：5秒
+                    cooldown: 5
                 }
             };
 
@@ -123,7 +117,7 @@ export function getSkinConfig(id: number): SkinConfig | null {
             return {
                 id: HeroType.GundamFrog,
                 name: "高达蛙",
-                spineSkinName: "mecha", 
+                spineSkinName: "yiliaobin", 
                 price: 50000,
                 description: "喷气背包：空中跳跃，20秒充能",
                 // 主动技能配置
@@ -138,7 +132,7 @@ export function getSkinConfig(id: number): SkinConfig | null {
             return {
                 id: HeroType.MeteorFrog,
                 name: "流星蛙",
-                spineSkinName: "meteor", 
+                spineSkinName: "yiliaobin", 
                 price: 100000,
                 description: "流星化：向上冲刺10层，30秒充能",
                 // 主动技能配置

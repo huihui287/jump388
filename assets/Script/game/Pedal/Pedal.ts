@@ -129,6 +129,17 @@ export class Pedal extends Component {
 
     }
     
+    /**
+     * 移除特定技能
+     * @param skill 要移除的技能
+     */
+    removeSkill(skill: PedalSkill) {
+        const index = this.skills.indexOf(skill);
+        if (index > -1) {
+            this.skills.splice(index, 1);
+        }
+    }
+
     /** 添加技能
      * @param skill 技能
      */

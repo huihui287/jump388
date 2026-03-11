@@ -38,6 +38,8 @@ export namespace EventName {
         HitSpike = "HitSpike",
         /** 释放主动技能 */
         UseSkill = "UseSkill",
+        /** 技能冷却开始 */
+        SkillCDStart = "SkillCDStart",
         /** 获得金币 */
         GetGold = "GetGold",
 

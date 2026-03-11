@@ -684,6 +684,34 @@ export class pedalManager extends Component {
     }
 
     /**
+     * 获取目标附近的踏板
+     * @param targetNode 目标节点
+     * @param range 范围半径
+     * @returns 范围内的踏板节点，如果没有则返回 null
+     */
+    public getNearbyPedal(targetNode: Node, range: number): Node | null {
+        if (!targetNode) return null;
+
+        const activePedals = this.getAllActivePedals();
+        const targetPos = targetNode.worldPosition;
+        
+        let bestPedal: Node | null = null;
+        let minDistanceSq = range * range; // 使用平方距离比较，避免开方
+
+        for (const pedalNode of activePedals) {
+            const pedalPos = pedalNode.worldPosition;
+            const distSq = Vec3.distance(targetPos, pedalPos);
+
+            if (distSq < minDistanceSq) {
+                minDistanceSq = distSq;
+                bestPedal = pedalNode;
+            }
+        }
+
+        return bestPedal;
+    }
+
+    /**
      * 获取最后一个生成的踏板（最上面的踏板）
      * @returns 最后一个活跃踏板节点，如果没有活跃踏板则返回 null
      */

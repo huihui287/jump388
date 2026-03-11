@@ -115,8 +115,8 @@ export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 2000,         // 无技能
     [PedalSkill.SPRING]: 1000,       // 弹簧
     [PedalSkill.LOW_GRAVITY]: 10,  // 低重力
-    [PedalSkill.SPIKE]: 1,         // 尖刺
-    [PedalSkill.GOLD]: 30000,         // 金币
+    [PedalSkill.SPIKE]: 30000,         // 尖刺
+    [PedalSkill.GOLD]: 1,         // 金币
     [PedalSkill.FRACTURE]: 0,      // 断裂通常不通过随机生成，而是由踏板类型决定
     [PedalSkill.SHIELD]: 1000,      // 护盾
 };

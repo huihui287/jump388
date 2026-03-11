@@ -6,7 +6,7 @@ export enum HeroType {
     StrawHatFrog = 1001,
     //金蟾
     GoldenToad = 1002,
-    //滑板蛙
+    //溜冰蛙
     SkatingFrog = 1003,
     //忍者蛙
     NinjaFrog = 1004,
@@ -27,7 +27,7 @@ export enum HeroSkillType {
     PASSIVE_GOLD_BONUS = 1,
     /** 额外金币获取 (固定数值) */
     PASSIVE_EXTRA_GOLD = 2,
-    /** 跳跃速度加成 (百分比) */
+    /** 跳跃速度加成 (百分比) 它就是溜冰蛙的技能*/
     PASSIVE_JUMP_SPEED = 3,
     /** 清除陷阱/免疫陷阱 */
     PASSIVE_DESTROY_TRAP = 4,

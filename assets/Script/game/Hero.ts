@@ -244,25 +244,30 @@ export class Hero extends Component {
     /** 是否有护盾技能 */
     private isShieldSkill: boolean = false;
 
-    //////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
     // 英雄技能数据
+    // 主动技能
     private _activeSkill: SkillInfo | null = null;
+    // 被动技能 
     private _passiveSkill: SkillInfo | null = null;
     // 技能冷却
     private _skillTimer: number = 0;
-    
-    // 被动技能数值
-    // 跳跃速度加成
-    private _jumpSpeedBonus: number = 0; 
-    private _destroyTrap: boolean = false; // 是否清除陷阱
+    /** 跳跃速度加成 */
+    private _jumpSpeedBonus: number = 0;
+
+    // 是否拥有被动清除陷阱技能 (忍者蛙被动)
+    private _hasPassiveDestroyTrap: boolean = false; 
+    // 结算金币加成百分比 (草帽蛙技能)
     private _goldBonusPct: number = 0;
+    // 额外获得金币数值 (金蟾技能)
     private _extraGold: number = 0;
+    // 金币踏板出现权重倍率 (金蟾被动)
     private _goldPedalWeightMultiplier: number = 1;
     
     // 流星充能
     private _meteorCharge: number = 0;
     private readonly MAX_METEOR_CHARGE: number = 30;
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected onLoad(): void {
         this.setSpawnPosition(this.node.position);
         this.reset();
@@ -341,6 +346,9 @@ export class Hero extends Component {
             this._currentJumpTween.stop();
             this._currentJumpTween = null;
         }
+
+        this._skillTimer = 0;
+        EventManager.emit(EventName.Game.SkillCDStart, 0);
 
         // 重置陀螺仪/输入状态
         this._gyroX = 0;
@@ -831,18 +839,13 @@ export class Hero extends Component {
      * 应用被动技能
      */
     private applyPassiveSkills() {
-        this._jumpSpeedBonus = 0;
-        this._destroyTrap = false;
+        this._hasPassiveDestroyTrap = false;
 
         if (!this._passiveSkill) return;
 
         switch (this._passiveSkill.type) {
-            case HeroSkillType.PASSIVE_JUMP_SPEED:
-                this._jumpSpeedBonus = this._passiveSkill.value || 0;
-                console.log(`Passive Skill: Jump Speed +${this._jumpSpeedBonus * 100}%`);
-                break;
             case HeroSkillType.PASSIVE_DESTROY_TRAP:
-                this._destroyTrap = true;
+                this._hasPassiveDestroyTrap = true;
                 console.log("Passive Skill: Destroy Traps Enabled");
                 break;
         }
@@ -880,13 +883,18 @@ export class Hero extends Component {
         // 设置冷却
         if (this._activeSkill.cooldown) {
             this._skillTimer = this._activeSkill.cooldown;
+            EventManager.emit(EventName.Game.SkillCDStart, this._skillTimer);
         }
         return true;
     }
 
+    /**
+     * 触发主动技能效果
+     */
     private triggerActiveSkillEffect() {
         if (!this._activeSkill) return;
         const val = this._activeSkill.value || 0;
+        const duration = this._activeSkill.duration || 0;
 
         console.log(`Triggering Active Skill: ${this._activeSkill.description}`);
         ViewManager.toast(`释放技能: ${this._activeSkill.description}`);
@@ -904,7 +912,30 @@ export class Hero extends Component {
                 // 流星冲刺
                 this.meteorRush(val);
                 break;
+            case HeroSkillType.PASSIVE_JUMP_SPEED:
+                // 极速滑行：临时增加跳跃速度
+                this.activateJumpSpeedBoost(val, duration);
+                break;
         }
+    }
+
+    /**
+     * 激活跳跃速度加成 (主动技能)
+     * @param bonusPercent 加成百分比
+     * @param duration 持续时间 (秒)
+     */
+    private activateJumpSpeedBoost(bonusPercent: number, duration: number) {
+        // 叠加额外的跳跃速度加成
+        this._jumpSpeedBonus += bonusPercent;
+        
+        console.log(`Active Skill: Jump Speed Boost +${bonusPercent * 100}%, Duration: ${duration}s`);
+        ViewManager.toast("跳跃加速开启！");
+
+        this.scheduleOnce(() => {
+            this._jumpSpeedBonus -= bonusPercent;
+            console.log("Active Skill: Jump Speed Boost Ended");
+            ViewManager.toast("跳跃加速结束");
+        }, duration);
     }
 
     // 流星冲刺逻辑
@@ -969,13 +1000,6 @@ export class Hero extends Component {
         return false;
     }
 
-    /**
-     * 是否拥有清除陷阱的能力
-     */
-    public get canDestroyTrap(): boolean {
-        return this._destroyTrap;
-    }
-
     setShieldSkillIconActive(active: boolean) {
         // 刷新护盾技能Icon
         
@@ -990,6 +1014,40 @@ export class Hero extends Component {
      */
     setSkin() {
         this.refreshSkin();
+    }
+
+    // 获取技能冷却时间
+    public getSkillCD(): number {
+        return this._skillTimer;
+    }
+
+    // 触发被动技能冷却
+    public triggerPassiveSkillCD(cd?: number) { 
+        // 优先使用配置中的 CD
+        let duration = cd;
+        if (duration === undefined) {
+            if (this._passiveSkill && this._passiveSkill.cooldown) {
+                duration = this._passiveSkill.cooldown;
+            } else {
+                duration = 5; // 默认值
+            }
+        }
+        
+        this._skillTimer = duration;
+        EventManager.emit(EventName.Game.SkillCDStart, this._skillTimer);
+    }
+    
+    // 获取被动技能范围
+    public getPassiveSkillRange(): number {
+        if (this._passiveSkill && this._passiveSkill.range) {
+            return this._passiveSkill.range;
+        }
+        return 100; // 默认范围
+    }
+
+    // 是否拥有被动清除陷阱技能
+    public hasPassiveDestroyTrap(): boolean {
+        return this._hasPassiveDestroyTrap;
     }
 }
 

@@ -184,18 +184,18 @@ export class Game extends BaseNodeCom {
     onHitSpike() {
         if (!this.heroCom) return;
 
-        // 1. 检查是否免疫陷阱 (忍者蛙被动)
-        if (this.heroCom.canDestroyTrap) {
-            console.log("Passive Skill: Trap destroyed/ignored!");
-            ViewManager.toast("免疫陷阱！");
-            return;
-        }
-
         // 2. 检查护盾
         if (this.heroCom.consumeShield()) {
             console.log("Shield blocked spike damage!");
             return;
         }
+
+        // 3. 检查是否在忍者蛙被动范围内（距离踏板一定范围内触发清除）
+        // 这个逻辑通常在 update 中实时检测，而不是在 HitSpike 中检测
+        // 因为 HitSpike 意味着已经“踩中”了，通常意味着死亡（除非有护盾或免疫）
+        // 但用户的需求是：在与pedal上的Pedal.SPIKE的情况下触发 Hero一定距离内触发，移除pedal上的 SPIKE 然后可以正常踩中跳跃 有cd
+        
+        // 我们在 checkHeroPedalCollision 中处理这个逻辑
         
         this.GameOver();
     }
@@ -417,6 +417,28 @@ export class Game extends BaseNodeCom {
      */
     private checkHeroPedalCollision(): void {
         if (!this.heroCom || !this.pedalManagerCom) return;
+
+        // 忍者蛙被动技能检测：检测周围是否有尖刺踏板
+        // 只有当拥有忍者蛙被动，且技能不在冷却中
+        if (this.heroCom.hasPassiveDestroyTrap() && this.heroCom.getSkillCD() <= 0) {
+            // 获取技能范围
+            const range = this.heroCom.getPassiveSkillRange();
+            // 获取附近的踏板
+            const nearbyPedal = this.pedalManagerCom.getNearbyPedal(this.heroCom.node, range); 
+            if (nearbyPedal) {
+                const pedalComponent = nearbyPedal.getComponent(Pedal);
+                // 必须是带有 SPIKE 技能的踏板
+                if (pedalComponent && pedalComponent.skills.indexOf(PedalSkill.SPIKE) !== -1) {
+                    // 移除 SPIKE 技能
+                    pedalComponent.removeSkill(PedalSkill.SPIKE);
+                    console.log("Ninja Frog Passive Triggered: Spike Removed!");
+                    ViewManager.toast("忍术：陷阱清除！");
+                    
+                    // 触发技能冷却
+                    this.heroCom.triggerPassiveSkillCD(); 
+                }
+            }
+        }
 
         // 只有当Hero处于下落状态时才进行检测
         if (!this.heroCom.isFalling()) return;
