@@ -208,6 +208,8 @@ export class Game extends BaseNodeCom {
             const goldCount = 10;
             const baseDuration = 0.8;
             const totalGold = this.pedalManagerCom.getPedalGold ? this.pedalManagerCom.getPedalGold() : 100;
+            const perGold = Math.floor(totalGold / goldCount);
+            const remainderGold = totalGold - perGold * goldCount;
 
             // 获取踏板的世界坐标作为基础起始点
             const baseStartWorldPos = pedalNode.worldPosition.clone();
@@ -259,7 +261,7 @@ export class Game extends BaseNodeCom {
                 
                 // 使用 MoveManager 的新版 flyItemToTarget 方法
                 MoveManager.getInstance().flyItemToTarget(flyGold, tempStartNode, targetNode, duration, () => {
-                    const addAmount = totalGold;
+                    const addAmount = perGold + (i === goldCount - 1 ? remainderGold : 0);
                     GameData.addGold(addAmount); 
                     flyGold.destroy();
                     // 销毁临时节点
@@ -368,8 +370,10 @@ export class Game extends BaseNodeCom {
         App.gameCtr.setPause(true);
         
         // 显示结算界面
+        const baseGold = this.pedalManagerCom.getGoldReward();
+        const finalGold = this.heroCom ? this.heroCom.applySettlementGoldBonus(baseGold) : baseGold;
         ViewManager.showGameWinView({
-            goldReward: this.pedalManagerCom.getGoldReward()
+            goldReward: finalGold
         });
         
     }
@@ -505,10 +509,19 @@ export class Game extends BaseNodeCom {
         this.gameState = GameState.GAME_OVER;
         console.log('GameOver logic called');
         // 这里可以弹出结算界面，如 ViewManager.showView(ViewName.GameOver)
+        const baseWinReward = this.pedalManagerCom.getGoldReward();
+        const currentLayer = this.heroCom.getHerolayerS();
+        const totalLayer = this.pedalManagerCom.getAlllayerNum();
+        let baseReward = 0;
+        if (totalLayer > 0) {
+            baseReward = Math.floor((currentLayer / totalLayer) * (baseWinReward || 1000));
+        }
+        const finalGoldReward = this.heroCom ? this.heroCom.applySettlementGoldBonus(baseReward) : baseReward;
         ViewManager.showGameOver({
-            currentLayer: this.heroCom.getHerolayerS(),
-            totalLayer: this.pedalManagerCom.getAlllayerNum(),
-            goldReward: this.pedalManagerCom.getGoldReward() // 传递总奖励
+            currentLayer,
+            totalLayer,
+            goldReward: baseWinReward,
+            finalGoldReward
         });
         // 暂停游戏
         EventManager.emit(EventName.Game.Pause);

@@ -27,8 +27,8 @@ export enum HeroSkillType {
     PASSIVE_GOLD_BONUS = 1,
     /** 额外金币获取 (固定数值) */
     PASSIVE_EXTRA_GOLD = 2,
-    /** 移动速度加成 (百分比) */
-    PASSIVE_MOVE_SPEED = 3,
+    /** 跳跃速度加成 (百分比) */
+    PASSIVE_JUMP_SPEED = 3,
     /** 清除陷阱/免疫陷阱 */
     PASSIVE_DESTROY_TRAP = 4,
     

@@ -3,11 +3,10 @@ import LoaderManeger from '../../sysloader/LoaderManeger';
 import { App } from '../../Controller/app';
 import { PedalType, Constant, PedalDefaults, PedalSkill, SkillWeights } from '../../Tools/enumConst';
 import { Pedal } from '../Pedal/Pedal';
+import { Hero } from '../Hero';
 import GameData from '../../Common/GameData';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
-import { SkinManager } from '../Skin/SkinManager';
-import { HeroType } from '../../Tools/enumHero';
 
 const { ccclass, property } = _decorator;
 /**
@@ -280,17 +279,16 @@ export class pedalManager extends Component {
         // 候选技能列表
         const candidates: { skill: PedalSkill; weight: number }[] = [];
         let totalWeight = 0;
-
-        const currentSkinId = SkinManager.getInstance().getCurrentSkinId();
-        const isGoldenToad = currentSkinId === HeroType.GoldenToad;
+        const heroComp = this.hero ? this.hero.getComponent(Hero) : null;
+        const goldWeightMul = heroComp ? heroComp.getGoldPedalWeightMultiplier() : 1;
 
         // 1. 构建候选池（过滤掉不符合条件的技能）
         for (const key in SkillWeights) {
             const skill = key as PedalSkill;
             let weight = SkillWeights[skill];
 
-            if (isGoldenToad && skill === PedalSkill.GOLD) {
-                weight = Math.floor(weight * 1.5);
+            if (skill === PedalSkill.GOLD) {
+                weight = Math.floor(weight * goldWeightMul);
             }
 
             // 过滤条件：

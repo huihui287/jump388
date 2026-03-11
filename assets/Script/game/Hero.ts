@@ -11,7 +11,7 @@ import { SkinManager } from './Skin/SkinManager';
 import { getSkinConfig, SkillInfo, SkinConfig } from './Skin/SkinConfig';
 import ViewManager from '../Common/view/ViewManager';
 import GameData from '../Common/GameData';
-import { HeroSkillType } from '../Tools/enumHero';
+import { HeroSkillType, HeroType } from '../Tools/enumHero';
         
 const { ccclass, property } = _decorator;
 
@@ -252,8 +252,12 @@ export class Hero extends Component {
     private _skillTimer: number = 0;
     
     // 被动技能数值
-    private _moveSpeedBonus: number = 0; // 移动速度加成
+    // 跳跃速度加成
+    private _jumpSpeedBonus: number = 0; 
     private _destroyTrap: boolean = false; // 是否清除陷阱
+    private _goldBonusPct: number = 0;
+    private _extraGold: number = 0;
+    private _goldPedalWeightMultiplier: number = 1;
     
     // 流星充能
     private _meteorCharge: number = 0;
@@ -497,6 +501,12 @@ export class Hero extends Component {
 
         let jumpHeight = pedal.jumpForce + this._pendingJumpBoost;
         let duration = pedal.jumpSpeed;
+        
+        // 应用跳跃速度加成 (速度越快，时间越短)
+        if (this._jumpSpeedBonus > 0) {
+            duration = duration / (1 + this._jumpSpeedBonus);
+        }
+
         this._pendingJumpBoost = 0;
         this._tweenJumpY = this.node.position.y;
 
@@ -783,6 +793,7 @@ export class Hero extends Component {
             // 初始化技能
             this._activeSkill = skinConfig.activeSkill || null;
             this._passiveSkill = skinConfig.passiveSkill || null;
+            this.rebuildSkinEffects(skinId);
             this.applyPassiveSkills();
             
             // 流星蛙初始赠送一次充能
@@ -792,20 +803,43 @@ export class Hero extends Component {
         }
     }
 
+    private rebuildSkinEffects(skinId: number) {
+        this._goldBonusPct = 0;
+        this._extraGold = 0;
+        this._goldPedalWeightMultiplier = skinId === HeroType.GoldenToad ? 1.5 : 1;
+
+        if (!this._passiveSkill) return;
+
+        if (this._passiveSkill.type === HeroSkillType.PASSIVE_GOLD_BONUS) {
+            this._goldBonusPct = this._passiveSkill.value || 0;
+        } else if (this._passiveSkill.type === HeroSkillType.PASSIVE_EXTRA_GOLD) {
+            this._extraGold = this._passiveSkill.value || 0;
+        }
+    }
+
+    public getGoldPedalWeightMultiplier(): number {
+        return this._goldPedalWeightMultiplier;
+    }
+
+    public applySettlementGoldBonus(baseGold: number): number {
+        let gold = Math.floor(baseGold * (1 + this._goldBonusPct));
+        gold += this._extraGold;
+        return gold;
+    }
+
     /**
      * 应用被动技能
      */
     private applyPassiveSkills() {
-        this._moveSpeedBonus = 0;
+        this._jumpSpeedBonus = 0;
         this._destroyTrap = false;
 
         if (!this._passiveSkill) return;
 
         switch (this._passiveSkill.type) {
-            case HeroSkillType.PASSIVE_MOVE_SPEED:
-                this._moveSpeedBonus = this._passiveSkill.value || 0;
-                this.moveSpeed = 800 * (1 + this._moveSpeedBonus);
-                console.log(`Passive Skill: Move Speed +${this._moveSpeedBonus * 100}%`);
+            case HeroSkillType.PASSIVE_JUMP_SPEED:
+                this._jumpSpeedBonus = this._passiveSkill.value || 0;
+                console.log(`Passive Skill: Jump Speed +${this._jumpSpeedBonus * 100}%`);
                 break;
             case HeroSkillType.PASSIVE_DESTROY_TRAP:
                 this._destroyTrap = true;

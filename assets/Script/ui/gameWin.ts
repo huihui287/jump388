@@ -12,9 +12,7 @@ import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
 import ViewManager from '../Common/view/ViewManager';
 import LoaderManeger from '../sysloader/LoaderManeger';
-import { SkinManager } from '../game/Skin/SkinManager';
-import { getSkinConfig } from '../game/Skin/SkinConfig';
-import { HeroSkillType } from '../Tools/enumHero';
+ 
 const { ccclass, property } = _decorator;
 
 // 游戏胜利界面
@@ -50,28 +48,7 @@ export class gameWin extends BaseDialog {
         if (!this._data) return;
 
         this.level = GameData.getCurLevel();
-        let baseGold = this._data.goldReward || 0;
-
-        // 皮肤加成逻辑
-        try {
-            const currentSkinId = SkinManager.getInstance().getCurrentSkinId();
-            const skinConfig = getSkinConfig(currentSkinId);
-            if (skinConfig && skinConfig.passiveSkill) {
-                // 百分比加成
-                if (skinConfig.passiveSkill.type === HeroSkillType.PASSIVE_GOLD_BONUS) {
-                    const bonus = skinConfig.passiveSkill.value || 0;
-                    baseGold = Math.floor(baseGold * (1 + bonus));
-                } 
-                // 固定数值加成
-                else if (skinConfig.passiveSkill.type === HeroSkillType.PASSIVE_EXTRA_GOLD) {
-                    baseGold += (skinConfig.passiveSkill.value || 0);
-                }
-            }
-        } catch (e) {
-            console.warn("Failed to calculate gold bonus for GameWin", e);
-        }
-
-        this.goldnum = baseGold;
+        this.goldnum = this._data.goldReward || 0;
 
         AudioManager.getInstance().playSound('win');
 

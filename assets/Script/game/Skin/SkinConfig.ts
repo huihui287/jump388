@@ -11,6 +11,7 @@ export interface SkillInfo {
     description: string;
     value?: number; // 技能数值 (如金币加成百分比)
     cooldown?: number; // 冷却时间 (秒)
+    duration?: number; // 持续时间 (秒)
 }
 
 /**
@@ -82,11 +83,18 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 name: "溜冰蛙",
                 spineSkinName: "yiliaobin", 
                 price: 8000,
-                description: "我可以滑着走：移动速度增加30%",
-                activeSkill: { type: HeroSkillType.NONE, description: "无" },
+                description: "我可以滑着走：整个跳跃速度增加30%",
+                // 主动技能配置
+                activeSkill: { 
+                    type: HeroSkillType.PASSIVE_JUMP_SPEED, 
+                    description: "极速滑行：整个跳跃速度+50%，持续5秒",
+                    value: 0.5, // 额外加速 50%
+                    duration: 5, // 持续 5 秒
+                    cooldown: 20 // 技能CD：20秒
+                },
                 passiveSkill: { 
-                    type: HeroSkillType.PASSIVE_MOVE_SPEED, 
-                    description: "移动速度+30%", 
+                    type: HeroSkillType.PASSIVE_JUMP_SPEED, 
+                    description: "整个跳跃速度+30%", 
                     value: 0.3 
                 }
             };
@@ -98,7 +106,13 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 spineSkinName: "ninja", 
                 price: 10000,
                 description: "居合斩：跳跃期间挥刀清除陷阱",
-                activeSkill: { type: HeroSkillType.NONE, description: "无" },
+                // 主动技能配置
+                activeSkill: { 
+                    type: HeroSkillType.PASSIVE_DESTROY_TRAP, 
+                    description: "隐匿：免疫陷阱，持续5秒",
+                    duration: 5,
+                    cooldown: 10 // 技能CD：10秒
+                },
                 passiveSkill: { 
                     type: HeroSkillType.PASSIVE_DESTROY_TRAP, 
                     description: "接触陷阱时清除之" 
@@ -111,11 +125,12 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 name: "高达蛙",
                 spineSkinName: "mecha", 
                 price: 50000,
-                description: "喷气背包：空中跳跃，5秒充能",
+                description: "喷气背包：空中跳跃，20秒充能",
+                // 主动技能配置
                 activeSkill: { 
                     type: HeroSkillType.ACTIVE_JETPACK, 
                     description: "空中跳跃", 
-                    cooldown: 5 
+                    cooldown: 20 // 技能CD：20秒
                 }
             };
 
@@ -125,12 +140,13 @@ export function getSkinConfig(id: number): SkinConfig | null {
                 name: "流星蛙",
                 spineSkinName: "meteor", 
                 price: 100000,
-                description: "流星化：向上冲刺10层，30次踩踏充能",
+                description: "流星化：向上冲刺10层，30秒充能",
+                // 主动技能配置
                 activeSkill: { 
                     type: HeroSkillType.ACTIVE_METEOR, 
                     description: "向上冲刺10层", 
-                    value: 10 // 冲刺层数
-                    // cooldown 由踩踏次数控制，不使用时间冷却
+                    value: 10, // 冲刺层数
+                    cooldown: 30 // 技能CD：30秒
                 }
             };
 
