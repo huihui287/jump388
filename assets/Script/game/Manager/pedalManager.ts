@@ -1,5 +1,6 @@
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat, UITransform } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
+import { CSVManager } from '../../Tools/CSVManager';
 import { App } from '../../Controller/app';
 import { PedalType, PedalConfig, PedalDefaults, PedalSkill, SkillWeights, SkillFloorLimit } from '../../Tools/enumPedal';
 import { Pedal } from '../Pedal/Pedal';
@@ -177,34 +178,37 @@ export class pedalManager extends Component {
         }
     }
     /**
-     * 加载游戏数据并从 JSON 配置生成踏板
+     * 加载游戏数据并从 CSV 配置生成踏板
      */
     public async loadPedalConfig(): Promise<void> {
    
         // 加载当前关卡的踏板配置
         const level = GameData.getCurLevel(); 
-        const configPath = `json/config/pedal_${level}`;
+        const configPath = `config/pedal_${level}`; // 关卡对应的 CSV 文件路径
         
         try {
             console.log(`Loading pedal config for level ${level} from ${configPath}...`);
-            const config = await LoaderManeger.instance.loadJSON(configPath) as any;
             
-            // 解析 layerS 配置
-            if (config && config.json.layerS && config.json.layerS.length > 0) {
-                const layerData = config.json.layerS[0];
-                this.layer = layerData.layer || [];
-                this.pedalSype = layerData.pedalSype || [];
-                this.AlllayerNum = layerData.AlllayerNum || 0;
-                this.goldReward = layerData.goldReward || 100;
-                this.pedalGold = layerData.pedalGold || 100;
-                console.log("Loaded layer config:", this.layer, this.pedalSype, this.AlllayerNum, this.goldReward, this.pedalGold); 
+            // 使用 CSVManager 加载
+            await CSVManager.getInstance().loadCSV(configPath);
+            // 获取表中的第一条数据（因为每一关只有一个配置行）
+            const table = CSVManager.getInstance().getTable(configPath);
+            
+            if (table && table.length > 0) {
+                const config = table[0];
+                
+                // 解析配置
+                // CSV 中的 layer 和 pedalSype 是以 | 分隔的字符串数组，CSVManager 已经自动处理了
+                this.layer = config.layer || [];
+                this.pedalSype = config.pedalSype || [];
+                this.AlllayerNum = config.AlllayerNum || 0;
+                this.goldReward = config.goldReward || 100;
+                this.pedalGold = config.pedalGold || 100;
+                
+                console.log("Loaded layer config from CSV:", this.layer, this.pedalSype, this.AlllayerNum, this.goldReward, this.pedalGold); 
             } else {
-                console.warn("layerS config not found or empty, using defaults.");
-                this.layer = [1000, 2000];
-                this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
-                this.AlllayerNum = 2;
-                this.goldReward = 100;
-                this.pedalGold = 100;
+                console.warn(`Level ${level} config empty or not found in CSV: ${configPath}, using defaults.`);
+                this.useDefaultConfig();
             }
 
             // 开始初始生成
@@ -213,12 +217,21 @@ export class pedalManager extends Component {
         } catch (error) {
             console.error(`Failed to load pedal config for level ${level}:`, error);
             // Fallback
-            this.layer = [1000, 2000];
-            this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
-            this.AlllayerNum = 2;
+            this.useDefaultConfig();
 
             this._configReady = true;
         }
+    }
+
+    /**
+     * 使用默认配置
+     */
+    private useDefaultConfig() {
+        this.layer = [1000, 2000];
+        this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
+        this.AlllayerNum = 2;
+        this.goldReward = 100;
+        this.pedalGold = 100;
     }
 
     /**

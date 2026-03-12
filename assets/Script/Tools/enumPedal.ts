@@ -59,10 +59,10 @@ export enum PedalSkill {
     ROCKET = 'rocket'
 }
 
-/** 踏板技能层数限制 */
+/** 踏板技能层数限制  多少层有概率可以出现 */
 export const SkillFloorLimit: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 0,
-    [PedalSkill.SPRING]: 20,
+    [PedalSkill.SPRING]: 1,
     [PedalSkill.LOW_GRAVITY]: 0,
     [PedalSkill.FRACTURE]: 0,
     [PedalSkill.SPIKE]: 0,
