@@ -8,7 +8,7 @@ import { BaseNodeCom } from './BaseNodeCom';
 import { App } from '../Controller/app';
 
 import { EventName } from '../Tools/eventName';
-import {  GameState, Constant, PedalSkill } from '../Tools/enumConst';
+import {  GameState, Constant } from '../Tools/enumConst';
 import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
@@ -22,6 +22,7 @@ import ViewManager from '../Common/view/ViewManager';
 import { getSkinConfig } from './Skin/SkinConfig';
 import LoaderManeger from '../sysloader/LoaderManeger';
 import { MoveManager } from './Manager/MoveManager';
+import { PedalSkill } from '../Tools/enumPedal';
 
 const { ccclass, property } = _decorator;
 

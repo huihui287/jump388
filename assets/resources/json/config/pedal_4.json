@@ -2,20 +2,18 @@
   "layerS": [
     {
       "layer": [
-        1,
-        2,
-        3,
-        4,
-        5
+        40,
+        100,
+        200
       ],
       "pedalSype": [
-        "pedal1",
-        "movePedal",
+        "woodPedal",
         "cloudPedal",
-        "fracturePedal",
-        "woodPedal"
+        "movePedal"
       ],
-      "AlllayerNum": 20
+      "AlllayerNum": 200,
+      "goldReward": 2000,
+      "pedalGold": 40
     }
   ]
 }

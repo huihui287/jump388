@@ -2,7 +2,6 @@ import { _decorator, Component, Node, ScrollView, instantiate, Prefab, Label, La
 import { BaseNodeCom } from '../game/BaseNodeCom';
 import BaseDialog from '../Common/view/BaseDialog';
 import LoaderManeger from '../sysloader/LoaderManeger';
-import { LevelConfig } from '../Tools/levelConfig';
 import { App } from '../Controller/app';
 import GameData from '../Common/GameData';
 import AudioManager from '../Common/AudioManager';
@@ -38,6 +37,14 @@ export class levelSelect extends BaseDialog {
     private readonly MAX_LEVEL: number = 1700; // 关卡上限
     /** 玩家当前已解锁的最大关卡 */
     private maxUnlockedLevel: number = 1;
+    
+    /** 关卡解锁金币配置 */
+    private readonly LEVEL_UNLOCK_COSTS: Record<number, number> = {
+        2: 1000,
+        3: 5000,
+        4: 8000,
+        5: 10000
+    };
     
     /////////////////////////////////////////////////
 
@@ -292,7 +299,32 @@ export class levelSelect extends BaseDialog {
 
         if (level > this.maxUnlockedLevel) {
             console.log("Level locked:", level);
-            ViewManager.toast("关卡未解锁");
+            
+            // 检查是否可以花费金币提前解锁
+            const cost = this.LEVEL_UNLOCK_COSTS[level];
+            if (cost !== undefined) {
+                // 如果是当前锁定关卡的下一关，或者是玩家想要提前解锁的关卡
+                // 这里的逻辑通常是只允许解锁下一关，或者任意锁定关卡
+                // 根据图片描述：花费金币提前解锁
+                const currentGold = GameData.getGold();
+                if (currentGold >= cost) {
+                    ViewManager.showConfirm(`是否花费 ${cost} 金币解锁关卡 ${level}？`, () => {
+                        if (GameData.spendGold(cost)) {
+                            GameData.updateMaxLevel(level);
+                            this.maxUnlockedLevel = level;
+                            ViewManager.toast("解锁成功！");
+                            // 刷新UI - 这里简单处理，直接重新加载当前可见项或刷新整个列表
+                            this.refreshLevelItems();
+                        } else {
+                            ViewManager.toast("金币不足");
+                        }
+                    });
+                } else {
+                    ViewManager.toast(`解锁需要 ${cost} 金币，当前金币不足`);
+                }
+            } else {
+                ViewManager.toast("关卡未解锁");
+            }
             return;
         }
 
@@ -300,6 +332,45 @@ export class levelSelect extends BaseDialog {
         GameData.setCurLevel(level);
         App.GoGame();
         this.dismiss();
+    }
+
+    /**
+     * 刷新关卡列表显示状态
+     */
+    private refreshLevelItems() {
+        if (!this.contentNd) return;
+        
+        const children = this.contentNd.children;
+        for (const node of children) {
+            const levelIndex = parseInt(node.name);
+            if (isNaN(levelIndex)) continue;
+
+            const isUnlocked = levelIndex <= this.maxUnlockedLevel;
+
+            // 处理锁的状态
+            const lockNode = node.getChildByName('lock');
+            if (lockNode) {
+                lockNode.active = !isUnlocked;
+            }
+
+            // 如果已解锁，恢复颜色
+            if (isUnlocked) {
+                const sprite = node.getComponent(Sprite);
+                if (sprite) {
+                    sprite.color = new Color(255, 255, 255, 255);
+                }
+                let label = node.getComponentInChildren(Label);
+                if (label) {
+                    label.node.getComponent(Label).color = new Color(255, 255, 255, 255);
+                }
+            }
+
+            // 处理"选择"子节点的显示/隐藏
+            const selectNode = node.getChildByName('选择');
+            if (selectNode) {
+                selectNode.active = (levelIndex === this.maxUnlockedLevel);
+            }
+        }
     }
 
     /**

@@ -44,6 +44,10 @@ export namespace EventName {
         UpdateSkillCharge = "UpdateSkillCharge",
         /** 获得金币 */
         GetGold = "GetGold",
+        /** 获得火箭 */
+        GetRocket = "GetRocket",
+        /** 获得金币雨 */
+        GetGoldRain = "GetGoldRain",
 
         //皮肤
         //////////////////////////

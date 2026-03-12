@@ -287,12 +287,15 @@ export class Hero extends Component {
 
         // 监听获得护盾事件
         EventManager.on(EventName.Game.GetShield, this.onGetShield, this);
+        // 监听获得火箭事件
+        EventManager.on(EventName.Game.GetRocket, this.onGetRocket, this);
         // 监听释放主动技能事件
         EventManager.on(EventName.Game.UseSkill, this.onUseSkill, this);
     }
 
     protected onDestroy(): void {
         EventManager.off(EventName.Game.GetShield, this.onGetShield, this);
+        EventManager.off(EventName.Game.GetRocket, this.onGetRocket, this);
         EventManager.off(EventName.Game.UseSkill, this.onUseSkill, this);
 
         // 销毁时清理定时器
@@ -308,6 +311,11 @@ export class Hero extends Component {
         if (this.isShieldSkill) return;
         this.triggerShieldSkill();
         console.log("Hero obtained SHIELD!");
+    }
+
+    private onGetRocket(layers: number) {
+        console.log(`Hero obtained ROCKET! Rushing ${layers} layers.`);
+        this.meteorRush(layers);
     }
 
     protected start(): void {

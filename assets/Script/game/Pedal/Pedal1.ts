@@ -1,6 +1,6 @@
 import { _decorator, Component, Node } from 'cc';
 import { Pedal } from './Pedal';
-import { PedalType } from '../../Tools/enumConst';
+import { PedalType } from '../../Tools/enumPedal';
 const { ccclass, property } = _decorator;
 
 @ccclass('Pedal1')  

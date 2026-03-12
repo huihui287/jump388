@@ -3,21 +3,17 @@
     {
       "layer": [
         1,
-        2,
-        3,
-        4,
-        5
+        20,
+        30
       ],
       "pedalSype": [
         "pedal1",
-        "movePedal",
-        "cloudPedal",
-        "fracturePedal",
-        "woodPedal"
+        "woodPedal",
+        "cloudPedal"
       ],
-      "AlllayerNum": 20,
-      "goldReward": 50,
-      "pedalGold": 100
+      "AlllayerNum": 30,
+      "goldReward": 100,
+      "pedalGold": 10
     }
   ]
 }

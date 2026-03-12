@@ -1,8 +1,8 @@
 import { _decorator, Component, Node, UITransform, Vec3, Enum } from 'cc';
-import { PedalType, PedalSkill } from '../../Tools/enumConst';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
 import GameData from '../../Common/GameData';
+import { PedalSkill, PedalType } from '../../Tools/enumPedal';
 
 const { ccclass, property } = _decorator;
 
@@ -265,6 +265,22 @@ export class Pedal extends Component {
                     console.log("Triggered SHIELD skill");
                     this.applyShieldEffect();
                     break;
+                case PedalSkill.GOLD_RAIN:
+                    console.log("Triggered GOLD_RAIN skill");
+                    // TODO: 实现金币雨逻辑
+                    break;
+                case PedalSkill.FLYING_SNAKE:
+                    console.log("Triggered FLYING_SNAKE skill");
+                    // TODO: 实现移动飞蛇逻辑
+                    break;
+                case PedalSkill.METEOR:
+                    console.log("Triggered METEOR skill");
+                    // TODO: 实现陨石逻辑
+                    break;
+                case PedalSkill.ROCKET:
+                    console.log("Triggered ROCKET skill");
+                    this.applyRocketEffect();
+                    break;
                 case PedalSkill.NONE:
                 default:
                     break;
@@ -280,6 +296,12 @@ export class Pedal extends Component {
         EventManager.emit(EventName.Game.GetShield);
     }
     
+    // 获得火箭
+    private applyRocketEffect() {
+        // 火箭：冲刺10层
+        EventManager.emit(EventName.Game.GetRocket, 10);
+    }
+
     //尖刺 效果 玩家死亡游戏结束
     applySpikeEffect() {
         // 玩家死亡

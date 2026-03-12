@@ -1,6 +1,7 @@
 import { _decorator, Component, Node, tween, Tween, Vec3 } from 'cc';
 import { Pedal } from './Pedal';
-import { Constant, PedalDefaults, PedalType } from '../../Tools/enumConst';
+import { PedalDefaults, PedalType } from '../../Tools/enumPedal';
+import { Constant } from '../../Tools/enumConst';
 const { ccclass, property } = _decorator;
 
 // 移动踏板

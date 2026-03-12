@@ -1,12 +1,13 @@
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat, UITransform } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { App } from '../../Controller/app';
-import { PedalType, Constant, PedalDefaults, PedalSkill, SkillWeights } from '../../Tools/enumConst';
+import { PedalType, PedalConfig, PedalDefaults, PedalSkill, SkillWeights, SkillFloorLimit } from '../../Tools/enumPedal';
 import { Pedal } from '../Pedal/Pedal';
 import { Hero } from '../Hero';
 import GameData from '../../Common/GameData';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
+import { Constant } from '../../Tools/enumConst';
 
 const { ccclass, property } = _decorator;
 /**
@@ -299,10 +300,14 @@ export class pedalManager extends Component {
             // - 权重必须大于 0
             // - 不能是 FRACTURE (通常由踏板类型决定)
             // - 不能与上一次技能相同，除非是 NONE (允许连续无技能)
+            // - 满足层数限制
             if (weight > 0 && skill !== PedalSkill.FRACTURE) {
-                if (skill === PedalSkill.NONE || skill !== this._lastSkill) {
-                    candidates.push({ skill, weight });
-                    totalWeight += weight;
+                const floorLimit = SkillFloorLimit[skill] || 0;
+                if (this.NewlayerS >= floorLimit) {
+                    if (skill === PedalSkill.NONE || skill !== this._lastSkill) {
+                        candidates.push({ skill, weight });
+                        totalWeight += weight;
+                    }
                 }
             }
         }
