@@ -40,6 +40,8 @@ export namespace EventName {
         UseSkill = "UseSkill",
         /** 技能冷却开始 */
         SkillCDStart = "SkillCDStart",
+        /** 更新技能充能 */
+        UpdateSkillCharge = "UpdateSkillCharge",
         /** 获得金币 */
         GetGold = "GetGold",
 

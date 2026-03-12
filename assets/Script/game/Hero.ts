@@ -266,7 +266,8 @@ export class Hero extends Component {
     
     // 流星充能
     private _meteorCharge: number = 0;
-    private readonly MAX_METEOR_CHARGE: number = 30;
+    // 默认30，从配置读取
+    private _maxMeteorCharge: number = 30;
 
     // 高达蛙技能状态
     private _isJetpacking: boolean = false; // 是否处于冲刺飞行状态
@@ -293,6 +294,10 @@ export class Hero extends Component {
     protected onDestroy(): void {
         EventManager.off(EventName.Game.GetShield, this.onGetShield, this);
         EventManager.off(EventName.Game.UseSkill, this.onUseSkill, this);
+
+        // 销毁时清理定时器
+        this.unschedule(this.startJetpackDash);
+        this.unschedule(this.endJetpackDash);
     }
     
     private onUseSkill() {
@@ -354,6 +359,11 @@ export class Hero extends Component {
         this._skillTimer = 0;
         EventManager.emit(EventName.Game.SkillCDStart, 0);
 
+        // 重置高达蛙状态
+        this._isJetpacking = false;
+        this.unschedule(this.startJetpackDash);
+        this.unschedule(this.endJetpackDash);
+
         // 重置陀螺仪/输入状态
         this._gyroX = 0;
         this._gyroAngle = 0;
@@ -368,6 +378,12 @@ export class Hero extends Component {
         // 刷新护盾技能Icon
         this.setShieldSkillIconActive(false);
         this.isShieldSkill = false;
+
+        // 重置流星蛙充能
+        if (this._activeSkill && this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
+            this._meteorCharge = this._maxMeteorCharge;
+            EventManager.emit(EventName.Game.UpdateSkillCharge, this._meteorCharge);
+        }
     }
     
     /**
@@ -688,6 +704,15 @@ export class Hero extends Component {
                 // 踩上踏板，使用踏板的重力
                 this._currentGravity = pedal._gravity;
                 console.log(`Landed on pedal with Gravity: ${pedal._gravity}`);
+
+                // 流星蛙充能逻辑
+                if (this._activeSkill && this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
+                    if (this._meteorCharge < this._maxMeteorCharge) {
+                        this._meteorCharge++;
+                        // 更新UI
+                        EventManager.emit(EventName.Game.UpdateSkillCharge, this._meteorCharge);
+                    }
+                }
             }
         }
     }
@@ -702,54 +727,6 @@ export class Hero extends Component {
 
     getUiTransform(): UITransform {
         return this._uiTransform;
-    }
-    /**
-     * 处理Hero踩中踏板的逻辑
-     * @param pedalNode 踩中的踏板节点
-     */
-    public landOnPedal(pedalNode: Node): void {
-        // 停止可能存在的上升 Tween
-        if (this._currentJumpTween) {
-            this._currentJumpTween.stop();
-            this._currentJumpTween = null;
-        }
-        this._isTweenJumping = false;
-
-        this._isTouchingPedal = true;
-        this._heroData.isTouchingPedal = true;
-        this._jumpVelocity = 0;
-
-        // 获取组件
-        const pedalUITransform = pedalNode.getComponent(UITransform);
-        const heroUITransform = this.getUiTransform();
-
-        if (pedalUITransform && heroUITransform) {
-            // 计算踏板顶部在世界坐标系下的Y值 (考虑锚点)
-            const pedalWorldPos = pedalNode.worldPosition;
-            const pedalTopWorldY = pedalWorldPos.y + (1 - pedalUITransform.anchorY) * pedalUITransform.height;
-            
-            // 计算Hero底部到中心的距离 (基于锚点)
-            const heroBottomToCenterY = heroUITransform.anchorY * heroUITransform.height;
-            
-            // 强制对齐：Hero底部 = 踏板顶部
-            const newHeroWorldY = pedalTopWorldY + heroBottomToCenterY;
-            
-            // 使用辅助变量更新位置
-            this._tempPosition.set(this.node.worldPosition);
-            this._tempPosition.y = newHeroWorldY;
-            this.node.setWorldPosition(this._tempPosition);
-        }
-        
-        // 流星蛙充能逻辑
-        if (this._activeSkill && this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
-            if (this._meteorCharge < this.MAX_METEOR_CHARGE) {
-                this._meteorCharge++;
-                // console.log(`Meteor Charge: ${this._meteorCharge}/${this.MAX_METEOR_CHARGE}`);
-            }
-        }
-        
-        // 切换到跳跃向上状态，开始新的跳跃循环
-        this.changeState(HeroState.JUMP_UP);
     }
     
     /**
@@ -825,7 +802,11 @@ export class Hero extends Component {
             
             // 流星蛙初始赠送一次充能
             if (this._activeSkill && this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
-                this._meteorCharge = this.MAX_METEOR_CHARGE;
+                // 初始化最大充能
+                this._maxMeteorCharge = this._activeSkill.maxCharge || 30;
+                this._meteorCharge = this._maxMeteorCharge;
+                // 更新UI显示
+                EventManager.emit(EventName.Game.UpdateSkillCharge, this._meteorCharge);
             }
         }
     }
@@ -893,12 +874,14 @@ export class Hero extends Component {
         
         // 特殊检查：流星蛙需要充能
         if (this._activeSkill.type === HeroSkillType.ACTIVE_METEOR) {
-            if (this._meteorCharge < this.MAX_METEOR_CHARGE) {
-                ViewManager.toast(`充能不足: ${this._meteorCharge}/${this.MAX_METEOR_CHARGE}`);
+            if (this._meteorCharge < this._maxMeteorCharge) {
+                ViewManager.toast(`充能不足: ${this._meteorCharge}/${this._maxMeteorCharge}`);
                 return false;
             }
             // 消耗充能
             this._meteorCharge = 0;
+            // 更新UI
+            EventManager.emit(EventName.Game.UpdateSkillCharge, this._meteorCharge);
         }
 
         // 触发技能效果
@@ -929,6 +912,8 @@ export class Hero extends Component {
                 ViewManager.toast(`释放技能: ${this._activeSkill.description}`);
                 // 流星冲刺
                 this.meteorRush(val);
+                // 技能释放后，重新发送充能状态(0)
+                EventManager.emit(EventName.Game.UpdateSkillCharge, this._meteorCharge);
                 break;
             case HeroSkillType.PASSIVE_JUMP_SPEED:
                 ViewManager.toast(`释放技能: ${this._activeSkill.description}`);
@@ -938,6 +923,9 @@ export class Hero extends Component {
         }
     }
 
+    /**
+     * 处理高达蛙技能
+     */
     private handleJetpackSkill() {
         const jumpForce = this._activeSkill.jetpackJumpForce || 800;
         // const dashForce = this._activeSkill.jetpackDashForce || 1500; // dashForce 在 update 中使用
@@ -953,22 +941,39 @@ export class Hero extends Component {
         console.log("Jetpack Jump Start!");
 
         // 2. 延迟后进入冲刺状态 (飞行)
-        this.scheduleOnce(() => {
-            this._isJetpacking = true;
-            this.triggerShieldSkill(); // 获得护盾（无敌）
-            console.log("Jetpack Dash Mode ON!");
-            ViewManager.toast("冲刺飞行！");
+        this.unschedule(this.startJetpackDash);
+        this.scheduleOnce(this.startJetpackDash, 0.2);
+    }
 
-            // 持续时间结束后取消飞行
-            this.scheduleOnce(() => {
-                this._isJetpacking = false;
-                console.log("Jetpack Dash Mode OFF");
-                ViewManager.toast("飞行结束");
-                // 飞行结束后可能需要给一个向上的小速度防止直接坠落？
-                this._jumpVelocity = 0; 
-            }, duration);
+    private startJetpackDash() {
+        if (!this.isValid) return;
 
-        }, 0.2); // 0.2秒延迟，让第一段跳跃稍微展示一下
+        this._isJetpacking = true;
+        this.triggerShieldSkill(); // 获得护盾（无敌）
+        console.log("Jetpack Dash Mode ON!");
+        ViewManager.toast("冲刺飞行！");
+
+        const duration = this._activeSkill && this._activeSkill.duration ? this._activeSkill.duration : 5;
+        this.unschedule(this.endJetpackDash);
+        this.scheduleOnce(this.endJetpackDash, duration);
+    }
+
+    private endJetpackDash() {
+        if (!this.isValid) return;
+        // 关键防御：如果当前已经不在冲刺状态（可能被重置、落地打断等），则忽略此回调
+        if (!this._isJetpacking) return;
+
+        this._isJetpacking = false;
+        console.log("Jetpack Dash Mode OFF");
+        ViewManager.toast("飞行结束");
+        
+        // 飞行结束后给予一个向上的速度（惯性冲刺），而不是立即下落
+        const exitForce = this._activeSkill && this._activeSkill.jetpackJumpForce ? this._activeSkill.jetpackJumpForce : 800;
+        this._jumpVelocity = exitForce;
+        
+        // 切换回跳跃状态动画
+        this.playAnimation('jump_up');
+        this.changeState(HeroState.JUMP_UP);
     }
 
     /**
@@ -1000,6 +1005,7 @@ export class Hero extends Component {
         const targetY = this.node.position.y + distance;
         
         this._isTweenJumping = true;
+        this._isTouchingPedal = false; // 确保不触发踩踏逻辑
         this._tweenJumpY = this.node.position.y;
 
         tween(this as any)
@@ -1043,8 +1049,8 @@ export class Hero extends Component {
      * @returns 是否有护盾保护
      */
     public consumeShield(): boolean {
-        if (this.isShieldSkill || this._isJetpacking) {
-            // 有护盾或正在冲刺，返回 true
+        if (this.isShieldSkill || this._isJetpacking || this._isTweenJumping) {
+            // 有护盾或正在冲刺或Tween跳跃（流星冲刺），返回 true
             console.log("Shield blocked damage (Immune)!");
             return true;
         }

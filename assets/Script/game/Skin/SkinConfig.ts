@@ -17,6 +17,8 @@ export interface SkillInfo {
     jetpackJumpForce?: number;
     // 高达蛙冲刺力度
     jetpackDashForce?: number;
+    // 流星蛙最大充能数
+    maxCharge?: number;
 }
 
 /**
@@ -129,7 +131,7 @@ export function getSkinConfig(id: number): SkinConfig | null {
                     type: HeroSkillType.ACTIVE_JETPACK, 
                     description: "空中跳跃：2段跳+冲刺", 
                     cooldown: 20, // 技能CD：20秒
-                    duration: 5, // 持续 5 秒
+                    duration: 2, // 持续 2 秒
                     // 高达蛙跳跃力度
                     jetpackJumpForce: 800,
                     // 高达蛙冲刺力度
@@ -149,7 +151,8 @@ export function getSkinConfig(id: number): SkinConfig | null {
                     type: HeroSkillType.ACTIVE_METEOR, 
                     description: "向上冲刺10层", 
                     value: 10, // 冲刺层数
-                    cooldown: 30 // 技能CD：30秒
+                    cooldown: 0, // 无CD
+                    maxCharge: 30 // 最大充能
                 }
             };
 

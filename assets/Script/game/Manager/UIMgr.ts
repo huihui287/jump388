@@ -19,15 +19,22 @@ export class UIMgr extends BaseDialog {
     // 高达蛙技能按钮
     GundamFrogSkillBtn: Node = null;
 
-    // 溜冰蛙技能按钮冷却时间标签可以成为公用的，忍者蛙也可以使用
+    // 流星化技能按钮
+    MeteorFrogSkillBtn: Node = null;
+
+    // 流星化技能按钮冷却时间标签可以成为公用的，忍者蛙也可以使用
     cdLabel: Node = null;
 
     private _cdTime: number = 0;
+
+    // 记录最大充能
+    private _maxMeteorCharge: number = 30;
 
     start() {
         this.refreshSkillBtn();
         // 注册事件
         EventManager.on(EventName.Game.SkillCDStart, this.onSkillCDStart, this);
+        EventManager.on(EventName.Game.UpdateSkillCharge, this.onUpdateSkillCharge, this);
     }
 
     /**
@@ -46,6 +53,9 @@ export class UIMgr extends BaseDialog {
         if (this.GundamFrogSkillBtn) {
             this.GundamFrogSkillBtn.active = skinId === HeroType.GundamFrog;
         }
+        if (this.MeteorFrogSkillBtn) {
+            this.MeteorFrogSkillBtn.active = skinId === HeroType.MeteorFrog;
+        }
         
         // 动态获取当前英雄对应的 CD Label
         this.cdLabel = null;
@@ -56,6 +66,10 @@ export class UIMgr extends BaseDialog {
         } else if (skinId === HeroType.SkatingFrog) {
             this.cdLabel = this.viewList.get('SkatingFrogSkillBtn/cd');
         }
+        else if (skinId === HeroType.MeteorFrog) {
+            this.cdLabel = this.viewList.get('MeteorFrogSkillBtn/cd');
+        }
+
 
         // 初始化隐藏
         if (this.cdLabel && this._cdTime <= 0) {
@@ -68,6 +82,7 @@ export class UIMgr extends BaseDialog {
         this.SkatingFrogSkillBtn = this.viewList.get('SkatingFrogSkillBtn');
         this.NinjaFrogSkillBtn = this.viewList.get('NinjaFrogSkillBtn');
         this.GundamFrogSkillBtn = this.viewList.get('GundamFrogSkillBtn');
+        this.MeteorFrogSkillBtn = this.viewList.get('MeteorFrogSkillBtn');
     }
 
     /**
@@ -87,6 +102,7 @@ export class UIMgr extends BaseDialog {
     onDestroy(): void {
         super.onDestroy();
         EventManager.off(EventName.Game.SkillCDStart, this.onSkillCDStart, this);
+        EventManager.off(EventName.Game.UpdateSkillCharge, this.onUpdateSkillCharge, this);
     }
     update(deltaTime: number) {
         if (this._cdTime > 0) {
@@ -122,7 +138,36 @@ export class UIMgr extends BaseDialog {
             }
         } else {
             this._cdTime = 0;
-            if (this.cdLabel) this.cdLabel.active = false;
+            if (this.cdLabel) {
+                // 如果是流星蛙，不应该隐藏，而是显示充能状态？
+                // 但流星蛙不使用 CDStart，而是 UpdateSkillCharge
+                // 对于其他英雄，CD结束隐藏Label
+                const skinId = SkinManager.getInstance().getCurrentSkinId();
+                if (skinId !== HeroType.MeteorFrog) {
+                    this.cdLabel.active = false;
+                }
+            }
+        }
+    }
+
+    onUpdateSkillCharge(current: number, max: number) {
+        // 只有流星蛙使用此逻辑
+        const skinId = SkinManager.getInstance().getCurrentSkinId();
+        if (skinId !== HeroType.MeteorFrog) return;
+        
+        // 更新最大值
+        if (max > 0) this._maxMeteorCharge = max;
+
+        if (this.cdLabel) {
+            this.cdLabel.active = true;
+            const label = this.cdLabel.getComponent(Label);
+            if (label) {
+                if (current >= this._maxMeteorCharge) {
+                    label.string = "MAX";
+                } else {
+                    label.string = `${current}/${this._maxMeteorCharge}`;
+                }
+            }
         }
     }
 
@@ -151,6 +196,13 @@ export class UIMgr extends BaseDialog {
      */
     onClick_GundamFrogSkillBtn() {
         // 触发技能
+        EventManager.emit(EventName.Game.UseSkill);
+    }
+
+    /**
+     * 点击流星蛙技能按钮
+     */
+    onClick_MeteorFrogSkillBtn() {
         EventManager.emit(EventName.Game.UseSkill);
     }
 }
