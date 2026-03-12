@@ -13,7 +13,6 @@ import AudioManager from '../Common/AudioManager';
 import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
 // import { JoystickControl } from './JoystickControl';
-import { DownGridManager } from './Manager/DownGridManager';
 import { Hero } from './Hero';
 import { CameraManager } from './CameraManager';
 import { pedalManager } from './Manager/pedalManager';

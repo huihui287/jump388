@@ -76,8 +76,8 @@ export class CSVManager {
         const headers = validLines[0].split(',').map(h => h.trim());
         const result: any[] = [];
 
-        // 从第二行开始解析数据
-        for (let i = 1; i < validLines.length; i++) {
+        // 从第三行开始解析数据 (第一行为表头，第二行为类型定义/注释，跳过)
+        for (let i = 2; i < validLines.length; i++) {
             const line = validLines[i].trim();
             // 处理简单的逗号分隔
             const values = line.split(',');

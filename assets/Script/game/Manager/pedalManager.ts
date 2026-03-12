@@ -178,7 +178,40 @@ export class pedalManager extends Component {
         }
     }
     /**
+     * 将 CSV 中的数字类型转换为 PedalType 字符串
+     * 映射关系:
+     * 1 -> PedalType.PEDAL1 (pedal1)
+     * 2 -> PedalType.WOOD (woodPedal)
+     * 3 -> PedalType.CLOUD (cloudPedal)
+     * 4 -> PedalType.MOVE_PEDAL (movePedal)
+     * 5 -> PedalType.FRACTURE_PEDAL (fracturePedal)
+     */
+    private convertPedalType(typeVal: string | number): string {
+        // 如果已经是字符串且非纯数字，直接返回
+        if (typeof typeVal === 'string' && isNaN(Number(typeVal))) {
+            return typeVal;
+        }
+
+        const typeNum = Number(typeVal);
+        switch (typeNum) {
+            case 1: return PedalType.PEDAL1;
+            case 2: return PedalType.WOOD;
+            case 3: return PedalType.CLOUD;
+            case 4: return PedalType.MOVE_PEDAL;
+            case 5: return PedalType.FRACTURE_PEDAL;
+            default: return PedalType.WOOD;
+        }
+    }
+
+    /**
      * 加载游戏数据并从 CSV 配置生成踏板
+     * CSV 结构：每一行代表一个里程碑区间
+     * 例如：
+     * layer,pedalSype,AlllayerNum,goldReward,pedalGold
+     * 描述行...
+     * 10,1,30,100,10  (表示 0-10 层使用类型 1)
+     * 20,2,30,100,10  (表示 10-20 层使用类型 2)
+     * 30,3,30,100,10  (表示 20-30 层使用类型 3)
      */
     public async loadPedalConfig(): Promise<void> {
    
@@ -191,21 +224,41 @@ export class pedalManager extends Component {
             
             // 使用 CSVManager 加载
             await CSVManager.getInstance().loadCSV(configPath);
-            // 获取表中的第一条数据（因为每一关只有一个配置行）
+            // 获取表中的所有有效数据行（CSVManager 已跳过前两行）
             const table = CSVManager.getInstance().getTable(configPath);
             
             if (table && table.length > 0) {
-                const config = table[0];
+                // 重置当前配置数组
+                this.layer = [];
+                this.pedalSype = [];
+
+                // 遍历每一行，填充 layer 和 pedalSype 数组
+                for (const row of table) {
+                    // 处理 layer (如果是数组形式 10|20 则取最后或按需，如果是单值则直接 push)
+                    const layerVal = row.layer;
+                    if (Array.isArray(layerVal)) {
+                        this.layer.push(...layerVal);
+                    } else if (layerVal !== undefined) {
+                        this.layer.push(Number(layerVal));
+                    }
+
+                    // 处理 pedalSype (如果是数组形式 1|2 则转换后 push，如果是单值则转换后 push)
+                    const typeVal = row.pedalSype;
+                    if (Array.isArray(typeVal)) {
+                        const convertedTypes = typeVal.map(t => this.convertPedalType(t));
+                        this.pedalSype.push(...convertedTypes);
+                    } else if (typeVal !== undefined) {
+                        this.pedalSype.push(this.convertPedalType(typeVal));
+                    }
+                }
+
+                // 取第一行的全局属性 (总层数和奖励在每一行通常是一样的)
+                const firstRow = table[0];
+                this.AlllayerNum = firstRow.AlllayerNum || 0;
+                this.goldReward = firstRow.goldReward || 100;
+                this.pedalGold = firstRow.pedalGold || 100;
                 
-                // 解析配置
-                // CSV 中的 layer 和 pedalSype 是以 | 分隔的字符串数组，CSVManager 已经自动处理了
-                this.layer = config.layer || [];
-                this.pedalSype = config.pedalSype || [];
-                this.AlllayerNum = config.AlllayerNum || 0;
-                this.goldReward = config.goldReward || 100;
-                this.pedalGold = config.pedalGold || 100;
-                
-                console.log("Loaded layer config from CSV:", this.layer, this.pedalSype, this.AlllayerNum, this.goldReward, this.pedalGold); 
+                console.log("Loaded layer config from CSV table:", this.layer, this.pedalSype, this.AlllayerNum, this.goldReward, this.pedalGold); 
             } else {
                 console.warn(`Level ${level} config empty or not found in CSV: ${configPath}, using defaults.`);
                 this.useDefaultConfig();
