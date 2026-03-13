@@ -142,11 +142,11 @@ export const PedalDefaults: Record<PedalType, {
         /** 跳跃速度 */ 
         jumpSpeed: 0.3,
         /** 重力加速度 */
-        _gravity: -2000,
+        _gravity: -5000,
         /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 100,
+        minYInterval: 50,
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 200,
+        maxYInterval: 80,
         /** 技能 */
         skill: [PedalSkill.NONE],
         /** 移动速度 */
@@ -161,13 +161,13 @@ export const PedalDefaults: Record<PedalType, {
         /** 跳跃力度 */
         jumpForce: 200,
         /** 跳跃速度 */
-        jumpSpeed: 0.5,
+        jumpSpeed: 0.3,
         /** 重力加速度 */
-        _gravity: -6000,
+        _gravity: -5000,
         /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
         minYInterval: 50,
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 80,
+        maxYInterval: 100,
         /** 技能 */
         skill: [PedalSkill.NONE],
         /** 移动速度 */
@@ -178,39 +178,18 @@ export const PedalDefaults: Record<PedalType, {
 
         moveDistance: 0,
     },
-    // 云踏板CLOUD
-    [PedalType.CLOUD]: {
-        /** 跳跃力度 */
-        jumpForce: 600,
-        /** 跳跃速度 */
-        jumpSpeed: 1.45,
-        /** 重力加速度 */
-        _gravity: -2000,
-        /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 500,
-        /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 600,
-        /** 技能 */
-        skill: [PedalSkill.NONE],
-        /** 移动速度 */
-        moveSpeed: 0,
-        /** 移动时间 */
-        moveTime: 0,
-        /** 移动距离 */             
-        moveDistance: 0,
-    },
     // 断裂踏板FRACTURE_PEDAL
     [PedalType.FRACTURE_PEDAL]: {
         /** 跳跃力度 */
         jumpForce: 200,
         /** 跳跃速度 */
-        jumpSpeed: 0.5,
+        jumpSpeed: 0.3,
         /** 重力加速度 */
-        _gravity: -6000,
+        _gravity: -5000,
         /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 300,
+        minYInterval: 50,
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 750,
+        maxYInterval: 80,
         /** 技能 */
         skill: [PedalSkill.FRACTURE],
         /** 移动速度 */
@@ -225,13 +204,13 @@ export const PedalDefaults: Record<PedalType, {
         /** 跳跃力度 */
         jumpForce: 600,
         /** 跳跃速度 */
-        jumpSpeed: 1.45,
+        jumpSpeed: 0.3,
         /** 重力加速度 */
-        _gravity: -2000,
+        _gravity: -5000,
         /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 250,
+        minYInterval: 100,
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 350,
+        maxYInterval: 300,
         /** 技能 */
         skill: [PedalSkill.NONE],
         /** 移动速度 */
