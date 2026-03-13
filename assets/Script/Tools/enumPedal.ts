@@ -46,7 +46,6 @@ export interface PedalConfig {
 export enum PedalType {
     PEDAL1 = 'pedal1',            // 最开始的白踏板：基础踏板PEDAL1
     WOOD = 'woodPedal',           // 木踏板：基础踏板
-    CLOUD = 'cloudPedal',         // 云踏板：偏向强化跳跃
     FRACTURE_PEDAL = 'fracturePedal', // 断裂踏板：偏向特殊/易碎行为
     MOVE_PEDAL = 'movePedal',     // 移动踏板：偏向移动
 }
