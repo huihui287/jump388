@@ -3,6 +3,7 @@ import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
 import GameData from '../../Common/GameData';
 import { PedalSkill, PedalType } from '../../Tools/enumPedal';
+import { Constant } from '../../Tools/enumConst';
 
 const { ccclass, property } = _decorator;
 
@@ -49,6 +50,15 @@ export class Pedal extends Component {
     /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
     private maxYInterval: number=200;
 
+    public moveSpeed: number = 0;
+    public moveTime: number = 0;
+    public moveDistance: number = 0;
+
+    private _moveDirection: number = 1;
+    private _leftLimit: number = 0;
+    private _rightLimit: number = 0;
+    private _isMoving: boolean = false;
+
     /**
      * 生命周期：组件加载
      * 缓存 UITransform 组件引用
@@ -69,7 +79,16 @@ export class Pedal extends Component {
      * @param deltaTime 帧间隔（秒）
      */
     update(deltaTime: number) {
-        
+        if (!this._isMoving) return;
+        let newX = this.node.position.x + this.moveSpeed * this._moveDirection * deltaTime;
+        if (newX >= this._rightLimit) {
+            newX = this._rightLimit;
+            this._moveDirection = -1;
+        } else if (newX <= this._leftLimit) {
+            newX = this._leftLimit;
+            this._moveDirection = 1;
+        }
+        this.node.setPosition(newX, this.node.position.y, this.node.position.z);
     }
 
     /**
@@ -106,7 +125,19 @@ export class Pedal extends Component {
      * @param jumpSpeed 提供的跳跃速度 (上升时间)
      * @param _gravity 提供的重力加速度
      */
-    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, _gravity: number = -2000, type: PedalType = PedalType.WOOD, minYInterval: number = 0, maxYInterval: number = 0) {
+    init(
+        position: Vec3,
+        jumpForce: number = 600,
+        jumpSpeed: number = 1.45,
+        _gravity: number = -2000,
+        type: PedalType = PedalType.WOOD,
+        minYInterval: number = 0,
+        maxYInterval: number = 0,
+        moveEnable: boolean = false,
+        moveSpeed: number = 0,
+        moveTime: number = 0,
+        moveDistance: number = 0
+    ) {
         this.node.position = position;
         this.node.active = true;
         this.jumpForce = jumpForce;
@@ -126,6 +157,14 @@ export class Pedal extends Component {
         if (this._type === PedalType.FRACTURE_PEDAL) {
             this.addSkill([PedalSkill.FRACTURE]);
         }
+
+        this._isMoving = false;
+        this.moveSpeed = 0;
+        this.moveTime = 0;
+        this.moveDistance = 0;
+        if (moveEnable) {
+            this.startMove(moveSpeed, moveTime, moveDistance);
+        }
     }
     
     /**
@@ -135,7 +174,40 @@ export class Pedal extends Component {
      * @param distance 单程移动距离 (像素)
      */
     startMove(speed: number, time: number, distance: number) {
+        this._isMoving = false;
+        this.moveSpeed = 0;
+        this.moveTime = time;
+        this.moveDistance = distance;
 
+        if (distance <= 0) {
+            return;
+        }
+
+        if (speed > 0) {
+            this.moveSpeed = speed;
+        } else if (time > 0) {
+            this.moveSpeed = distance / time;
+        } else {
+            this.moveSpeed = 100;
+        }
+
+        const startX = this.node.position.x;
+        const screenHalfWidth = Constant.Width / 2;
+        const pedalHalfWidth = this.getPedalWidth() / 2;
+        const minX = -screenHalfWidth + pedalHalfWidth;
+        const maxX = screenHalfWidth - pedalHalfWidth;
+
+        const leftLimit = Math.max(startX - distance, minX);
+        const rightLimit = Math.min(startX + distance, maxX);
+
+        if (leftLimit >= rightLimit) {
+            return;
+        }
+
+        this._leftLimit = leftLimit;
+        this._rightLimit = rightLimit;
+        this._moveDirection = Math.random() > 0.5 ? 1 : -1;
+        this._isMoving = true;
     }
     
     /**
