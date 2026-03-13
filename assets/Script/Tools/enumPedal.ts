@@ -94,17 +94,17 @@ export const SkillFloorLimit: Record<PedalSkill, number> = {
 
 /** 技能权重配置 (可在代码中灵活修改) */
 export const SkillWeights: Record<PedalSkill, number> = {
-    [PedalSkill.NONE]: 2000,         // 无技能
-    [PedalSkill.SPRING]: 1000,       // 弹簧
+    [PedalSkill.NONE]: 5000,         // 无技能
+    [PedalSkill.SPRING]: 400,       // 弹簧
     [PedalSkill.LOW_GRAVITY]: 10,  // 低重力
-    [PedalSkill.SPIKE]: 1000,         // 尖刺
-    [PedalSkill.GOLD]: 1000,         // 金币
+    [PedalSkill.SPIKE]: 400,         // 尖刺
+    [PedalSkill.GOLD]: 400,         // 金币
     [PedalSkill.FRACTURE]: 0,      // 断裂通常不通过随机生成，而是由踏板类型决定
-    [PedalSkill.SHIELD]: 1000,      // 护盾 (调低点)
-    [PedalSkill.GOLD_RAIN]: 1000,     // 金币雨
-    [PedalSkill.FLYING_SNAKE]: 1000,  // 移动飞蛇
-    [PedalSkill.METEOR]: 1000,        // 陨石
-    [PedalSkill.ROCKET]: 1000,        // 火箭
+    [PedalSkill.SHIELD]: 400,      // 护盾 (调低点)
+    [PedalSkill.GOLD_RAIN]: 400,     // 金币雨
+    [PedalSkill.FLYING_SNAKE]: 400,  // 移动飞蛇
+    [PedalSkill.METEOR]: 400,        // 陨石
+    [PedalSkill.ROCKET]: 400,        // 火箭
 };
 
 // /** 踏板类型字符串标识 */

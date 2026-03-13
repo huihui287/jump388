@@ -43,20 +43,27 @@ export class CameraManager extends Component {
     update(deltaTime: number) {
         // 如果有目标，实现跟随逻辑
         if (this.target) {
-            if (this.onlyFollowY) {
-                // 只跟随Y值，保持X和Z不变
-                this._tempVec.set(this.node.position.x, this.target.position.y + this.offset.y, this.node.position.z);
-            } else {
-                // 跟随完整位置
-                this._tempVec.set(this.target.position).add(this.offset);
-            }
+            // 计算目标位置的Y值（包含偏移）
+            const targetY = this.target.position.y + this.offset.y;
             
-            if (this.useSmoothFollow) {
-                // 使用平滑插值实现相机跟随
-                this.node.position.lerp(this._tempVec, deltaTime * this.followSpeed);
-            } else {
-                // 直接设置相机位置，完全跟随目标
-                this.node.setPosition(this._tempVec);
+            // 只有当目标位置高于当前相机位置时才更新（单向跟随）
+            if (targetY > this.node.position.y) {
+                if (this.onlyFollowY) {
+                    // 只跟随Y值，保持X和Z不变
+                    this._tempVec.set(this.node.position.x, targetY, this.node.position.z);
+                } else {
+                    // 跟随完整位置
+                    this._tempVec.set(this.target.position).add(this.offset);
+                }
+                
+                if (this.useSmoothFollow) {
+                    // 使用平滑插值实现相机跟随
+                    this.node.position.lerp(this._tempVec, deltaTime * this.followSpeed);
+                    this.node.setPosition(this.node.position); // 确保位置更新生效
+                } else {
+                    // 直接设置相机位置，完全跟随目标
+                    this.node.setPosition(this._tempVec);
+                }
             }
         }
     }

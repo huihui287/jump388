@@ -442,9 +442,9 @@ export class pedalManager extends Component {
 
         const finalMinY = targetMinY ?? def.minYInterval;
         const finalMaxY = targetMaxY ?? def.maxYInterval;
-        const finalMoveSpeed = targetMoveSpeed ?? def.moveSpeed;
-        const finalMoveTime = targetMoveTime ?? def.moveTime;
-        const finalMoveDistance = targetMoveDistance ?? def.moveDistance;
+        const finalMoveSpeed = def.moveSpeed;
+        const finalMoveTime = def.moveTime;
+        const finalMoveDistance = def.moveDistance;
 
         this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity, finalMinY, finalMaxY, finalMoveSpeed, finalMoveTime, finalMoveDistance);
     }
