@@ -89,7 +89,7 @@ export const SkillFloorLimit: Record<PedalSkill, number> = {
 export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 5000,         // 无技能
     [PedalSkill.SPRING]: 400,       // 弹簧
-    [PedalSkill.SPIKE]: 400,         // 尖刺
+    [PedalSkill.SPIKE]: 1,         // 尖刺
     [PedalSkill.GOLD]: 400,         // 金币
     [PedalSkill.SHIELD]: 400,      // 护盾 (调低点)
     [PedalSkill.GOLD_RAIN]: 400,     // 金币雨
@@ -150,7 +150,7 @@ export const PedalDefaults: Record<PedalType, {
     // 木踏板WOOD
     [PedalType.WOOD]: {
         /** 跳跃力度 */
-        jumpForce: 200,
+        jumpForce: 500,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */

@@ -294,6 +294,7 @@ export class Pedal extends Component {
                 break;
             case PedalSkill.GOLD_RAIN:
                 console.log("Triggered GOLD_RAIN skill");
+                EventManager.emit(EventName.Game.GetGoldRain, this.node);
                 break;
             case PedalSkill.METEOR:
                 console.log("Triggered METEOR skill");
@@ -302,14 +303,11 @@ export class Pedal extends Component {
                 console.log("Triggered ROCKET skill");
                 this.applyRocketEffect();
                 break;
-            case PedalSkill.NONE:
-                break;
             default:
                 break;
         }
-        
-        // 释放后清空技能（一次性效果）
-      //  this.skills = [];
+
+        this.setSkill(PedalSkill.NONE);
     }
     
     // 获得护盾

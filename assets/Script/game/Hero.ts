@@ -313,9 +313,11 @@ export class Hero extends Component {
         console.log("Hero obtained SHIELD!");
     }
 
+    // 获得火箭
     private onGetRocket(layers: number) {
         console.log(`Hero obtained ROCKET! Rushing ${layers} layers.`);
-        this.meteorRush(layers);
+        const safeLayers = typeof layers === 'number' && layers > 0 ? layers : 10;
+        this.scheduleOnce(() => this.RocketRush(safeLayers), 0);
     }
 
     protected start(): void {
@@ -1003,8 +1005,9 @@ export class Hero extends Component {
         }, duration);
     }
 
-    // 流星冲刺逻辑
-    private meteorRush(layers: number) {
+       // 火箭冲刺逻辑
+    private RocketRush(layers: number) {
+        if (!layers || layers <= 0) return;
         // 向上冲刺N层，期间无敌
         this.triggerShieldSkill(); // 获得护盾保护 (无敌)
         
@@ -1012,15 +1015,62 @@ export class Hero extends Component {
         const distance = layers * 200; 
         const targetY = this.node.position.y + distance;
         
+        if (this._currentJumpTween) {
+            this._currentJumpTween.stop();
+            this._currentJumpTween = null;
+        }
+
         this._isTweenJumping = true;
         this._isTouchingPedal = false; // 确保不触发踩踏逻辑
+        this._heroData.isTouchingPedal = false;
+        this._jumpVelocity = 0;
         this._tweenJumpY = this.node.position.y;
 
-        tween(this as any)
-            .to(1.5, { _tweenJumpY: targetY }, { easing: 'cubicOut' }) // 冲刺动画
+        this.playAnimation('jump_up');
+        this.changeState(HeroState.JUMP_UP);
+
+        this._currentJumpTween = tween(this as any)
+            .to(1.5, { _tweenJumpY: targetY }, { easing: 'cubicOut' })
             .call(() => {
                 this._isTweenJumping = false;
                 this._jumpVelocity = 0;
+                this._currentJumpTween = null;
+                // 更新层数
+                this.updateLayer(this.HerolayerS + layers);
+            })
+            .start();
+    }
+
+    // 流星冲刺逻辑
+    private meteorRush(layers: number) {
+        if (!layers || layers <= 0) return;
+        // 向上冲刺N层，期间无敌
+        this.triggerShieldSkill(); // 获得护盾保护 (无敌)
+        
+        // 计算目标高度 (假设每层高度200，或者直接让 Game.ts 处理层数跳转，这里简化为位移)
+        const distance = layers * 200; 
+        const targetY = this.node.position.y + distance;
+        
+        if (this._currentJumpTween) {
+            this._currentJumpTween.stop();
+            this._currentJumpTween = null;
+        }
+
+        this._isTweenJumping = true;
+        this._isTouchingPedal = false; // 确保不触发踩踏逻辑
+        this._heroData.isTouchingPedal = false;
+        this._jumpVelocity = 0;
+        this._tweenJumpY = this.node.position.y;
+
+        this.playAnimation('jump_up');
+        this.changeState(HeroState.JUMP_UP);
+
+        this._currentJumpTween = tween(this as any)
+            .to(1.5, { _tweenJumpY: targetY }, { easing: 'cubicOut' })
+            .call(() => {
+                this._isTweenJumping = false;
+                this._jumpVelocity = 0;
+                this._currentJumpTween = null;
                 // 更新层数
                 this.updateLayer(this.HerolayerS + layers);
             })
