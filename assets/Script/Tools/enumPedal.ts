@@ -1,14 +1,4 @@
 /////////////////////////////////////////////////////////////////////////////////////////
-/**踏板cvs 配置文件 */
-export interface PedalConfigData {
-    /** 踏板类型 */
-    pedalSype: string;
-    /** Y轴间隔最小值 (下一个pedal与当前pedal的最小间隔) */
-    minYInterval?: number;
-    /** Y轴间隔最大值 (下一个pedal与当前pedal的最大间隔) */
-    maxYInterval?: number;
-}
-
 /** 踏板物理配置接口 */
 export interface PedalConfig {
     /** 跳跃力度 (决定跳跃高度) */
@@ -69,10 +59,10 @@ export enum PedalSkill {
     ROCKET = 'rocket'
 }
 
-/** 踏板技能层数限制  多少层有概率可以出现 */
+/** 踏板技能层数限制 */
 export const SkillFloorLimit: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 0,
-    [PedalSkill.SPRING]: 1,
+    [PedalSkill.SPRING]: 20,
     [PedalSkill.LOW_GRAVITY]: 0,
     [PedalSkill.FRACTURE]: 0,
     [PedalSkill.SPIKE]: 0,
@@ -152,15 +142,15 @@ export const PedalDefaults: Record<PedalType, {
     // 木踏板WOOD
     [PedalType.WOOD]: {
         /** 跳跃力度 */
-        jumpForce: 600,
+        jumpForce: 200,
         /** 跳跃速度 */
-        jumpSpeed: 1.45,
+        jumpSpeed: 0.5,
         /** 重力加速度 */
-        _gravity: -2000,
+        _gravity: -6000,
         /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 150,
+        minYInterval: 50,
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 250,
+        maxYInterval: 80,
         /** 技能 */
         skill: [PedalSkill.NONE],
         /** 移动速度 */
@@ -168,6 +158,7 @@ export const PedalDefaults: Record<PedalType, {
         /** 移动时间 */
         moveTime: 0,
         /** 移动距离 */             
+
         moveDistance: 0,
     },
     // 云踏板CLOUD
@@ -194,15 +185,15 @@ export const PedalDefaults: Record<PedalType, {
     // 断裂踏板FRACTURE_PEDAL
     [PedalType.FRACTURE_PEDAL]: {
         /** 跳跃力度 */
-        jumpForce: 600,
+        jumpForce: 200,
         /** 跳跃速度 */
-        jumpSpeed: 1.45,
+        jumpSpeed: 0.5,
         /** 重力加速度 */
-        _gravity: -2000,
+        _gravity: -6000,
         /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-        minYInterval: 250,
+        minYInterval: 300,
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-        maxYInterval: 350,
+        maxYInterval: 750,
         /** 技能 */
         skill: [PedalSkill.FRACTURE],
         /** 移动速度 */
