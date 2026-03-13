@@ -2,13 +2,14 @@ import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, N
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { CSVManager } from '../../Tools/CSVManager';
 import { App } from '../../Controller/app';
-import { PedalType, PedalConfig, PedalDefaults, PedalSkill, SkillWeights, SkillFloorLimit } from '../../Tools/enumPedal';
+import { PedalType, PedalConfig, PedalDefaults, PedalSkill, SkillWeights, SkillFloorLimit, PedalConfigData } from '../../Tools/enumPedal';
 import { Pedal } from '../Pedal/Pedal';
 import { Hero } from '../Hero';
 import GameData from '../../Common/GameData';
 import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
 import { Constant } from '../../Tools/enumConst';
+import { LevelConfig } from '../../Tools/levelConfig';
 
 const { ccclass, property } = _decorator;
 /**
@@ -49,10 +50,10 @@ export class pedalManager extends Component {
 
     ///////////////////////////////////////////////////////////////////////////
     
-    /** 对应 Rice 里程碑的踏板类型数组（字符串，来源于 JSON） */
-    private pedalSype: string[] = [];
-    /** 层数配置 */
-    private layer: number[] = [];
+    /** 层数配置映射 Key: layer, Value: ConfigData */
+    private layerConfigMap: Map<number, PedalConfigData> = new Map();
+    /** 排序后的层数键值，用于快速查找 */
+    private layerKeys: number[] = [];
 
     /** 生成了的层数 */
     private NewlayerS: number = 0;
@@ -228,37 +229,79 @@ export class pedalManager extends Component {
             const table = CSVManager.getInstance().getTable(configPath);
             
             if (table && table.length > 0) {
-                // 重置当前配置数组
-                this.layer = [];
-                this.pedalSype = [];
+                // 重置当前配置
+                this.layerConfigMap.clear();
+                this.layerKeys = [];
 
-                // 遍历每一行，填充 layer 和 pedalSype 数组
+                // 遍历每一行，填充 layerConfigMap
                 for (const row of table) {
-                    // 处理 layer (如果是数组形式 10|20 则取最后或按需，如果是单值则直接 push)
                     const layerVal = row.layer;
+                    const typeVal = row.pedalSype;
+                    const minVal = row.minYInterval;
+                    const maxVal = row.maxYInterval;
+
+                    let layers: number[] = [];
                     if (Array.isArray(layerVal)) {
-                        this.layer.push(...layerVal);
+                        layers = layerVal.map(Number);
                     } else if (layerVal !== undefined) {
-                        this.layer.push(Number(layerVal));
+                        layers = [Number(layerVal)];
                     }
 
-                    // 处理 pedalSype (如果是数组形式 1|2 则转换后 push，如果是单值则转换后 push)
-                    const typeVal = row.pedalSype;
+                    let types: string[] = [];
                     if (Array.isArray(typeVal)) {
-                        const convertedTypes = typeVal.map(t => this.convertPedalType(t));
-                        this.pedalSype.push(...convertedTypes);
+                        types = typeVal.map(t => this.convertPedalType(t));
                     } else if (typeVal !== undefined) {
-                        this.pedalSype.push(this.convertPedalType(typeVal));
+                        types = [this.convertPedalType(typeVal)];
+                    }
+
+                    let minIntervals: number[] = [];
+                    if (Array.isArray(minVal)) {
+                        minIntervals = minVal.map(Number);
+                    } else if (minVal !== undefined) {
+                        minIntervals = [Number(minVal)];
+                    }
+
+                    let maxIntervals: number[] = [];
+                    if (Array.isArray(maxVal)) {
+                        maxIntervals = maxVal.map(Number);
+                    } else if (maxVal !== undefined) {
+                        maxIntervals = [Number(maxVal)];
+                    }
+
+                    // 填充 Map
+                    for (let i = 0; i < layers.length; i++) {
+                        const layer = layers[i];
+                        // 如果类型数组长度不够，循环使用或者取最后一个？这里假设一一对应，如果不够则取对应索引，若越界则取最后一个
+                        const typeIndex = Math.min(i, types.length - 1);
+                        const pedalSype = types[typeIndex];
+                        
+                        const minIndex = Math.min(i, minIntervals.length - 1);
+                        const minY = minIntervals.length > 0 ? minIntervals[minIndex] : undefined;
+
+                        const maxIndex = Math.min(i, maxIntervals.length - 1);
+                        const maxY = maxIntervals.length > 0 ? maxIntervals[maxIndex] : undefined;
+
+                        const config: PedalConfigData = {
+                            pedalSype: pedalSype,
+                            minYInterval: minY,
+                            maxYInterval: maxY
+                        };
+                        
+                        this.layerConfigMap.set(layer, config);
+                        this.layerKeys.push(layer);
                     }
                 }
-
-                // 取第一行的全局属性 (总层数和奖励在每一行通常是一样的)
-                const firstRow = table[0];
-                this.AlllayerNum = firstRow.AlllayerNum || 0;
-                this.goldReward = firstRow.goldReward || 100;
-                this.pedalGold = firstRow.pedalGold || 100;
                 
-                console.log("Loaded layer config from CSV table:", this.layer, this.pedalSype, this.AlllayerNum, this.goldReward, this.pedalGold); 
+                // 排序 keys
+                this.layerKeys.sort((a, b) => a - b);
+
+                // 从 LevelConfig 获取全局配置
+                const config = LevelConfig.getConfig(level);
+                this.AlllayerNum = config.AlllayerNum;
+                this.goldReward = config.goldReward;
+                this.pedalGold = config.pedalGold;
+
+                console.log("Loaded layer config from CSV table:", this.layerConfigMap); 
             } else {
                 console.warn(`Level ${level} config empty or not found in CSV: ${configPath}, using defaults.`);
                 this.useDefaultConfig();
@@ -280,8 +323,12 @@ export class pedalManager extends Component {
      * 使用默认配置
      */
     private useDefaultConfig() {
-        this.layer = [1000, 2000];
-        this.pedalSype = [PedalType.WOOD, PedalType.CLOUD];
+        this.layerConfigMap.clear();
+        this.layerKeys = [1000, 2000];
+        
+        this.layerConfigMap.set(1000, { pedalSype: PedalType.WOOD });
+        this.layerConfigMap.set(2000, { pedalSype: PedalType.CLOUD });
+        
         this.AlllayerNum = 2;
         this.goldReward = 100;
         this.pedalGold = 100;
@@ -311,22 +358,36 @@ export class pedalManager extends Component {
     private spawnNextPedal() {
         // 确定当前应该使用的类型名称（字符串）
         let targetTypeName: string = PedalType.WOOD; // 默认类型名
+        let targetMinY: number | undefined = undefined;
+        let targetMaxY: number | undefined = undefined;
 
-        // 遍历 Rice 数组找到匹配的区间
-        // 规则：AllRice < Rice[i] 时，使用 pedalSype[i]
-        // 如果超过了所有 Rice，则使用最后一个配置
+        // 遍历 layerKeys 数组找到匹配的区间
+        // 规则：NewlayerS < layerKeys[i] 时，使用对应配置
+        // 如果超过了所有 layerKeys，则使用最后一个配置
         let found = false;
-        for (let i = 0; i < this.layer.length; i++) {
-            if (this.NewlayerS < this.layer[i]) {
-                targetTypeName = this.pedalSype[i];
+        let idx = -1;
+        
+        for (let i = 0; i < this.layerKeys.length; i++) {
+            if (this.NewlayerS < this.layerKeys[i]) {
+                idx = i;
                 found = true;
                 break;
             }
         }
 
-        if (!found && this.pedalSype.length > 0) {
+        if (!found && this.layerKeys.length > 0) {
             // 超过最大里程，使用最后一个配置
-            targetTypeName = this.pedalSype[this.pedalSype.length - 1];
+            idx = this.layerKeys.length - 1;
+        }
+
+        if (idx !== -1) {
+            const layerKey = this.layerKeys[idx];
+            const config = this.layerConfigMap.get(layerKey);
+            if (config) {
+                targetTypeName = config.pedalSype;
+                targetMinY = config.minYInterval;
+                targetMaxY = config.maxYInterval;
+            }
         }
 
         // 将字符串类型名解析为 PedalType 枚举
@@ -337,7 +398,10 @@ export class pedalManager extends Component {
         const jumpSpeed = def.jumpSpeed;
         const _gravity = def._gravity;
 
-        this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity);
+        const finalMinY = targetMinY ?? def.minYInterval;
+        const finalMaxY = targetMaxY ?? def.maxYInterval;
+
+        this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity, finalMinY, finalMaxY);
     }
 
     /**随机pedal的skill
@@ -414,7 +478,7 @@ export class pedalManager extends Component {
      * @param jumpSpeed 提供的跳跃速度 (上升时间)
      * @param _gravity 提供的重力加速度
      */
-    public spawnPedal(type: PedalType, jumpForce: number, jumpSpeed: number, _gravity: number): Node | null {
+    public spawnPedal(type: PedalType, jumpForce: number, jumpSpeed: number, _gravity: number, minYInterval: number, maxYInterval: number): Node | null {
         const pedalNode = this.getPedalFromPool(type);
         if (!pedalNode) return null;
         
@@ -423,7 +487,7 @@ export class pedalManager extends Component {
         // 初始化踏板的物理属性
         const pedalComponent = pedalNode.getComponent(Pedal);
         if (pedalComponent) {
-            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, _gravity,type);
+            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, _gravity,type,minYInterval,maxYInterval);
             // 随机生成技能
             const skills = this.RandomSkill();
             pedalComponent.addSkill(skills);
@@ -447,7 +511,7 @@ export class pedalManager extends Component {
         this._activePedals.push(pedalNode);
         
         // 设置随机位置
-        this.setPedalPosition(pedalNode);
+        this.setPedalPosition(pedalNode, minYInterval, maxYInterval);
         
         // 记录类型
         this._lastPedalType = type;
@@ -602,7 +666,7 @@ export class pedalManager extends Component {
     /**
      * 设置踏板位置 (随机逻辑)
      */
-    private setPedalPosition(pedalNode: Node): void {
+    private setPedalPosition(pedalNode: Node, minYInterval: number, maxYInterval: number): void {
         // 使用Constant中的游戏宽度
         const screenWidth = Constant.Width;
         
@@ -635,9 +699,7 @@ export class pedalManager extends Component {
    
         let randomInterval = 0;
         if (this.NewlayerS > 0) {
-            // 使用上一个踏板类型的间隔配置
-            const lastPedalDefaults = PedalDefaults[this._lastPedalType];
-            randomInterval = lastPedalDefaults.minYInterval + Math.random() * (lastPedalDefaults.maxYInterval - lastPedalDefaults.minYInterval);
+            randomInterval = minYInterval + Math.random() * (maxYInterval - minYInterval);
         }
         const newY = this._lastPedalPosition.y + randomInterval;
         

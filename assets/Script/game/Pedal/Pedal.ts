@@ -38,13 +38,16 @@ export class Pedal extends Component {
     /** 踏板ID 就是层数*/
     public layer: number = 0;
 
-    /** 原始跳跃力度（无技能） */
-    private _originalJumpForce: number = 0;
     /** 原始重力加速度（无技能） */
     private _originalGravity: number = 0;
 
     /** 技能节点映射 */
     private _skillNodes: Map<PedalSkill, Node> = new Map();
+
+    /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
+    private minYInterval: number=100;
+    /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
+    private maxYInterval: number=200;
 
     /**
      * 生命周期：组件加载
@@ -99,20 +102,23 @@ export class Pedal extends Component {
     /**
      * 初始化踏板
      * @param position 初始位置
-     * @param jumpForce 提供的跳跃力度
+     * @param jumpForce 提供的跳跃力度xx
      * @param jumpSpeed 提供的跳跃速度 (上升时间)
      * @param _gravity 提供的重力加速度
      */
-    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, _gravity: number = -2000, type: PedalType = PedalType.WOOD) {
+    init(position: Vec3, jumpForce: number = 600, jumpSpeed: number = 1.45, _gravity: number = -2000, type: PedalType = PedalType.WOOD, minYInterval: number = 0, maxYInterval: number = 0) {
         this.node.position = position;
         this.node.active = true;
         this.jumpForce = jumpForce;
         this.jumpSpeed = jumpSpeed;
         this._gravity = _gravity;
+        // 设置Y轴间隔
+        this.minYInterval = minYInterval || 100;
+        this.maxYInterval = maxYInterval || 200;
+        
         this.setType(type);
         
         // 记录原始属性（因为后续可能会被技能修改）
-        this._originalJumpForce = jumpForce;
         this._originalGravity = _gravity;
 
         // 初始化技能

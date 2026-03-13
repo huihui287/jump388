@@ -1,4 +1,14 @@
 /////////////////////////////////////////////////////////////////////////////////////////
+/**踏板cvs 配置文件 */
+export interface PedalConfigData {
+    /** 踏板类型 */
+    pedalSype: string;
+    /** Y轴间隔最小值 (下一个pedal与当前pedal的最小间隔) */
+    minYInterval?: number;
+    /** Y轴间隔最大值 (下一个pedal与当前pedal的最大间隔) */
+    maxYInterval?: number;
+}
+
 /** 踏板物理配置接口 */
 export interface PedalConfig {
     /** 跳跃力度 (决定跳跃高度) */

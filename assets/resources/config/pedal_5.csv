@@ -1,2 +1,2 @@
-layer,pedalSype,AlllayerNum,goldReward,pedalGold
-50|150|300,woodPedal|cloudPedal|movePedal,300,5000,50
+layer,pedalSype,minYInterval,maxYInterval
+50|150|300,woodPedal|cloudPedal|movePedal,150|500|250,250|600|350
