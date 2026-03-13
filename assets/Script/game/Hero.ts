@@ -189,7 +189,7 @@ export class Hero extends Component {
     /** 输入方向向量 */
     private _inputVector: Vec3 = v3();
     /** 移动速度 */
-    public moveSpeed: number = 800;
+    public HeromoveSpeed: number = 800;
 
     /** 是否开启触摸摇杆控制 (仅用于调试) */
     @property
@@ -632,7 +632,7 @@ export class Hero extends Component {
      */
     public moveCharacter(direction: Vec3, speed: number): void {
         this._tempPosition.set(this.node.position);
-        this._tempPosition.x += direction.x * this.moveSpeed * speed;
+        this._tempPosition.x += direction.x * this.HeromoveSpeed * speed;
         
         // 限制在屏幕内 (720 宽，中心为 0，即 -360 到 360)
         const halfWidth = 360; 

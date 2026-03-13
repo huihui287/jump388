@@ -8,8 +8,6 @@ export interface PedalConfigData {
     minYInterval?: number;
     /** Y轴间隔最大值 (下一个pedal与当前pedal的最大间隔) */
     maxYInterval?: number;
-    /** 是否开启移动 */
-    moveEnable?: number;
     /** 移动速度 */
     moveSpeed?: number;
     /** 移动时间 */

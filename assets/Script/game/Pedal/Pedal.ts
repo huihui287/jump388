@@ -133,7 +133,6 @@ export class Pedal extends Component {
         type: PedalType = PedalType.WOOD,
         minYInterval: number = 0,
         maxYInterval: number = 0,
-        moveEnable: boolean = false,
         moveSpeed: number = 0,
         moveTime: number = 0,
         moveDistance: number = 0
@@ -162,9 +161,7 @@ export class Pedal extends Component {
         this.moveSpeed = 0;
         this.moveTime = 0;
         this.moveDistance = 0;
-        if (moveEnable) {
-            this.startMove(moveSpeed, moveTime, moveDistance);
-        }
+        this.startMove(moveSpeed, moveTime, moveDistance);
     }
     
     /**
@@ -179,6 +176,9 @@ export class Pedal extends Component {
         this.moveTime = time;
         this.moveDistance = distance;
 
+        if (speed === 0) {
+            return;
+        }
         if (distance <= 0) {
             return;
         }

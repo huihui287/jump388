@@ -239,7 +239,6 @@ export class pedalManager extends Component {
                     const typeVal = row.pedalSype;
                     const minVal = row.minYInterval;
                     const maxVal = row.maxYInterval;
-                    const moveEnableVal = row.moveEnable ?? row.isMove ?? row.move ?? row.isMoving;
                     const moveSpeedVal = row.moveSpeed;
                     const moveTimeVal = row.moveTime;
                     const moveDistanceVal = row.moveDistance;
@@ -270,13 +269,6 @@ export class pedalManager extends Component {
                         maxIntervals = maxVal.map(Number);
                     } else if (maxVal !== undefined) {
                         maxIntervals = [Number(maxVal)];
-                    }
-
-                    let moveEnables: number[] = [];
-                    if (Array.isArray(moveEnableVal)) {
-                        moveEnables = moveEnableVal.map(Number);
-                    } else if (moveEnableVal !== undefined) {
-                        moveEnables = [Number(moveEnableVal)];
                     }
 
                     let moveSpeeds: number[] = [];
@@ -313,9 +305,6 @@ export class pedalManager extends Component {
                         const maxIndex = Math.min(i, maxIntervals.length - 1);
                         const maxY = maxIntervals.length > 0 ? maxIntervals[maxIndex] : undefined;
 
-                        const enableIndex = Math.min(i, moveEnables.length - 1);
-                        const moveEnable = moveEnables.length > 0 ? moveEnables[enableIndex] : undefined;
-
                         const speedIndex = Math.min(i, moveSpeeds.length - 1);
                         const moveSpeed = moveSpeeds.length > 0 ? moveSpeeds[speedIndex] : undefined;
 
@@ -329,7 +318,6 @@ export class pedalManager extends Component {
                             pedalSype: pedalSype,
                             minYInterval: minY,
                             maxYInterval: maxY,
-                            moveEnable: moveEnable,
                             moveSpeed: moveSpeed,
                             moveTime: moveTime,
                             moveDistance: moveDistance
@@ -408,7 +396,6 @@ export class pedalManager extends Component {
         let targetTypeName: string = PedalType.WOOD; // 默认类型名
         let targetMinY: number | undefined = undefined;
         let targetMaxY: number | undefined = undefined;
-        let targetMoveEnable: number | undefined = undefined;
         let targetMoveSpeed: number | undefined = undefined;
         let targetMoveTime: number | undefined = undefined;
         let targetMoveDistance: number | undefined = undefined;
@@ -439,7 +426,6 @@ export class pedalManager extends Component {
                 targetTypeName = config.pedalSype;
                 targetMinY = config.minYInterval;
                 targetMaxY = config.maxYInterval;
-                targetMoveEnable = config.moveEnable;
                 targetMoveSpeed = config.moveSpeed;
                 targetMoveTime = config.moveTime;
                 targetMoveDistance = config.moveDistance;
@@ -456,12 +442,11 @@ export class pedalManager extends Component {
 
         const finalMinY = targetMinY ?? def.minYInterval;
         const finalMaxY = targetMaxY ?? def.maxYInterval;
-        const finalMoveEnable = (targetMoveEnable ?? 0) > 0;
         const finalMoveSpeed = targetMoveSpeed ?? def.moveSpeed;
         const finalMoveTime = targetMoveTime ?? def.moveTime;
         const finalMoveDistance = targetMoveDistance ?? def.moveDistance;
 
-        this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity, finalMinY, finalMaxY, finalMoveEnable, finalMoveSpeed, finalMoveTime, finalMoveDistance);
+        this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity, finalMinY, finalMaxY, finalMoveSpeed, finalMoveTime, finalMoveDistance);
     }
 
     /**随机pedal的skill
@@ -538,7 +523,7 @@ export class pedalManager extends Component {
      * @param jumpSpeed 提供的跳跃速度 (上升时间)
      * @param _gravity 提供的重力加速度
      */
-    public spawnPedal(type: PedalType, jumpForce: number, jumpSpeed: number, _gravity: number, minYInterval: number, maxYInterval: number, moveEnable: boolean, moveSpeed: number, moveTime: number, moveDistance: number): Node | null {
+    public spawnPedal(type: PedalType, jumpForce: number, jumpSpeed: number, _gravity: number, minYInterval: number, maxYInterval: number, moveSpeed: number, moveTime: number, moveDistance: number): Node | null {
         const pedalNode = this.getPedalFromPool(type);
         if (!pedalNode) return null;
         
@@ -552,7 +537,7 @@ export class pedalManager extends Component {
         // 初始化踏板的物理属性
         const pedalComponent = pedalNode.getComponent(Pedal);
         if (pedalComponent) {
-            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, _gravity, type, minYInterval, maxYInterval, moveEnable, moveSpeed, moveTime, moveDistance);
+            pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, _gravity, type, minYInterval, maxYInterval, moveSpeed, moveTime, moveDistance);
             // 随机生成技能
             const skills = this.RandomSkill();
             pedalComponent.addSkill(skills);
