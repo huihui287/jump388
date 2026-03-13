@@ -197,9 +197,9 @@ export class pedalManager extends Component {
         switch (typeNum) {
             case 1: return PedalType.PEDAL1;
             case 2: return PedalType.WOOD;
-            case 3: return PedalType.CLOUD;
-            case 4: return PedalType.MOVE_PEDAL;
-            case 5: return PedalType.FRACTURE_PEDAL;
+            case 3: return PedalType.MOVE_PEDAL;
+            case 4: return PedalType.FRACTURE_PEDAL;
+            case 5: return PedalType.CLOUD;
             default: return PedalType.WOOD;
         }
     }

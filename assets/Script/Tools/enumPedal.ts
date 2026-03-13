@@ -48,6 +48,8 @@ export enum PedalType {
     WOOD = 'woodPedal',           // 木踏板：基础踏板
     FRACTURE_PEDAL = 'fracturePedal', // 断裂踏板：偏向特殊/易碎行为
     MOVE_PEDAL = 'movePedal',     // 移动踏板：偏向移动
+    // 云踏板CLOUD
+    CLOUD = 'cloudPedal',
 }
 
 /**
@@ -219,4 +221,27 @@ export const PedalDefaults: Record<PedalType, {
         /** 移动距离 */         
         moveDistance: 200,
     },
+  // 云踏板CLOUD
+    [PedalType.CLOUD]: {
+        /** 跳跃力度 */
+        jumpForce: 600,
+        /** 跳跃速度 */
+        jumpSpeed: 0.3,
+        /** 重力加速度 */
+        _gravity: -5000,
+        /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
+        minYInterval: 100,
+        /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
+        maxYInterval: 300,
+        /** 技能 */
+        skill: [PedalSkill.NONE],
+        /** 移动速度 */
+        moveSpeed: 100,
+        /** 移动时间 */
+        moveTime: 1,
+        /** 移动距离 */         
+        moveDistance: 200,
+    },
+
+
 };
