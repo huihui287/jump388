@@ -7,17 +7,17 @@ export interface LevelConfigData {
 
 export const LevelConfigs: { [key: number]: LevelConfigData } = {
     1: {
-        AlllayerNum: 100,
+        AlllayerNum: 300,
         goldReward: 50,
         pedalGold: 10
     },
     2: {
-        AlllayerNum: 100,
+        AlllayerNum: 300,
         goldReward: 500,
         pedalGold: 20
     },
     3: {
-        AlllayerNum: 150,
+        AlllayerNum: 300,
         goldReward: 1000,
         pedalGold: 30
     },

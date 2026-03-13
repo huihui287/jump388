@@ -57,10 +57,8 @@ export enum PedalType {
  * 控制 Hero 落到踏板时触发的特殊效果
  */
 export enum PedalSkill {
-    NONE = 'none',                 // 无效果
-    SPRING = 'spring',               // 弹簧跳跃高度
-    LOW_GRAVITY = 'low_gravity',   // 降低重力，下落更慢
-    FRACTURE = 'fracture',                // 断裂效果（预留，待接入具体逻辑）
+    NONE = 'none',// 无效果
+    SPRING = 'springPedal',// 弹簧跳跃高度
     //尖刺
     SPIKE = 'spikePedal',
     //金币堆
@@ -68,26 +66,21 @@ export enum PedalSkill {
     //护盾
     SHIELD = 'shieldPedal',
     //金币雨
-    GOLD_RAIN = 'goldRain',
-    //移动飞蛇
-    FLYING_SNAKE = 'flyingSnake',
+    GOLD_RAIN = 'goldRainPedal',
     //陨石
-    METEOR = 'meteor',
+    METEOR = 'meteorPedal',
     //火箭
-    ROCKET = 'rocket'
+    ROCKET = 'rocketPedal'  
 }
 
 /** 踏板技能层数限制 */
 export const SkillFloorLimit: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 0,
     [PedalSkill.SPRING]: 20,
-    [PedalSkill.LOW_GRAVITY]: 0,
-    [PedalSkill.FRACTURE]: 0,
     [PedalSkill.SPIKE]: 0,
     [PedalSkill.GOLD]: 0,
     [PedalSkill.SHIELD]: 20,
     [PedalSkill.GOLD_RAIN]: 0,
-    [PedalSkill.FLYING_SNAKE]: 0,
     [PedalSkill.METEOR]: 30,
     [PedalSkill.ROCKET]: 50,
 };
@@ -96,13 +89,10 @@ export const SkillFloorLimit: Record<PedalSkill, number> = {
 export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.NONE]: 5000,         // 无技能
     [PedalSkill.SPRING]: 400,       // 弹簧
-    [PedalSkill.LOW_GRAVITY]: 10,  // 低重力
     [PedalSkill.SPIKE]: 400,         // 尖刺
     [PedalSkill.GOLD]: 400,         // 金币
-    [PedalSkill.FRACTURE]: 0,      // 断裂通常不通过随机生成，而是由踏板类型决定
     [PedalSkill.SHIELD]: 400,      // 护盾 (调低点)
     [PedalSkill.GOLD_RAIN]: 400,     // 金币雨
-    [PedalSkill.FLYING_SNAKE]: 400,  // 移动飞蛇
     [PedalSkill.METEOR]: 400,        // 陨石
     [PedalSkill.ROCKET]: 400,        // 火箭
 };
@@ -134,7 +124,7 @@ export const PedalDefaults: Record<PedalType, {
     minYInterval: number; 
     /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
     maxYInterval: number; 
-    skill: PedalSkill[];
+    skill: PedalSkill;
      moveSpeed: number; moveTime: number; moveDistance: number; }> = {
         // 基础踏板PEDAL1
     [PedalType.PEDAL1]: {
@@ -149,7 +139,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 80,
         /** 技能 */
-        skill: [PedalSkill.NONE],
+        skill: PedalSkill.NONE,
         /** 移动速度 */
         moveSpeed: 0,
         /** 移动时间 */
@@ -170,7 +160,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 100,
         /** 技能 */
-        skill: [PedalSkill.NONE],
+        skill: PedalSkill.NONE,
         /** 移动速度 */
         moveSpeed: 0,
         /** 移动时间 */
@@ -192,7 +182,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 80,
         /** 技能 */
-        skill: [PedalSkill.FRACTURE],
+        skill: PedalSkill.NONE,
         /** 移动速度 */
         moveSpeed: 0,
         /** 移动时间 */
@@ -213,7 +203,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 300,
         /** 技能 */
-        skill: [PedalSkill.NONE],
+        skill: PedalSkill.NONE,
         /** 移动速度 */
         moveSpeed: 100,
         /** 移动时间 */
@@ -234,7 +224,7 @@ export const PedalDefaults: Record<PedalType, {
         /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
         maxYInterval: 300,
         /** 技能 */
-        skill: [PedalSkill.NONE],
+        skill: PedalSkill.NONE,
         /** 移动速度 */
         moveSpeed: 100,
         /** 移动时间 */

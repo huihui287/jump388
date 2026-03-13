@@ -33,8 +33,8 @@ export class Pedal extends Component {
     @property
     public _gravity: number = -2000;
     
-    @property({ type: [Enum(PedalSkill)] })
-    public skills: PedalSkill[] = [PedalSkill.NONE];
+    @property({ type: Enum(PedalSkill) })
+    public skill: PedalSkill = PedalSkill.NONE;
     
     /** 踏板ID 就是层数*/
     public layer: number = 0;
@@ -137,6 +137,7 @@ export class Pedal extends Component {
         moveTime: number = 0,
         moveDistance: number = 0
     ) {
+        this.setSkill(PedalSkill.NONE);
         this.node.position = position;
         this.node.active = true;
         this.jumpForce = jumpForce;
@@ -150,12 +151,6 @@ export class Pedal extends Component {
         
         // 记录原始属性（因为后续可能会被技能修改）
         this._originalGravity = _gravity;
-
-        // 初始化技能
-        this.skills = [];
-        if (this._type === PedalType.FRACTURE_PEDAL) {
-            this.addSkill([PedalSkill.FRACTURE]);
-        }
 
         this._isMoving = false;
         this.moveSpeed = 0;
@@ -215,39 +210,9 @@ export class Pedal extends Component {
      * @param skill 要移除的技能
      */
     removeSkill(skill: PedalSkill) {
-        const index = this.skills.indexOf(skill);
-        if (index > -1) {
-            this.skills.splice(index, 1);
-            
-            // 移除并回收对应的技能节点
-            const skillNode = this._skillNodes.get(skill);
-            if (skillNode) {
-                skillNode.removeFromParent();
-                // 暂时不直接销毁，而是隐藏或放回池中
-                // 由于 Pedal 无法直接访问 pedalManager 的对象池，这里我们选择直接销毁或者隐藏
-                // 更好的做法是通知 pedalManager 回收，或者在 removeSkill 时由 pedalManager 处理回收
-                // 为了简单起见，这里先将其隐藏，等待 Pedal 回收时一并处理
-                skillNode.active = false;
-                
-                // 但为了正确回收，我们应该让 pedalManager 来管理
-                // 由于 removeSkill 是被外部调用的，外部应该也负责回收节点
-                // 这里我们仅从 _skillNodes 中移除引用
-                this._skillNodes.delete(skill);
-                // 真正的回收逻辑应该在外部处理，或者使用 destroy
-                skillNode.destroy(); // 临时方案：直接销毁
-            }
-        }
-    }
-
-    /** 添加技能
-     * @param skill 技能
-     */
-    addSkill(skill: PedalSkill[]) {
-        for (const s of skill) {
-            if (this.skills.indexOf(s) === -1) {
-                this.skills.push(s);
-            }
-        }
+        if (skill === PedalSkill.NONE) return;
+        if (this.skill !== skill) return;
+        this.setSkill(PedalSkill.NONE);
     }
 
     /**
@@ -255,6 +220,7 @@ export class Pedal extends Component {
      */
     addSkillNode(skill: PedalSkill, node: Node) {
         if (!node) return;
+        this.clearSkillNodesExcept(skill);
         
         // 如果已经有同类节点，先移除旧的
         if (this._skillNodes.has(skill)) {
@@ -306,63 +272,40 @@ export class Pedal extends Component {
      * @param pedal 踏板
      */
     releaseSkill() {
-        if (!this.skills || this.skills.length === 0) return;
+        const skill = this.skill ?? PedalSkill.NONE;
+        if (skill === PedalSkill.NONE) return;
 
-        for (const skill of this.skills) {
-            
-            switch (skill) {
-                case PedalSkill.SPRING:
-                    // 弹簧跳跃高度
-                    console.log("Triggered SPRING skill");
-                    this.applySpringEffect();
-                    break;
-                case PedalSkill.LOW_GRAVITY:
-                    // 降低重力
-                    console.log("Triggered LOW_GRAVITY skill");
-                    // 恢复原始重力
-                    this._gravity = this._originalGravity;
-                    break;
-                case PedalSkill.FRACTURE:
-                    // 断裂效果
-                    console.log("Triggered FRACTURE skill");
-                    // 延迟一秒后释放技能（发送释放对象消息）
-                    this.scheduleOnce(this.releaseObject, 1.0);
-                    break;
-                case PedalSkill.GOLD:
-                    // 金币效果
-                    console.log("Triggered GOLD skill");
-                    this.getGoldSkill();
-                    break; // 添加 break
-                case PedalSkill.SPIKE:
-                    // 尖刺效果
-                    console.log("Triggered SPIKE skill");
-                    this.applySpikeEffect();
-                    break;
-                case PedalSkill.SHIELD:
-                    // 护盾效果
-                    console.log("Triggered SHIELD skill");
-                    this.applyShieldEffect();
-                    break;
-                case PedalSkill.GOLD_RAIN:
-                    console.log("Triggered GOLD_RAIN skill");
-                    // TODO: 实现金币雨逻辑
-                    break;
-                case PedalSkill.FLYING_SNAKE:
-                    console.log("Triggered FLYING_SNAKE skill");
-                    // TODO: 实现移动飞蛇逻辑
-                    break;
-                case PedalSkill.METEOR:
-                    console.log("Triggered METEOR skill");
-                    // TODO: 实现陨石逻辑
-                    break;
-                case PedalSkill.ROCKET:
-                    console.log("Triggered ROCKET skill");
-                    this.applyRocketEffect();
-                    break;
-                case PedalSkill.NONE:
-                default:
-                    break;
-            }
+        switch (skill) {
+            case PedalSkill.SPRING:
+                console.log("Triggered SPRING skill");
+                this.applySpringEffect();
+                break;
+            case PedalSkill.GOLD:
+                console.log("Triggered GOLD skill");
+                this.getGoldSkill();
+                break;
+            case PedalSkill.SPIKE:
+                console.log("Triggered SPIKE skill");
+                this.applySpikeEffect();
+                break;
+            case PedalSkill.SHIELD:
+                console.log("Triggered SHIELD skill");
+                this.applyShieldEffect();
+                break;
+            case PedalSkill.GOLD_RAIN:
+                console.log("Triggered GOLD_RAIN skill");
+                break;
+            case PedalSkill.METEOR:
+                console.log("Triggered METEOR skill");
+                break;
+            case PedalSkill.ROCKET:
+                console.log("Triggered ROCKET skill");
+                this.applyRocketEffect();
+                break;
+            case PedalSkill.NONE:
+                break;
+            default:
+                break;
         }
         
         // 释放后清空技能（一次性效果）
@@ -397,17 +340,37 @@ export class Pedal extends Component {
     // 弹簧跳跃一次
     private applySpringEffect() {
         // 增加跳跃力度
-        this.jumpForce *= 6.5;
+        this.jumpForce *= 3.5;
         // 增加跳跃速度
-        this.jumpSpeed *= 0.8;
+        this.jumpSpeed *= 1.8;
     }
 
-    private releaseObject() {
+    public releaseObject() {
         if (!this.node || !this.node.isValid) return;
         EventManager.emit(EventName.Game.ReleaseObject, this.node);
     }
 
     protected onDisable(): void {
         this.unschedule(this.releaseObject);
+    }
+
+    private clearSkillNodesExcept(keepSkill: PedalSkill) {
+        const keys = Array.from(this._skillNodes.keys());
+        for (const k of keys) {
+            if (k === keepSkill) continue;
+            const node = this._skillNodes.get(k);
+            if (node) {
+                node.removeFromParent();
+                node.destroy();
+            }
+            this._skillNodes.delete(k);
+        }
+    }
+
+
+    setSkill(skill: PedalSkill) {
+        const next = skill ?? PedalSkill.NONE;
+        this.clearSkillNodesExcept(next);
+        this.skill = next;
     }
 }

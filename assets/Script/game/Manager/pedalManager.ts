@@ -145,16 +145,10 @@ export class pedalManager extends Component {
         // 收集需要回收的节点
         const toRecycle: Node[] = [];
         
-        // 假设 activePedals 是按 Y 轴排序的（从低到高），因为是按顺序生成的
-        // 所以一旦遇到不需要回收的，后面的都不需要回收
         for (let i = 0; i < this._activePedals.length; i++) {
             const pedalNode = this._activePedals[i];
             if (pedalNode.position.y < recycleThreshold) {
                 toRecycle.push(pedalNode);
-            } else {
-                // 遇到第一个在屏幕内的，后面的肯定也在（假设有序）
-                // 如果不能保证完全有序（例如随机位置可能导致错乱），则去掉 break
-                break; 
             }
         }
 
@@ -455,7 +449,7 @@ export class pedalManager extends Component {
     /**随机pedal的skill
     * @param type 踏板类型
     */
-    private RandomSkill(): PedalSkill[] {
+    private RandomSkill(): PedalSkill {
         // 候选技能列表
         const candidates: { skill: PedalSkill; weight: number }[] = [];
         let totalWeight = 0;
@@ -476,7 +470,7 @@ export class pedalManager extends Component {
             // - 不能是 FRACTURE (通常由踏板类型决定)
             // - 不能与上一次技能相同，除非是 NONE (允许连续无技能)
             // - 满足层数限制
-            if (weight > 0 && skill !== PedalSkill.FRACTURE) {
+            if (weight > 0) {
                 const floorLimit = SkillFloorLimit[skill] || 0;
                 if (this.NewlayerS >= floorLimit) {
                     if (skill === PedalSkill.NONE || skill !== this._lastSkill) {
@@ -490,7 +484,7 @@ export class pedalManager extends Component {
         // 2. 如果没有有效候选（理论上不应发生），强制返回 NONE
         if (candidates.length === 0 || totalWeight <= 0) {
             this._lastSkill = PedalSkill.NONE;
-            return [PedalSkill.NONE];
+            return PedalSkill.NONE;
         }
 
         // 3. 执行加权随机
@@ -514,7 +508,7 @@ export class pedalManager extends Component {
 
         // 5. 更新状态并返回
         this._lastSkill = selectedSkill;
-        return [selectedSkill];
+        return selectedSkill;
     }
     /**
      * 添加踏板到管理器 (随机位置)
@@ -539,16 +533,12 @@ export class pedalManager extends Component {
         if (pedalComponent) {
             pedalComponent.init(pedalNode.position, jumpForce, jumpSpeed, _gravity, type, minYInterval, maxYInterval, moveSpeed, moveTime, moveDistance);
             // 随机生成技能
-            const skills = this.RandomSkill();
-            pedalComponent.addSkill(skills);
-            
-            // 为 SPIKE, GOLD, SHIELD 生成预制体
-            for (const skill of skills) {
-                if (skill === PedalSkill.SPIKE || skill === PedalSkill.GOLD || skill === PedalSkill.SHIELD) {
-                    const skillNode = this.getSkillNode(skill);
-                    if (skillNode) {
-                        pedalComponent.addSkillNode(skill, skillNode);
-                    }
+            const skill = this.RandomSkill();
+            pedalComponent.setSkill(skill);
+            if (skill !== PedalSkill.NONE) {
+                const skillNode = this.getSkillNode(skill);
+                if (skillNode) {
+                    pedalComponent.addSkillNode(skill, skillNode);
                 }
             }
             
@@ -589,11 +579,11 @@ export class pedalManager extends Component {
         }
 
         // 加载所有技能预制体
-        const skillTypes = [PedalSkill.SPIKE, PedalSkill.GOLD, PedalSkill.SHIELD];
+        const skillTypes = Object.keys(SkillWeights).filter((s) => s !== PedalSkill.NONE) as PedalSkill[];
         for (const skill of skillTypes) {
             // 假设技能预制体路径为 prefab/PedalSkill/{SkillName}
             // 或者直接用 skill 枚举值作为名称
-            const prefabPath = `prefab/item/${skill}`+"Skill"; 
+            const prefabPath = `prefab/item/${skill}`; 
             const prefab = await LoaderManeger.instance.loadPrefab(prefabPath);
             if (prefab) {
                 this._skillPrefabs.set(skill, prefab);
@@ -877,10 +867,17 @@ export class pedalManager extends Component {
     public getLowestPedal(): Node | null {
         if (this._activePedals.length === 0) return null;
 
-        // activePedals 是按生成顺序添加的，通常 index 0 就是最底部的
-        // 但为了保险，可以遍历一次找 Y 最小的，或者直接返回第一个
-        // 考虑到性能和逻辑一致性，这里假设第一个就是最低的
-        return this._activePedals[0];
+        let lowest: Node = this._activePedals[0];
+        let lowestY = lowest.worldPosition.y;
+        for (let i = 1; i < this._activePedals.length; i++) {
+            const n = this._activePedals[i];
+            const y = n.worldPosition.y;
+            if (y < lowestY) {
+                lowest = n;
+                lowestY = y;
+            }
+        }
+        return lowest;
     }
     /**
      * 获取与目标节点发生碰撞的最佳踏板

@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "fddd3c49-4df8-4002-8911-947ff1089561",
+  "uuid": "713b5103-9e7d-407b-b408-baea2509ba95",
   "files": [
     ".json",
     ".png"
@@ -10,8 +10,8 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "fddd3c49-4df8-4002-8911-947ff1089561@6c48a",
-      "displayName": "底部",
+      "uuid": "713b5103-9e7d-407b-b408-baea2509ba95@6c48a",
+      "displayName": "火箭",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -22,7 +22,7 @@
         "mipfilter": "none",
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "fddd3c49-4df8-4002-8911-947ff1089561",
+        "imageUuidOrDatabaseUri": "713b5103-9e7d-407b-b408-baea2509ba95",
         "visible": false
       },
       "ver": "1.0.22",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "fddd3c49-4df8-4002-8911-947ff1089561@f9941",
-      "displayName": "底部",
+      "uuid": "713b5103-9e7d-407b-b408-baea2509ba95@f9941",
+      "displayName": "火箭",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -45,10 +45,10 @@
         "offsetY": 0,
         "trimX": 0,
         "trimY": 0,
-        "width": 720,
-        "height": 115,
-        "rawWidth": 720,
-        "rawHeight": 115,
+        "width": 78,
+        "height": 152,
+        "rawWidth": 78,
+        "rawHeight": 152,
         "borderTop": 0,
         "borderBottom": 0,
         "borderLeft": 0,
@@ -60,17 +60,17 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -360,
-            -57.5,
+            -39,
+            -76,
             0,
-            360,
-            -57.5,
+            39,
+            -76,
             0,
-            -360,
-            57.5,
+            -39,
+            76,
             0,
-            360,
-            57.5,
+            39,
+            76,
             0
           ],
           "indexes": [
@@ -83,12 +83,12 @@
           ],
           "uv": [
             0,
-            115,
-            720,
-            115,
+            152,
+            78,
+            152,
             0,
             0,
-            720,
+            78,
             0
           ],
           "nuv": [
@@ -102,18 +102,18 @@
             1
           ],
           "minPos": [
-            -360,
-            -57.5,
+            -39,
+            -76,
             0
           ],
           "maxPos": [
-            360,
-            57.5,
+            39,
+            76,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "fddd3c49-4df8-4002-8911-947ff1089561@6c48a",
+        "imageUuidOrDatabaseUri": "713b5103-9e7d-407b-b408-baea2509ba95@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "fddd3c49-4df8-4002-8911-947ff1089561@6c48a"
+    "redirect": "713b5103-9e7d-407b-b408-baea2509ba95@6c48a"
   }
 }

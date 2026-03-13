@@ -1,4 +1,5 @@
 import { _decorator, Component, Node, Vec3, v3 } from 'cc';
+import { App } from '../Controller/app';
 const { ccclass, property } = _decorator;
 
 @ccclass('CameraManager')
@@ -27,6 +28,10 @@ export class CameraManager extends Component {
     private _tempVec: Vec3 = v3();
     private _tempVec2: Vec3 = v3();
     
+    protected onLoad(): void {
+        
+    }
+        
     start() {
         // 初始化时，如果有目标，直接设置相机位置
         if (this.target) {
@@ -42,6 +47,7 @@ export class CameraManager extends Component {
     }
 
     protected lateUpdate(deltaTime: number) {
+        if (App.gameCtr.isPause) return;
         // 如果有目标，实现跟随逻辑
         if (this.target) {
             // 计算目标位置的Y值（包含偏移）

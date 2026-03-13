@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "fddd3c49-4df8-4002-8911-947ff1089561",
+  "uuid": "d2172b49-a8a3-456e-b8aa-90f13a5a8559",
   "files": [
     ".json",
     ".png"
@@ -10,8 +10,8 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "fddd3c49-4df8-4002-8911-947ff1089561@6c48a",
-      "displayName": "底部",
+      "uuid": "d2172b49-a8a3-456e-b8aa-90f13a5a8559@6c48a",
+      "displayName": "寒冰板碎1",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -22,7 +22,7 @@
         "mipfilter": "none",
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "fddd3c49-4df8-4002-8911-947ff1089561",
+        "imageUuidOrDatabaseUri": "d2172b49-a8a3-456e-b8aa-90f13a5a8559",
         "visible": false
       },
       "ver": "1.0.22",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "fddd3c49-4df8-4002-8911-947ff1089561@f9941",
-      "displayName": "底部",
+      "uuid": "d2172b49-a8a3-456e-b8aa-90f13a5a8559@f9941",
+      "displayName": "寒冰板碎1",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -45,10 +45,10 @@
         "offsetY": 0,
         "trimX": 0,
         "trimY": 0,
-        "width": 720,
-        "height": 115,
-        "rawWidth": 720,
-        "rawHeight": 115,
+        "width": 106,
+        "height": 54,
+        "rawWidth": 106,
+        "rawHeight": 54,
         "borderTop": 0,
         "borderBottom": 0,
         "borderLeft": 0,
@@ -60,17 +60,17 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -360,
-            -57.5,
+            -53,
+            -27,
             0,
-            360,
-            -57.5,
+            53,
+            -27,
             0,
-            -360,
-            57.5,
+            -53,
+            27,
             0,
-            360,
-            57.5,
+            53,
+            27,
             0
           ],
           "indexes": [
@@ -83,12 +83,12 @@
           ],
           "uv": [
             0,
-            115,
-            720,
-            115,
+            54,
+            106,
+            54,
             0,
             0,
-            720,
+            106,
             0
           ],
           "nuv": [
@@ -102,18 +102,18 @@
             1
           ],
           "minPos": [
-            -360,
-            -57.5,
+            -53,
+            -27,
             0
           ],
           "maxPos": [
-            360,
-            57.5,
+            53,
+            27,
             0
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "fddd3c49-4df8-4002-8911-947ff1089561@6c48a",
+        "imageUuidOrDatabaseUri": "d2172b49-a8a3-456e-b8aa-90f13a5a8559@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -129,6 +129,6 @@
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": true,
-    "redirect": "fddd3c49-4df8-4002-8911-947ff1089561@6c48a"
+    "redirect": "d2172b49-a8a3-456e-b8aa-90f13a5a8559@6c48a"
   }
 }

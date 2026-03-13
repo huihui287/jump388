@@ -428,7 +428,7 @@ export class Game extends BaseNodeCom {
             if (nearbyPedal) {
                 const pedalComponent = nearbyPedal.getComponent(Pedal);
                 // 必须是带有 SPIKE 技能的踏板
-                if (pedalComponent && pedalComponent.skills.indexOf(PedalSkill.SPIKE) !== -1) {
+                if (pedalComponent && pedalComponent.skill === PedalSkill.SPIKE) {
                     // 移除 SPIKE 技能
                     pedalComponent.removeSkill(PedalSkill.SPIKE);
                     console.log("Ninja Frog Passive Triggered: Spike Removed!");
