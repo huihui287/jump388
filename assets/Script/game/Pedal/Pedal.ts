@@ -4,6 +4,7 @@ import { EventName } from '../../Tools/eventName';
 import GameData from '../../Common/GameData';
 import { PedalSkill, PedalType } from '../../Tools/enumPedal';
 import { Constant } from '../../Tools/enumConst';
+import { SkillConfigs } from '../../Tools/enumSkill';
 
 const { ccclass, property } = _decorator;
 
@@ -337,10 +338,14 @@ export class Pedal extends Component {
 
     // 弹簧跳跃一次
     private applySpringEffect() {
+        const config = SkillConfigs[PedalSkill.SPRING];
+        const forceMul = config?.jumpForceMul ?? 3.5;
+        const speedMul = config?.jumpSpeedMul ?? 1.8;
+
         // 增加跳跃力度
-        this.jumpForce *= 3.5;
+        this.jumpForce *= forceMul;
         // 增加跳跃速度
-        this.jumpSpeed *= 1.8;
+        this.jumpSpeed *= speedMul;
     }
 
     public releaseObject() {
