@@ -93,14 +93,14 @@ export const SkillFloorLimit: Record<PedalSkill, number> = {
 
 /** 技能权重配置 (可在代码中灵活修改) */
 export const SkillWeights: Record<PedalSkill, number> = {
-    [PedalSkill.NONE]: 5000,         // 无技能
-    [PedalSkill.SPRING]: 400,       // 弹簧
-    [PedalSkill.SPIKE]: 1,         // 尖刺
-    [PedalSkill.GOLD]: 400,         // 金币
-    [PedalSkill.SHIELD]: 400,      // 护盾 (调低点)
-    [PedalSkill.GOLD_RAIN]: 400,     // 金币雨
-    [PedalSkill.METEOR]: 400,        // 陨石
-    [PedalSkill.ROCKET]: 400,        // 火箭
+    [PedalSkill.NONE]: 6400,         // 无技能
+    [PedalSkill.SPRING]: 200,       // 弹簧
+    [PedalSkill.SPIKE]: 200,         // 尖刺
+    [PedalSkill.GOLD]: 200,         // 金币
+    [PedalSkill.SHIELD]: 200,      // 护盾 (调低点)
+    [PedalSkill.GOLD_RAIN]: 200,     // 金币雨
+    [PedalSkill.METEOR]: 200,        // 陨石
+    [PedalSkill.ROCKET]: 200,        // 火箭
 };
 
 // /** 踏板类型字符串标识 */
@@ -135,7 +135,7 @@ export const PedalDefaults: Record<PedalType, {
         // 基础踏板PEDAL1
     [PedalType.PEDAL1]: {
         // 跳跃力度
-        jumpForce: 500,
+        jumpForce: 200,
         /** 跳跃速度 */ 
         jumpSpeed: 0.3,
         /** 重力加速度 */
@@ -156,7 +156,7 @@ export const PedalDefaults: Record<PedalType, {
     // 木踏板WOOD
     [PedalType.WOOD]: {
         /** 跳跃力度 */
-        jumpForce: 500,
+        jumpForce: 200,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */
@@ -178,7 +178,7 @@ export const PedalDefaults: Record<PedalType, {
     // 断裂踏板FRACTURE_PEDAL
     [PedalType.FRACTURE_PEDAL]: {
         /** 跳跃力度 */
-        jumpForce: 200,
+        jumpForce: 300,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */
@@ -199,7 +199,7 @@ export const PedalDefaults: Record<PedalType, {
     // 移动踏板MOVE_PEDAL
     [PedalType.MOVE_PEDAL]: {
         /** 跳跃力度 */
-        jumpForce: 400,
+        jumpForce: 300,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */
@@ -220,7 +220,7 @@ export const PedalDefaults: Record<PedalType, {
   // 云踏板CLOUD
     [PedalType.CLOUD]: {
         /** 跳跃力度 */
-        jumpForce: 600,
+        jumpForce: 500,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */
