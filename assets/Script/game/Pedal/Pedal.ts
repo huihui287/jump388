@@ -4,7 +4,7 @@ import { EventName } from '../../Tools/eventName';
 import GameData from '../../Common/GameData';
 import { PedalSkill, PedalType } from '../../Tools/enumPedal';
 import { Constant } from '../../Tools/enumConst';
-import { SkillConfigs } from '../../Tools/enumSkill';
+import { PedalSkillRegistry } from '../Skill/PedalSkillRegistry';
 
 const { ccclass, property } = _decorator;
 
@@ -275,77 +275,10 @@ export class Pedal extends Component {
     releaseSkill() {
         const skill = this.skill ?? PedalSkill.NONE;
         if (skill === PedalSkill.NONE) return;
-
-        switch (skill) {
-            case PedalSkill.SPRING:
-                console.log("Triggered SPRING skill");
-                this.applySpringEffect();
-                break;
-            case PedalSkill.GOLD:
-                console.log("Triggered GOLD skill");
-                this.getGoldSkill();
-                break;
-            case PedalSkill.SPIKE:
-                console.log("Triggered SPIKE skill");
-                this.applySpikeEffect();
-                break;
-            case PedalSkill.SHIELD:
-                console.log("Triggered SHIELD skill");
-                this.applyShieldEffect();
-                break;
-            case PedalSkill.GOLD_RAIN:
-                console.log("Triggered GOLD_RAIN skill");
-                EventManager.emit(EventName.Game.GetGoldRain, this.node);
-                break;
-            case PedalSkill.METEOR:
-                console.log("Triggered METEOR skill");
-                break;
-            case PedalSkill.ROCKET:
-                console.log("Triggered ROCKET skill");
-                this.applyRocketEffect();
-                break;
-            default:
-                break;
-        }
+        // 技能效果统一由 Registry 分发处理；本组件只负责在触发后清空技能（保持一次性触发时序不变）
+        PedalSkillRegistry.trigger(skill, this);
 
         this.setSkill(PedalSkill.NONE);
-    }
-    
-    // 获得护盾
-    applyShieldEffect() {
-        EventManager.emit(EventName.Game.GetShield);
-    }
-    
-    // 获得火箭
-    private applyRocketEffect() {
-        // 火箭：冲刺10层
-        EventManager.emit(EventName.Game.GetRocket, 10);
-    }
-
-    //尖刺 效果 玩家死亡游戏结束
-    applySpikeEffect() {
-        // 玩家死亡
-        // EventManager.emit(EventName.Game.GameOver);
-        // 改为发送 HitSpike 消息，由 Game 判断是否有护盾
-        EventManager.emit(EventName.Game.HitSpike);
-    }
-
-    //获得金币技能
-    private getGoldSkill() {
-        // 发送获得金币事件，由 Game 处理动画和加金币
-        EventManager.emit(EventName.Game.GetGold, this.node);
-    }
-
-    // 弹簧跳跃一次
-    private applySpringEffect() {
-        const config = SkillConfigs[PedalSkill.SPRING];
-        const forceMul = config?.jumpForceMul ?? 3.5;
-        const speedMul = config?.jumpSpeedMul ?? 1.8;
-
-        // 增加跳跃力度
-        this.jumpForce *= forceMul;
-        // 增加跳跃速度
-        this.jumpSpeed *= speedMul;
     }
 
     public releaseObject() {

@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat, UITransform } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { App } from '../../Controller/app';
-import { PedalType, PedalConfig, PedalDefaults, PedalSkill, SkillWeights, SkillFloorLimit, PedalConfigData } from '../../Tools/enumPedal';
+import { PedalType, PedalConfig, PedalDefaults, PedalSkill, PedalConfigData } from '../../Tools/enumPedal';
 import { Pedal } from '../Pedal/Pedal';
 import { Hero } from '../Hero';
 import GameData from '../../Common/GameData';
@@ -10,6 +10,7 @@ import { EventName } from '../../Tools/eventName';
 import { Constant } from '../../Tools/enumConst';
 import { LevelConfig } from '../../Tools/levelConfig';
 import { CSVManager } from './CSVManager';
+import { PedalSkillRegistry } from '../Skill/PedalSkillRegistry';
 
 const { ccclass, property } = _decorator;
 /**
@@ -485,70 +486,18 @@ export class pedalManager extends Component {
         this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity, finalMinY, finalMaxY, finalMoveSpeed, finalMoveTime, finalMoveDistance);
     }
 
-    /**随机pedal的skill
-    * @param type 踏板类型
-    */
-    /**随机pedal的skill
-    * @param type 踏板类型
-    */
+    /**
+     * 随机生成踏板技能
+     * 规则与旧实现保持一致，但把“权重/门槛/去重”等逻辑收敛到 PedalSkillRegistry 里统一维护。
+     */
     private RandomSkill(): PedalSkill {
-        // 候选技能列表
-        const candidates: { skill: PedalSkill; weight: number }[] = [];
-        let totalWeight = 0;
         const heroComp = this.hero ? this.hero.getComponent(Hero) : null;
         const goldWeightMul = heroComp ? heroComp.getGoldPedalWeightMultiplier() : 1;
-
-        // 1. 构建候选池（过滤掉不符合条件的技能）
-        for (const key in SkillWeights) {
-            const skill = key as PedalSkill;
-            let weight = SkillWeights[skill];
-
-            if (skill === PedalSkill.GOLD) {
-                weight = Math.floor(weight * goldWeightMul);
-            }
-
-            // 过滤条件：
-            // - 权重必须大于 0
-            // - 不能是 FRACTURE (通常由踏板类型决定)
-            // - 不能与上一次技能相同，除非是 NONE (允许连续无技能)
-            // - 满足层数限制
-            if (weight > 0) {
-                const floorLimit = SkillFloorLimit[skill] || 0;
-                if (this.NewlayerS >= floorLimit) {
-                    if (skill === PedalSkill.NONE || skill !== this._lastSkill) {
-                        candidates.push({ skill, weight });
-                        totalWeight += weight;
-                    }
-                }
-            }
-        }
-
-        // 2. 如果没有有效候选（理论上不应发生），强制返回 NONE
-        if (candidates.length === 0 || totalWeight <= 0) {
-            this._lastSkill = PedalSkill.NONE;
-            return PedalSkill.NONE;
-        }
-
-        // 3. 执行加权随机
-        const randomVal = Math.random() * totalWeight;
-        let accumulatedWeight = 0;
-        let selectedSkill = PedalSkill.NONE;
-
-        for (const candidate of candidates) {
-            accumulatedWeight += candidate.weight;
-            if (randomVal < accumulatedWeight) {
-                selectedSkill = candidate.skill;
-                break;
-            }
-        }
-
-        // 4. 最终结果处理（如果循环结束仍未选中，理论上不会发生，默认取最后一个候选）
-        // 这一步是为了防止浮点数精度问题导致的 randomVal === totalWeight 边界情况
-        if (randomVal >= totalWeight) {
-             selectedSkill = candidates[candidates.length - 1].skill;
-        }
-
-        // 5. 更新状态并返回
+        const selectedSkill = PedalSkillRegistry.selectRandomSkill({
+            currentLayer: this.NewlayerS,
+            lastSkill: this._lastSkill,
+            goldWeightMultiplier: goldWeightMul,
+        });
         this._lastSkill = selectedSkill;
         return selectedSkill;
     }
@@ -621,7 +570,7 @@ export class pedalManager extends Component {
         }
 
         // 加载所有技能预制体
-        const skillTypes = Object.keys(SkillWeights).filter((s) => s !== PedalSkill.NONE) as PedalSkill[];
+        const skillTypes = PedalSkillRegistry.getSkillTypesForPools();
         for (const skill of skillTypes) {
             // 假设技能预制体路径为 prefab/PedalSkill/{SkillName}
             // 或者直接用 skill 枚举值作为名称
