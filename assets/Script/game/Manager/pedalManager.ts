@@ -436,9 +436,9 @@ export class pedalManager extends Component {
 
         const finalMinY = targetMinY ?? def.minYInterval;
         const finalMaxY = targetMaxY ?? def.maxYInterval;
-        const finalMoveSpeed = def.moveSpeed;
-        const finalMoveTime = def.moveTime;
-        const finalMoveDistance = def.moveDistance;
+        const finalMoveSpeed = targetMoveSpeed ?? def.moveSpeed;
+        const finalMoveTime = targetMoveTime ?? def.moveTime;
+        const finalMoveDistance = targetMoveDistance ?? def.moveDistance;
 
         this.spawnPedal(targetType, jumpForce, jumpSpeed, _gravity, finalMinY, finalMaxY, finalMoveSpeed, finalMoveTime, finalMoveDistance);
     }
@@ -596,12 +596,13 @@ export class pedalManager extends Component {
         // 为每种踏板类型初始化对象池
         this._pedalPrefabs.forEach((prefab, type) => {
             const pool = new NodePool();
+            const def = PedalDefaults[type];
             for (let i = 0; i < this.initialPoolSize; i++) {
                 const pedalNode = instantiate(prefab);
                 const pedalComponent = pedalNode.getComponent(Pedal);
                 if (pedalComponent) {
                     pedalComponent.setType(type);
-                    pedalComponent.init(v3(0, 0, 0), 600, 1.45, -2000, type);
+                    pedalComponent.init(v3(0, 0, 0), def.jumpForce, def.jumpSpeed, def._gravity, type, def.minYInterval, def.maxYInterval, def.moveSpeed, def.moveTime, def.moveDistance);
                 }
                 pool.put(pedalNode);
             }
@@ -678,8 +679,9 @@ export class pedalManager extends Component {
         // 确保踏板类型始终正确设置
         const pedalComponent = pedalNode.getComponent(Pedal);
         if (pedalComponent) {
+            const def = PedalDefaults[type];
             pedalComponent.setType(type);
-            pedalComponent.init(v3(0, 0, 0), 600, 1.45, -2000, type);
+            pedalComponent.init(v3(0, 0, 0), def.jumpForce, def.jumpSpeed, def._gravity, type, def.minYInterval, def.maxYInterval, def.moveSpeed, def.moveTime, def.moveDistance);
         }
 
         return pedalNode;

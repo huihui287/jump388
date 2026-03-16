@@ -12,6 +12,7 @@ import { getSkinConfig, SkillInfo, SkinConfig } from './Skin/SkinConfig';
 import ViewManager from '../Common/view/ViewManager';
 import GameData from '../Common/GameData';
 import { HeroSkillType, HeroType } from '../Tools/enumHero';
+import { PedalType, PedalDefaults } from '../Tools/enumPedal';
         
 const { ccclass, property } = _decorator;
 
@@ -324,9 +325,10 @@ export class Hero extends Component {
         this.refreshSkin();
         // 游戏开始时，为首次跳跃创建一个“虚拟”踏板
         const initialPedal = new Pedal();
-        initialPedal.jumpForce = 600;
-        initialPedal.jumpSpeed = 1.45;
-        initialPedal._gravity = -2000;
+        const config = PedalDefaults[PedalType.PEDAL1];
+        initialPedal.jumpForce = config.jumpForce;
+        initialPedal.jumpSpeed = config.jumpSpeed;
+        initialPedal._gravity = config._gravity;
         
         this.setGrounded(true, initialPedal);
         this.performJump(initialPedal);
@@ -353,7 +355,7 @@ export class Hero extends Component {
         
         // 重置物理状态
         this._jumpVelocity = 0;
-        this._currentGravity = -2000; // 恢复默认重力
+        this._currentGravity = PedalDefaults[PedalType.PEDAL1]._gravity; // 恢复默认重力
         this._isTweenJumping = false;
         this._isTouchingPedal = false;
         

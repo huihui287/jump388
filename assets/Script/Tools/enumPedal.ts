@@ -205,11 +205,11 @@ export const PedalDefaults: Record<PedalType, {
         /** 技能 */
         skill: PedalSkill.NONE,
         /** 移动速度 */
-        moveSpeed: 100,
+        moveSpeed: 200,
         /** 移动时间 */
-        moveTime: 1,
+        moveTime: 0.1,
         /** 移动距离 */         
-        moveDistance: 200,
+        moveDistance: 600,
     },
   // 云踏板CLOUD
     [PedalType.CLOUD]: {
