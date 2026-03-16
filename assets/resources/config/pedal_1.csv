@@ -1,8 +1,12 @@
 layer,pedalSype,jumpSpeed,_gravity,minYInterval,maxYInterval,skill
 层数,跳板id,跳跃速度,重力加速度 ,Y轴间隔最小值,Y轴间隔最大值,技能（道具效果）
 1,1,0.5,-5000,50,80,[PedalSkill.NONE]
-15,2,0.7,-5000,50,100,[PedalSkill.NONE]
-30,3,0.7,-5000,80,200,[PedalSkill.NONE]
-80,2,0.5,-5000,50,150,[PedalSkill.NONE]
-150,2,0.5,-5000,50,150,[PedalSkill.NONE]
-200,3,0.5,-5000,100,200,[PedalSkill.NONE]
+15,2,0.6,-5000,50,100,[PedalSkill.NONE]
+30,3,0.6,-5000,80,200,[PedalSkill.NONE]
+80,2,0.6,-5000,80,150,[PedalSkill.NONE]
+120,3,0.6,-5000,200,300,[PedalSkill.NONE]
+121,3,0.6,-5000,200,300,[PedalSkill.NONE]
+122,3,0.6,-5000,200,300,[PedalSkill.NONE]
+150,2,0.6,-5000,100,150,[PedalSkill.NONE]
+200,3,0.6,-5000,100,300,[PedalSkill.NONE]
+300,2,0.6,-5000,100,180,[PedalSkill.NONE]
