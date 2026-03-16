@@ -14,6 +14,12 @@ export interface PedalConfigData {
     moveTime?: number;
     /** 移动距离 */
     moveDistance?: number;
+    /** 跳跃力度 */
+    jumpForce?: number;
+    /** 跳跃速度 */
+    jumpSpeed?: number;
+    /** 重力加速度 */
+    _gravity?: number;
 }
 
 /** 踏板物理配置接口 */

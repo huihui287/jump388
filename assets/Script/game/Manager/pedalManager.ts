@@ -236,6 +236,9 @@ export class pedalManager extends Component {
                     const moveSpeedVal = row.moveSpeed;
                     const moveTimeVal = row.moveTime;
                     const moveDistanceVal = row.moveDistance;
+                    const jumpForceVal = row.jumpForce;
+                    const jumpSpeedVal = row.jumpSpeed;
+                    const gravityVal = row._gravity;
 
                     let layers: number[] = [];
                     if (Array.isArray(layerVal)) {
@@ -286,6 +289,27 @@ export class pedalManager extends Component {
                         moveDistances = [Number(moveDistanceVal)];
                     }
 
+                    let jumpForces: number[] = [];
+                    if (Array.isArray(jumpForceVal)) {
+                        jumpForces = jumpForceVal.map(Number);
+                    } else if (jumpForceVal !== undefined) {
+                        jumpForces = [Number(jumpForceVal)];
+                    }
+
+                    let jumpSpeeds: number[] = [];
+                    if (Array.isArray(jumpSpeedVal)) {
+                        jumpSpeeds = jumpSpeedVal.map(Number);
+                    } else if (jumpSpeedVal !== undefined) {
+                        jumpSpeeds = [Number(jumpSpeedVal)];
+                    }
+
+                    let gravities: number[] = [];
+                    if (Array.isArray(gravityVal)) {
+                        gravities = gravityVal.map(Number);
+                    } else if (gravityVal !== undefined) {
+                        gravities = [Number(gravityVal)];
+                    }
+
                     // 填充 Map
                     for (let i = 0; i < layers.length; i++) {
                         const layer = layers[i];
@@ -308,13 +332,25 @@ export class pedalManager extends Component {
                         const distIndex = Math.min(i, moveDistances.length - 1);
                         const moveDistance = moveDistances.length > 0 ? moveDistances[distIndex] : undefined;
 
+                        const jumpForceIndex = Math.min(i, jumpForces.length - 1);
+                        const jumpForce = jumpForces.length > 0 ? jumpForces[jumpForceIndex] : undefined;
+
+                        const jumpSpeedIndex = Math.min(i, jumpSpeeds.length - 1);
+                        const jumpSpeed = jumpSpeeds.length > 0 ? jumpSpeeds[jumpSpeedIndex] : undefined;
+
+                        const gravityIndex = Math.min(i, gravities.length - 1);
+                        const gravity = gravities.length > 0 ? gravities[gravityIndex] : undefined;
+
                         const config: PedalConfigData = {
                             pedalSype: pedalSype,
                             minYInterval: minY,
                             maxYInterval: maxY,
                             moveSpeed: moveSpeed,
                             moveTime: moveTime,
-                            moveDistance: moveDistance
+                            moveDistance: moveDistance,
+                            jumpForce: jumpForce,
+                            jumpSpeed: jumpSpeed,
+                            _gravity: gravity
                         };
                         
                         this.layerConfigMap.set(layer, config);
@@ -393,6 +429,9 @@ export class pedalManager extends Component {
         let targetMoveSpeed: number | undefined = undefined;
         let targetMoveTime: number | undefined = undefined;
         let targetMoveDistance: number | undefined = undefined;
+        let targetJumpForce: number | undefined = undefined;
+        let targetJumpSpeed: number | undefined = undefined;
+        let targetGravity: number | undefined = undefined;
 
         // 遍历 layerKeys 数组找到匹配的区间
         // 规则：NewlayerS < layerKeys[i] 时，使用对应配置
@@ -423,6 +462,9 @@ export class pedalManager extends Component {
                 targetMoveSpeed = config.moveSpeed;
                 targetMoveTime = config.moveTime;
                 targetMoveDistance = config.moveDistance;
+                targetJumpForce = config.jumpForce;
+                targetJumpSpeed = config.jumpSpeed;
+                targetGravity = config._gravity;
             }
         }
 
@@ -430,9 +472,9 @@ export class pedalManager extends Component {
         const targetType: PedalType = this.resolvePedalType(targetTypeName);
         // 使用枚举常量中的默认物理参数
         const def = PedalDefaults[targetType];
-        const jumpForce = def.jumpForce;
-        const jumpSpeed = def.jumpSpeed;
-        const _gravity = def._gravity;
+        const jumpForce = targetJumpForce ?? def.jumpForce;
+        const jumpSpeed = targetJumpSpeed ?? def.jumpSpeed;
+        const _gravity = targetGravity ?? def._gravity;
 
         const finalMinY = targetMinY ?? def.minYInterval;
         const finalMaxY = targetMaxY ?? def.maxYInterval;
