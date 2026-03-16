@@ -193,7 +193,7 @@ export const PedalDefaults: Record<PedalType, {
     // 移动踏板MOVE_PEDAL
     [PedalType.MOVE_PEDAL]: {
         /** 跳跃力度 */
-        jumpForce: 600,
+        jumpForce: 400,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */
