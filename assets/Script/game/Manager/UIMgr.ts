@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Label } from 'cc';
+import { _decorator, Node, Label } from 'cc';
 import BaseDialog from '../../Common/view/BaseDialog';
 import { App } from '../../Controller/app';
 import { SkinManager } from '../Skin/SkinManager';
@@ -30,6 +30,9 @@ export class UIMgr extends BaseDialog {
     // 记录最大充能
     private _maxMeteorCharge: number = 30;
 
+    // 踏板层
+    PedalLayerLabel: Node = null;
+    private _lastLayer = -1;
     start() {
         this.refreshSkillBtn();
         // 注册事件
@@ -70,6 +73,12 @@ export class UIMgr extends BaseDialog {
             this.cdLabel = this.viewList.get('MeteorFrogSkillBtn/cd');
         }
 
+        // 初始化踏板层标签
+
+        this.PedalLayerLabel = this.viewList.get('PedalLayerLabel');
+        if (this.PedalLayerLabel) {
+            this.PedalLayerLabel.getComponent(Label).string = '0'+"层";
+        }
 
         // 初始化隐藏
         if (this.cdLabel && this._cdTime <= 0) {
@@ -83,6 +92,7 @@ export class UIMgr extends BaseDialog {
         this.NinjaFrogSkillBtn = this.viewList.get('NinjaFrogSkillBtn');
         this.GundamFrogSkillBtn = this.viewList.get('GundamFrogSkillBtn');
         this.MeteorFrogSkillBtn = this.viewList.get('MeteorFrogSkillBtn');
+        this.PedalLayerLabel = this.viewList.get('PedalLayerLabel');
     }
 
     /**
@@ -168,6 +178,18 @@ export class UIMgr extends BaseDialog {
                     label.string = `${current}/${this._maxMeteorCharge}`;
                 }
             }
+        }
+    }
+
+    public setPedalLayer(layer: number) {
+        if (layer === this._lastLayer) return;
+        this._lastLayer = layer;
+        if (!this.PedalLayerLabel) {
+            this.PedalLayerLabel = this.viewList.get('PedalLayerLabel');
+        }
+        const label = this.PedalLayerLabel?.getComponent(Label);
+        if (label) {
+            label.string = `${layer}层`;
         }
     }
 

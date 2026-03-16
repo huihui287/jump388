@@ -1,5 +1,5 @@
 import { _decorator, Component, Node, Vec3, v3 } from 'cc';
-import { App } from '../Controller/app';
+import { App } from '../../Controller/app';
 const { ccclass, property } = _decorator;
 
 @ccclass('CameraManager')

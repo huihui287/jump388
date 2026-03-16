@@ -14,15 +14,17 @@ import EventManager from '../Common/view/EventManager';
 import GameData from '../Common/GameData';
 // import { JoystickControl } from './JoystickControl';
 import { Hero } from './Hero';
-import { CameraManager } from './CameraManager';
+
 import { pedalManager } from './Manager/pedalManager';
 import { bgMgr } from './Manager/bgMgr';
+import { UIMgr } from './Manager/UIMgr';
 import { Pedal } from './Pedal/Pedal';
 import ViewManager from '../Common/view/ViewManager';
 import { getSkinConfig } from './Skin/SkinConfig';
 import LoaderManeger from '../sysloader/LoaderManeger';
 import { MoveManager } from './Manager/MoveManager';
 import { PedalSkill } from '../Tools/enumPedal';
+import { CameraManager } from './Manager/CameraManager';
 
 const { ccclass, property } = _decorator;
 
@@ -46,15 +48,14 @@ export class Game extends BaseNodeCom {
 
     /** 游戏状态 */
     private gameState: GameState = GameState.PLAYING;
+    /**  ui管理组件 */
+    @property(UIMgr)
+    private uiMgrCom: UIMgr = null;
    
     /*********************************************  ui  *********************************************/
     /** 玩家金币 */
     @property({ type: Node })
     ndSelfGold: Node = null!;
-
-    /**MoveNodeMGR */
-    @property({ type: Node })
-    MoveNodeMGR: Node = null!;
 
     onDestroy(): void {
         App.gameCtr.setPause(false);
@@ -109,6 +110,7 @@ export class Game extends BaseNodeCom {
             bgMgrCom.setHero(this.heroCom.node);
         }
     }
+
     
     // 初始化踏板管理组件
     async initpedalManagerCom() {
@@ -333,6 +335,10 @@ export class Game extends BaseNodeCom {
      */
     protected update(dt: number): void {
         if (App.gameCtr.isPause || this.gameState !== GameState.PLAYING) return;
+
+        if (this.uiMgrCom && this.heroCom) {
+            this.uiMgrCom.setPedalLayer(this.heroCom.getHerolayerS());
+        }
 
         this.checkHeroPedalCollision();
         this.checkHeroFallDeath();

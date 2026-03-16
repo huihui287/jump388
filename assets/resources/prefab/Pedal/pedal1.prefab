@@ -242,9 +242,7 @@
     "jumpForce": 600,
     "jumpSpeed": 1.45,
     "_gravity": -2000,
-    "skills": [
-      "none"
-    ],
+    "skill": "none",
     "_id": ""
   },
   {

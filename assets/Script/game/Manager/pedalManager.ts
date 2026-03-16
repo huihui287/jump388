@@ -1,6 +1,5 @@
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, director, NodePool, Quat, UITransform } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
-import { CSVManager } from '../../Tools/CSVManager';
 import { App } from '../../Controller/app';
 import { PedalType, PedalConfig, PedalDefaults, PedalSkill, SkillWeights, SkillFloorLimit, PedalConfigData } from '../../Tools/enumPedal';
 import { Pedal } from '../Pedal/Pedal';
@@ -10,6 +9,7 @@ import EventManager from '../../Common/view/EventManager';
 import { EventName } from '../../Tools/eventName';
 import { Constant } from '../../Tools/enumConst';
 import { LevelConfig } from '../../Tools/levelConfig';
+import { CSVManager } from './CSVManager';
 
 const { ccclass, property } = _decorator;
 /**
