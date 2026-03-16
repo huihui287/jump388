@@ -16,6 +16,7 @@ import GameData from '../Common/GameData';
 import { Hero } from './Hero';
 import { CameraManager } from './CameraManager';
 import { pedalManager } from './Manager/pedalManager';
+import { bgMgr } from './Manager/bgMgr';
 import { Pedal } from './Pedal/Pedal';
 import ViewManager from '../Common/view/ViewManager';
 import { getSkinConfig } from './Skin/SkinConfig';
@@ -101,6 +102,12 @@ export class Game extends BaseNodeCom {
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
         this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
         this.setHeroSkin();
+        
+        // 将 Hero 引用传递给 bgMgr，用于背景无限循环
+        const bgMgrCom = this.viewList.get('bgMgr')?.getComponent(bgMgr);
+        if (bgMgrCom) {
+            bgMgrCom.setHero(this.heroCom.node);
+        }
     }
     
     // 初始化踏板管理组件
@@ -617,6 +624,12 @@ export class Game extends BaseNodeCom {
             this.cameraCom.setTarget(this.heroCom.node);
             // 可能需要重置摄像机位置到初始状态
             this.cameraCom.node.setPosition(0, 0, this.cameraCom.node.position.z);
+        }
+
+        const bgMgrCom = this.viewList.get('bgMgr')?.getComponent(bgMgr);
+        if (bgMgrCom && this.heroCom) {
+            bgMgrCom.setHero(this.heroCom.node);
+            bgMgrCom.resetBgs();
         }
         
         // 5. 重新加载关卡数据（如果有需要）
