@@ -135,7 +135,7 @@ export const PedalDefaults: Record<PedalType, {
         // 基础踏板PEDAL1
     [PedalType.PEDAL1]: {
         // 跳跃力度
-        jumpForce: 200,
+        jumpForce: 400,
         /** 跳跃速度 */ 
         jumpSpeed: 0.3,
         /** 重力加速度 */
@@ -156,7 +156,7 @@ export const PedalDefaults: Record<PedalType, {
     // 木踏板WOOD
     [PedalType.WOOD]: {
         /** 跳跃力度 */
-        jumpForce: 200,
+        jumpForce: 400,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */
@@ -178,7 +178,7 @@ export const PedalDefaults: Record<PedalType, {
     // 断裂踏板FRACTURE_PEDAL
     [PedalType.FRACTURE_PEDAL]: {
         /** 跳跃力度 */
-        jumpForce: 300,
+        jumpForce: 500,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */
@@ -199,7 +199,7 @@ export const PedalDefaults: Record<PedalType, {
     // 移动踏板MOVE_PEDAL
     [PedalType.MOVE_PEDAL]: {
         /** 跳跃力度 */
-        jumpForce: 300,
+        jumpForce: 500,
         /** 跳跃速度 */
         jumpSpeed: 0.3,
         /** 重力加速度 */
