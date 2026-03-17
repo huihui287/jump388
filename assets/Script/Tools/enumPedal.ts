@@ -1,46 +1,25 @@
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-/**踏板cvs 配置文件 */
-export interface PedalConfigData {
-    /** 踏板类型 */
-    pedalSype: string;
-    /** Y轴间隔最小值 (下一个pedal与当前pedal的最小间隔) */
-    minYInterval?: number;
-    /** Y轴间隔最大值 (下一个pedal与当前pedal的最大间隔) */
-    maxYInterval?: number;
-    /** 移动速度 */
-    moveSpeed?: number;
-    /** 移动时间 */
-    moveTime?: number;
-    /** 移动距离 */
-    moveDistance?: number;
-    /** 跳跃力度 */
-    jumpForce?: number;
-    /** 跳跃速度 */
-    jumpSpeed?: number;
-    /** 重力加速度 */
-    _gravity?: number;
-}
-
-/** 踏板物理配置接口 */
-export interface PedalConfig {
+/**
+ * 单个踏板类型的默认参数
+ * 说明：游戏运行时创建/复用踏板节点时，统一以这里的参数为准（不再依赖外部配置文件）。
+ */
+export interface PedalDefaultConfig {
     /** 跳跃力度 (决定跳跃高度) */
-    jumpForce: number; 
+    jumpForce: number;
     /** 跳跃速度 (上升时间) */
-    jumpSpeed: number; 
+    jumpSpeed: number;
     /** 重力加速度 */
-    _gravity: number; 
-    /** Y轴间隔最小值 (下一个pedal与当前pedal的最小间隔) */
-    minYInterval: number; 
-    /** Y轴间隔最大值 (下一个pedal与当前pedal的最大间隔) */
-    maxYInterval: number; 
-    /** 默认携带技能 */
-    skill: PedalSkill[];
-    /** 移动速度 */
-    moveSpeed: number; 
-    /** 移动时间 */
-    moveTime: number; 
-    /** 移动距离 */
+    _gravity: number;
+    /** Y 轴间隔最小值（下一个踏板与当前踏板的最小间隔） */
+    minYInterval: number;
+    /** Y 轴间隔最大值（下一个踏板与当前踏板的最大间隔） */
+    maxYInterval: number;
+    /** 默认技能（当前由逻辑随机决定，保留字段用于兜底/扩展） */
+    skill: PedalSkill;
+    /** 移动速度（仅移动类踏板生效） */
+    moveSpeed: number;
+    /** 移动时间（仅移动类踏板生效） */
+    moveTime: number;
+    /** 移动距离（仅移动类踏板生效） */
     moveDistance: number;
 }
 
@@ -102,36 +81,11 @@ export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.METEOR]: 100,        // 陨石
     [PedalSkill.ROCKET]: 100,        // 火箭
 };
-
-// /** 踏板类型字符串标识 */
-// type: string;
-// /** 跳跃力度 */决定跳跃高度
-// jumpForce: number;
-// /** 跳跃速度 */
-// jumpSpeed: number;
-// /** 重力加速度 */
-// _gravity: number;
-/** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-//  minYInterval: number ;
-// /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-//  maxYInterval: number ;
 /**
  * 导出：按枚举值组织的踏板默认参数映射
  * 供运行时在创建踏板节点后快速设置其物理属性
  */
-export const PedalDefaults: Record<PedalType, { 
-    /** 跳跃力度 */
-    jumpForce: number; 
-    /** 跳跃速度 */
-    jumpSpeed: number; 
-    /** 重力加速度 */
-    _gravity: number; 
-    /** Y轴间隔最小值 下一个pedal与当前pedal的最小间隔*/
-    minYInterval: number; 
-    /** Y轴间隔最大值 下一个pedal与当前pedal的最大间隔*/
-    maxYInterval: number; 
-    skill: PedalSkill;
-     moveSpeed: number; moveTime: number; moveDistance: number; }> = {
+export const PedalDefaults: Record<PedalType, PedalDefaultConfig> = {
         // 基础踏板PEDAL1
     [PedalType.PEDAL1]: {
         // 跳跃力度
@@ -240,4 +194,68 @@ export const PedalDefaults: Record<PedalType, {
     },
 
 
+};
+
+/**
+ * 低层数踏板默认参数（新手区间用）
+ * 说明：
+ * - 只在低层数区间生效，用于把“间隔更小/移动更慢”，让前期更稳。
+ * - 具体在哪个层数区间启用，由生成逻辑决定（pedalManager）。
+ */
+export const PedalDefaultsLowLayer: Record<PedalType, PedalDefaultConfig> = {
+    [PedalType.PEDAL1]: {
+        jumpForce: 420,
+        jumpSpeed: 0.3,
+        _gravity: -5000,
+        minYInterval: 40,
+        maxYInterval: 65,
+        skill: PedalSkill.NONE,
+        moveSpeed: 0,
+        moveTime: 0,
+        moveDistance: 0,
+    },
+    [PedalType.WOOD]: {
+        jumpForce: 420,
+        jumpSpeed: 0.3,
+        _gravity: -5000,
+        minYInterval: 45,
+        maxYInterval: 75,
+        skill: PedalSkill.NONE,
+        moveSpeed: 0,
+        moveTime: 0,
+        moveDistance: 0,
+    },
+    [PedalType.FRACTURE_PEDAL]: {
+        jumpForce: 450,
+        jumpSpeed: 0.3,
+        _gravity: -5000,
+        minYInterval: 45,
+        maxYInterval: 70,
+        skill: PedalSkill.NONE,
+        moveSpeed: 0,
+        moveTime: 0,
+        moveDistance: 0,
+    },
+    [PedalType.MOVE_PEDAL]: {
+        jumpForce: 450,
+        jumpSpeed: 0.3,
+        _gravity: -5000,
+        minYInterval: 60,
+        maxYInterval: 140,
+        skill: PedalSkill.NONE,
+        moveSpeed: 120,
+        moveTime: 0.15,
+        moveDistance: 320,
+    },
+    [PedalType.CLOUD]: {
+        jumpForce: 450,
+        jumpSpeed: 0.3,
+        _gravity: -5000,
+        minYInterval: 60,
+        maxYInterval: 140,
+        skill: PedalSkill.NONE,
+        moveSpeed: 60,
+        moveTime: 1,
+        moveDistance: 120,
+    },
 };
