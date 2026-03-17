@@ -406,10 +406,21 @@ export class Hero extends Component {
         this._smoothGyroX = 0;
         this._inputVector.set(0, 0);
         
-        // 切换到初始状态 (通常是下落或者待机，这里假设先下落或者直接跳起)
-        // 如果当前已经在 JUMP_DOWN 状态，changeState 会返回 false，但这符合预期
-        this._stateMachine.changeState(HeroState.JUMP_UP);
-        this.playAnimation('jump_down');
+        if (this._stateMachine.hasState(HeroState.JUMP_UP)) {
+            this._stateMachine.changeState(null);
+            this._stateMachine.changeState(HeroState.JUMP_UP);
+        }
+
+        if (this._heroData) {
+            const initialPedal = new Pedal();
+            const config = PedalDefaults[PedalType.PEDAL1];
+            initialPedal.jumpForce = config.jumpForce;
+            initialPedal.jumpSpeed = config.jumpSpeed;
+            initialPedal._gravity = config._gravity;
+
+            this.setGrounded(true, initialPedal);
+            this.performJump(initialPedal);
+        }
 
         // 刷新护盾技能Icon
         this.setShieldSkillIconActive(false);

@@ -91,12 +91,16 @@ export class Game extends BaseNodeCom {
         super.onLoad();
         // 播放背景音乐
         AudioManager.getInstance().playMusic('background1', true);
-        
-        this.initHero();
-        await this.initpedalManagerCom();
 
-        this.setCameraTarget();
+        // 初始化Hero组件
+        this.initHero();
+
+        // 初始化踏板管理组件
+        await this.initpedalManagerCom();
         this.loadExtraData(GameData.getCurLevel());
+
+        // 初始化相机目标
+        this.setCameraTarget();
         // 添加事件监听器
         this.addEvents();
         
@@ -125,38 +129,8 @@ export class Game extends BaseNodeCom {
         this.pedalManagerCom.setHero(this.heroCom.node);
         await this.pedalManagerCom.loadtPools();
         await this.pedalManagerCom.loadPedalConfig();
-     //   this.setupHeroOnFirstPedal();
     }
 
-    /**
-     * 设置 Hero 在第一个踏板上
-     */
-    private setupHeroOnFirstPedal() {
-        return;
-        if (!this.pedalManagerCom || !this.heroCom) return;
-        
-        // 强制生成第一个踏板
-        const firstPedal = this.pedalManagerCom.spawnFirstPedal();
-        if (firstPedal) {
-             const pedalPos = firstPedal.position;
-             const pedalComp = firstPedal.getComponent(Pedal);
-             // 获取踏板高度的一半
-             const halfHeight = pedalComp ? pedalComp.getPedalHeight() / 2 : 10;
-             
-             // 设置 Hero 出生位置 (踏板中心上方)
-             // 假设 Hero 锚点在脚底，或者需要一些偏移
-             // 这里的 50 是一个估算值，保证 Hero 在踏板上方不穿模
-             // 注意：Hero 的 pivot 通常是脚底，所以 y 应该是 pedalTopY
-             const spawnY = pedalPos.y + halfHeight; 
-             const spawnPos = new Vec3(pedalPos.x, spawnY, 0);
-             
-             // 更新 Hero 的出生点
-             this.heroCom.setSpawnPosition(spawnPos);
-             
-             // 立即设置位置 (防止 reset 还没调用或者已经调用过)
-             this.heroCom.node.setPosition(spawnPos);
-        }
-    }
     /**
      * 设置相机目标
      * @description 设置相机跟随的目标节点，包括偏移量和跟随速度
@@ -533,7 +507,6 @@ export class Game extends BaseNodeCom {
             this.pedalManagerCom.init();
             // 加载新关卡的配置
             await this.pedalManagerCom.loadPedalConfig();
-            this.setupHeroOnFirstPedal();
         }
 
         // 3. 重置 Hero
@@ -659,7 +632,7 @@ export class Game extends BaseNodeCom {
             this.pedalManagerCom.init();
             // 重新初始化踏板生成状态
             await this.pedalManagerCom.loadPedalConfig();
-            this.setupHeroOnFirstPedal();
+
         }
         
         // 3. 重置 Hero
