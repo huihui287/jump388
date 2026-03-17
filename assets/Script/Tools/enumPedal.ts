@@ -93,14 +93,14 @@ export const SkillFloorLimit: Record<PedalSkill, number> = {
 
 /** 技能权重配置 (可在代码中灵活修改) */
 export const SkillWeights: Record<PedalSkill, number> = {
-    [PedalSkill.NONE]: 6400,         // 无技能
-    [PedalSkill.SPRING]: 200,       // 弹簧
+    [PedalSkill.NONE]: 9200,         // 无技能
+    [PedalSkill.SPRING]: 100,       // 弹簧
     [PedalSkill.SPIKE]: 100,         // 尖刺
     [PedalSkill.GOLD]: 200,         // 金币
-    [PedalSkill.SHIELD]: 200,      // 护盾 (调低点)
-    [PedalSkill.GOLD_RAIN]: 200,     // 金币雨
-    [PedalSkill.METEOR]: 200,        // 陨石
-    [PedalSkill.ROCKET]: 200,        // 火箭
+    [PedalSkill.SHIELD]: 100,      // 护盾 (调低点)
+    [PedalSkill.GOLD_RAIN]: 100,     // 金币雨
+    [PedalSkill.METEOR]: 100,        // 陨石
+    [PedalSkill.ROCKET]: 100,        // 火箭
 };
 
 // /** 踏板类型字符串标识 */

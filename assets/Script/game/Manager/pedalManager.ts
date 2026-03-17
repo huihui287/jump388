@@ -77,6 +77,8 @@ export class pedalManager extends Component {
 
     /** 上一次生成的技能 */
     private _lastSkill: PedalSkill = PedalSkill.NONE;
+    private _blockSpikeForPedals: number = 0;
+    private _forcedSkillQueue: PedalSkill[] = [];
 
     /**
      * 设置 Hero 引用
@@ -101,6 +103,9 @@ export class pedalManager extends Component {
         this.PedalRice = 0;
         this.tempAllRice = 0;
         this._lastPedalType = PedalType.WOOD;
+        this._lastSkill = PedalSkill.NONE;
+        this._blockSpikeForPedals = 0;
+        this._forcedSkillQueue.length = 0;
         
         if (this.hero) {
             this.setHero(this.hero);
@@ -491,14 +496,37 @@ export class pedalManager extends Component {
      * 规则与旧实现保持一致，但把“权重/门槛/去重”等逻辑收敛到 PedalSkillRegistry 里统一维护。
      */
     private RandomSkill(): PedalSkill {
+        let didSetSpikeBlockThisCall = false;
+
+        if (this._forcedSkillQueue.length > 0) {
+            const forced = this._forcedSkillQueue.shift() ?? PedalSkill.NONE;
+            this._lastSkill = forced;
+            if (!didSetSpikeBlockThisCall && this._blockSpikeForPedals > 0) {
+                this._blockSpikeForPedals -= 1;
+            }
+            return forced;
+        }
+
         const heroComp = this.hero ? this.hero.getComponent(Hero) : null;
         const goldWeightMul = heroComp ? heroComp.getGoldPedalWeightMultiplier() : 1;
         const selectedSkill = PedalSkillRegistry.selectRandomSkill({
             currentLayer: this.NewlayerS,
             lastSkill: this._lastSkill,
             goldWeightMultiplier: goldWeightMul,
+            blockSpikeForPedals: this._blockSpikeForPedals,
         });
+
+        if (selectedSkill === PedalSkill.SHIELD) {
+            this._blockSpikeForPedals = 2;
+            didSetSpikeBlockThisCall = true;
+        } else if (selectedSkill === PedalSkill.SPIKE) {
+            this._forcedSkillQueue.push(PedalSkill.SPIKE);
+        }
+
         this._lastSkill = selectedSkill;
+        if (!didSetSpikeBlockThisCall && this._blockSpikeForPedals > 0) {
+            this._blockSpikeForPedals -= 1;
+        }
         return selectedSkill;
     }
     /**

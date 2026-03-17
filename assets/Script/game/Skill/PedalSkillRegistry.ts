@@ -17,6 +17,8 @@ export interface PedalSkillRandomParams {
     lastSkill: PedalSkill;
     /** 金币蛙等被动对金币踏板出现率的倍率（仅影响 GOLD 的权重） */
     goldWeightMultiplier?: number;
+    /** SHIELD 之后的尖刺冷却：>0 时本次不允许生成 SPIKE */
+    blockSpikeForPedals?: number;
 }
 
 /**
@@ -45,6 +47,8 @@ export class PedalSkillRegistry {
         for (const key in SkillWeights) {
             const skill = key as PedalSkill;
             let weight = SkillWeights[skill];
+
+            if (skill === PedalSkill.SPIKE && (params.blockSpikeForPedals ?? 0) > 0) continue;
 
             if (skill === PedalSkill.GOLD) {
                 const mul = params.goldWeightMultiplier ?? 1;
