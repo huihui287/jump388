@@ -20,11 +20,11 @@ export class JoystickControl extends Component {
     /** 是否正在触摸 */
     private _isTouching: boolean = false;
 
-    protected onLoad(): void {
+    protected onEnable(): void {
         this.registerTouchEvents();
     }
 
-    protected onDestroy(): void {
+    protected onDisable(): void {
         this.unregisterTouchEvents();
     }
 

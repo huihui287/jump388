@@ -78,7 +78,14 @@ export class pedalManager extends Component {
     /** 上一次生成的技能 */
     private _lastSkill: PedalSkill = PedalSkill.NONE;
     private _blockSpikeForPedals: number = 0;
-    private _forcedSkillQueue: PedalSkill[] = [];
+    /**
+     * 是否“允许生成下一次尖刺”
+     * - true：代表系统已经生成了 SHIELD 踏板，允许在间隔 2 个踏板后生成一次 SPIKE
+     * - false：代表当前不允许生成 SPIKE（要么还没生成护盾，要么已经生成过一次 SPIKE 消耗了许可）
+     *
+     * 说明：遵循用户需求，尖刺不能单独出现，必须在生成护盾后间隔 2 个踏板再生成。
+     */
+    private _spikePermitFromShield: boolean = false;
 
     /**
      * 设置 Hero 引用
@@ -94,6 +101,10 @@ export class pedalManager extends Component {
         EventManager.on(EventName.Game.ReleaseObject, this.onReleaseObject, this);
     }
 
+    protected onDestroy(): void {
+        EventManager.off(EventName.Game.ReleaseObject, this.onReleaseObject, this);
+    }
+
     init() {
         this.recycleAllPedals();
         this._configReady = false;
@@ -105,7 +116,7 @@ export class pedalManager extends Component {
         this._lastPedalType = PedalType.WOOD;
         this._lastSkill = PedalSkill.NONE;
         this._blockSpikeForPedals = 0;
-        this._forcedSkillQueue.length = 0;
+        this._spikePermitFromShield = false;
         
         if (this.hero) {
             this.setHero(this.hero);
@@ -407,6 +418,29 @@ export class pedalManager extends Component {
     }
 
     /**
+     * 强制生成第一个踏板（如果尚未生成）并返回该节点
+     * 用于初始化 Hero 位置
+     */
+    public spawnFirstPedal(): Node | null {
+        // 如果已经有踏板，直接返回第一个
+        if (this._activePedals.length > 0) {
+            return this._activePedals[0];
+        }
+
+        // 确保配置已就绪
+        if (!this._configReady || !this._poolsReady) {
+            console.warn("Cannot spawn first pedal: Config or Pools not ready.");
+            return null;
+        }
+
+        // 强制生成一个踏板
+        this.spawnNextPedal();
+        
+        // 返回刚刚生成的踏板
+        return this.getLastPedal();
+    }
+
+    /**
      * 检查并生成新踏板
      * 当最后一个踏板距离 屏幕上面的距离 不够远时，继续生成
      */
@@ -496,37 +530,50 @@ export class pedalManager extends Component {
      * 规则与旧实现保持一致，但把“权重/门槛/去重”等逻辑收敛到 PedalSkillRegistry 里统一维护。
      */
     private RandomSkill(): PedalSkill {
-        let didSetSpikeBlockThisCall = false;
-
-        if (this._forcedSkillQueue.length > 0) {
-            const forced = this._forcedSkillQueue.shift() ?? PedalSkill.NONE;
-            this._lastSkill = forced;
-            if (!didSetSpikeBlockThisCall && this._blockSpikeForPedals > 0) {
-                this._blockSpikeForPedals -= 1;
-            }
-            return forced;
-        }
-
+        /**
+         * 生成规则（按用户最新需求）：
+         * 1) 尖刺不能单独出现，必须在生成护盾技能后，间隔 2 个踏板再生成。
+         * 2) 当系统生成了 SHIELD 技能后，设置 _blockSpikeForPedals = 2 和 _spikePermitFromShield = true。
+         * 3) 在间隔期间（_blockSpikeForPedals > 0），不允许生成 SPIKE。
+         * 4) 当间隔结束（_blockSpikeForPedals == 0 且有许可时），强制生成一次 SPIKE 并消耗许可。
+         */
         const heroComp = this.hero ? this.hero.getComponent(Hero) : null;
         const goldWeightMul = heroComp ? heroComp.getGoldPedalWeightMultiplier() : 1;
-        const selectedSkill = PedalSkillRegistry.selectRandomSkill({
-            currentLayer: this.NewlayerS,
-            lastSkill: this._lastSkill,
-            goldWeightMultiplier: goldWeightMul,
-            blockSpikeForPedals: this._blockSpikeForPedals,
-        });
 
+        let selectedSkill: PedalSkill = PedalSkill.NONE;
+
+        // 检查是否应该强制生成尖刺（已生成护盾且过了 2 个间隔踏板）
+        if (this._spikePermitFromShield && this._blockSpikeForPedals === 0) {
+            selectedSkill = PedalSkill.SPIKE;
+        } else {
+            // 否则进行正常随机（但要受 allowSpike 限制：没有许可或在冷却中则不允许随机到尖刺）
+            const allowSpike = this._blockSpikeForPedals <= 0 && this._spikePermitFromShield;
+            selectedSkill = PedalSkillRegistry.selectRandomSkill({
+                currentLayer: this.NewlayerS,
+                lastSkill: this._lastSkill,
+                goldWeightMultiplier: goldWeightMul,
+                blockSpikeForPedals: this._blockSpikeForPedals,
+                allowSpike,
+            });
+        }
+
+        // 状态更新逻辑：
         if (selectedSkill === PedalSkill.SHIELD) {
+            // 刚刚生成了护盾，设置间隔和许可
+            // 设置为 2，代表接下来的 2 个踏板将作为间隔，不生成尖刺
             this._blockSpikeForPedals = 2;
-            didSetSpikeBlockThisCall = true;
+            this._spikePermitFromShield = true;
         } else if (selectedSkill === PedalSkill.SPIKE) {
-            this._forcedSkillQueue.push(PedalSkill.SPIKE);
+            // 刚刚生成了尖刺，消耗掉本次许可
+            this._spikePermitFromShield = false;
+        } else {
+            // 只有在生成非护盾、非尖刺踏板（即处于间隔期或普通期）时，才递减计数器
+            if (this._blockSpikeForPedals > 0) {
+                this._blockSpikeForPedals -= 1;
+            }
         }
 
         this._lastSkill = selectedSkill;
-        if (!didSetSpikeBlockThisCall && this._blockSpikeForPedals > 0) {
-            this._blockSpikeForPedals -= 1;
-        }
         return selectedSkill;
     }
     /**

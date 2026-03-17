@@ -19,6 +19,8 @@ export interface PedalSkillRandomParams {
     goldWeightMultiplier?: number;
     /** SHIELD 之后的尖刺冷却：>0 时本次不允许生成 SPIKE */
     blockSpikeForPedals?: number;
+    /** 是否允许在本次随机中生成 SPIKE（用于“必须有护盾才允许出尖刺”等更高层规则） */
+    allowSpike?: boolean;
 }
 
 /**
@@ -48,7 +50,10 @@ export class PedalSkillRegistry {
             const skill = key as PedalSkill;
             let weight = SkillWeights[skill];
 
-            if (skill === PedalSkill.SPIKE && (params.blockSpikeForPedals ?? 0) > 0) continue;
+            if (skill === PedalSkill.SPIKE) {
+                if ((params.blockSpikeForPedals ?? 0) > 0) continue;
+                if (params.allowSpike === false) continue;
+            }
 
             if (skill === PedalSkill.GOLD) {
                 const mul = params.goldWeightMultiplier ?? 1;

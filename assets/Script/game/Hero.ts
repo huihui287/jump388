@@ -1,4 +1,4 @@
-import { _decorator, Node, Component, Vec3, v3, sp, UITransform, tween, Tween, resources } from 'cc';
+import { _decorator, Node, Component, Vec3, v3, sp, UITransform, tween, Tween, resources, sys } from 'cc';
 import { App } from '../Controller/app';
 import StateMachine, { IState } from '../Common/StateMachine';
 import CM from '../channel/CM';
@@ -281,8 +281,32 @@ export class Hero extends Component {
         this.initStateMachine();
         this._uiTransform = this.getComponent(UITransform);
         
-        // 如果没有开启调试用的摇杆控制，则启动陀螺仪
-        if (!this.useJoystick) {
+        // 自动选择控制方式
+        // 微信小游戏 或 字节跳动小游戏（抖音）：使用陀螺仪
+        const currentPlatform = CM.getPlatform();
+        if (currentPlatform === CM.CH_WEIXIN || currentPlatform === CM.CH_ZJ) {
+            this.useJoystick = false;
+            console.log(`Platform: ${currentPlatform}, using Gyroscope.`);
+        } else if (sys.isBrowser || sys.platform === sys.Platform.MOBILE_BROWSER || sys.platform === sys.Platform.DESKTOP_BROWSER) {
+            // 网页端：使用触摸摇杆
+            this.useJoystick = true;
+            console.log("Platform: Browser, using Joystick.");
+        } else {
+            // 其他平台：默认跟随 useJoystick 的预设值
+            console.log(`Platform: ${sys.platform} / Channel: ${currentPlatform}, using default: ${this.useJoystick ? 'Joystick' : 'Gyroscope'}`);
+        }
+
+        // 根据选择初始化
+        if (this.useJoystick) {
+            if (this.joystick) {
+                this.joystick.node.active = true;
+                this.joystick.enabled = true;
+            }
+        } else {
+            if (this.joystick) {
+                this.joystick.node.active = false;
+                this.joystick.enabled = false;
+            }
             this.initGyroscope();
         }
 
@@ -463,12 +487,31 @@ export class Hero extends Component {
         if (this._gyroAngle > maxAngle) this._gyroAngle = maxAngle;
         if (this._gyroAngle < -maxAngle) this._gyroAngle = -maxAngle;
 
-        // 3. 阻尼回归中心 (如果不晃动，角度会慢慢回到 0)
-        this._gyroAngle *= 0.95;
+        // 3. 动态死区与曲线响应
+        // 死区设为 0.03 (约 1.7度)，既能过滤轻微抖动，又能保证响应灵敏
+        const deadZone = 0.03;
+        let targetX = 0;
+        
+        if (Math.abs(this._gyroAngle) > deadZone) {
+            // 归一化输入：将 (deadZone ~ maxAngle) 映射到 (0 ~ 1)
+            const sign = Math.sign(this._gyroAngle);
+            const rawRatio = (Math.abs(this._gyroAngle) - deadZone) / (maxAngle - deadZone);
+            const ratio = Math.min(Math.max(rawRatio, 0), 1);
+            
+            // 使用非线性曲线 (平方) 提升手感：
+            // 小角度时变化平缓（便于微调），大角度时迅速响应
+            // 基础灵敏度系数设为 2.5
+            targetX = sign * (ratio * ratio) * 2.5;
+        }
 
-        // 4. 平滑插值计算目标 X 输入，实现“丝滑”感
-        const targetX = this._gyroAngle * 2.5; 
-        this._smoothGyroX += (targetX - this._smoothGyroX) * 0.2;
+        // 4. 动态平滑插值 (基于输入变化率)
+        // 当需要快速转向时（输入与当前速度反向或差值大），减少平滑（加快响应）
+        // 当稳定移动时，增加平滑（减少抖动）
+        const diff = Math.abs(targetX - this._smoothGyroX);
+        const baseSmooth = 0.15; // 基础平滑系数
+        const dynamicSmooth = baseSmooth + (diff * 0.2); // 差值越大，追赶越快
+        
+        this._smoothGyroX += (targetX - this._smoothGyroX) * Math.min(dynamicSmooth, 0.8);
 
         // 5. 更新输入向量
         this._inputVector.x = this._smoothGyroX;
