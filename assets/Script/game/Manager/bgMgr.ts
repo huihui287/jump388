@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform, Vec3 } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('bgMgr')
@@ -21,7 +21,12 @@ export class bgMgr extends Component {
     tileStep = 0;
     bgs: Node[] = [];
 
+    // 背景图片每一关背景图都不一样
+    @property({ type: SpriteFrame })
+    bgsSprite: SpriteFrame[] = [];
+
     private _initialPositions: { node: Node; pos: Vec3 }[] = [];
+    private _currentBgIndex: number = -1;
 
     start() {
         this.initBgs();
@@ -44,6 +49,27 @@ export class bgMgr extends Component {
         }
 
         this.bgs.sort((a, b) => a.worldPosition.y - b.worldPosition.y);
+    }
+
+    public applyLevelBackground(level: number, bgIndex?: number) {
+        if (!this.bgsSprite || this.bgsSprite.length === 0) return;
+
+        let idx = bgIndex ?? (level - 1);
+        if (!Number.isFinite(idx)) idx = 0;
+        idx = Math.max(0, Math.floor(idx));
+
+        const resolvedIndex = idx % this.bgsSprite.length;
+        if (resolvedIndex === this._currentBgIndex) return;
+        this._currentBgIndex = resolvedIndex;
+
+        const spriteFrame = this.bgsSprite[resolvedIndex];
+        if (!spriteFrame) return;
+
+        for (const bg of this.bgs) {
+            const sprite = bg.getComponent(Sprite);
+            if (!sprite) continue;
+            sprite.spriteFrame = spriteFrame;
+        }
     }
 
     update(_deltaTime: number) {

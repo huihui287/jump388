@@ -25,6 +25,7 @@ import LoaderManeger from '../sysloader/LoaderManeger';
 import { MoveManager } from './Manager/MoveManager';
 import { PedalSkill } from '../Tools/enumPedal';
 import { CameraManager } from './Manager/CameraManager';
+import { LevelConfig } from '../Tools/levelConfig';
 
 const { ccclass, property } = _decorator;
 
@@ -37,9 +38,11 @@ const { ccclass, property } = _decorator;
 export class Game extends BaseNodeCom {
     /*********************************************  游戏核心组件  *********************************************/
     /** Hero组件 */
+    @property(Hero)
     heroCom: Hero = null!;
     /** 踏板管理组件 */
-    pedalManagerCom: pedalManager = null!;  
+    @property(pedalManager)
+    pedalManagerCom: pedalManager = null!;
 
     /** 相机管理组件 */
     @property(CameraManager)
@@ -51,11 +54,15 @@ export class Game extends BaseNodeCom {
     /**  ui管理组件 */
     @property(UIMgr)
     private uiMgrCom: UIMgr = null;
-   
+
     /*********************************************  ui  *********************************************/
     /** 玩家金币 */
     @property({ type: Node })
     ndSelfGold: Node = null!;
+
+    /** 背景管理组件 */
+    @property(bgMgr)
+    bgMgrCom: bgMgr = null!;
 
     onDestroy(): void {
         App.gameCtr.setPause(false);
@@ -95,19 +102,19 @@ export class Game extends BaseNodeCom {
         
     }
     
+
     /**
      * 初始化Hero组件
      * @description 初始化游戏主角Hero组件，设置其初始状态和属性
      */
     initHero() {
         // 初始化UI引用 - 获取各种游戏组件和UI元素的引用
-        this.heroCom = this.viewList.get('center/Hero').getComponent(Hero);
         this.setHeroSkin();
         
         // 将 Hero 引用传递给 bgMgr，用于背景无限循环
-        const bgMgrCom = this.viewList.get('bgMgr')?.getComponent(bgMgr);
-        if (bgMgrCom) {
-            bgMgrCom.setHero(this.heroCom.node);
+   
+        if (this.bgMgrCom) {
+            this.bgMgrCom.setHero(this.heroCom.node);
         }
     }
 
@@ -304,7 +311,11 @@ export class Game extends BaseNodeCom {
      * @returns {Promise<void>} 异步操作，完成后加载关卡数据
      */
     async loadExtraData(lv: number) {
-
+        const bgMgrCom = this.viewList.get('bgMgr')?.getComponent(bgMgr);
+        if (bgMgrCom) {
+            const config = LevelConfig.getConfig(lv);
+            bgMgrCom.applyLevelBackground(lv, config.bgIndex);
+        }
     }
     /*********************************************  UI information *********************************************/
     /*********************************************  UI information *********************************************/
