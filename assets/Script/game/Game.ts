@@ -91,9 +91,10 @@ export class Game extends BaseNodeCom {
         super.onLoad();
         // 播放背景音乐
         AudioManager.getInstance().playMusic('background1', true);
-
-        await this.initpedalManagerCom();
+        
         this.initHero();
+        await this.initpedalManagerCom();
+
         this.setCameraTarget();
         this.loadExtraData(GameData.getCurLevel());
         // 添加事件监听器
@@ -124,13 +125,14 @@ export class Game extends BaseNodeCom {
         this.pedalManagerCom.setHero(this.heroCom.node);
         await this.pedalManagerCom.loadtPools();
         await this.pedalManagerCom.loadPedalConfig();
-        this.setupHeroOnFirstPedal();
+     //   this.setupHeroOnFirstPedal();
     }
 
     /**
      * 设置 Hero 在第一个踏板上
      */
     private setupHeroOnFirstPedal() {
+        return;
         if (!this.pedalManagerCom || !this.heroCom) return;
         
         // 强制生成第一个踏板

@@ -295,7 +295,7 @@ export class Hero extends Component {
             // 其他平台：默认跟随 useJoystick 的预设值
             console.log(`Platform: ${sys.platform} / Channel: ${currentPlatform}, using default: ${this.useJoystick ? 'Joystick' : 'Gyroscope'}`);
         }
-
+        this.useJoystick = true;
         // 根据选择初始化
         if (this.useJoystick) {
             if (this.joystick) {

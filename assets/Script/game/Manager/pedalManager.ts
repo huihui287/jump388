@@ -424,6 +424,7 @@ export class pedalManager extends Component {
     public spawnFirstPedal(): Node | null {
         // 如果已经有踏板，直接返回第一个
         if (this._activePedals.length > 0) {
+             console.warn("this._activePedals[0]");
             return this._activePedals[0];
         }
 
