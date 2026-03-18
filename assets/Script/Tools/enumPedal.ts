@@ -65,7 +65,7 @@ export const SkillFloorLimit: Record<PedalSkill, number> = {
     [PedalSkill.SPIKE]: 20,
     [PedalSkill.GOLD]: 0,
     [PedalSkill.SHIELD]: 20,
-    [PedalSkill.GOLD_RAIN]: 20,
+    [PedalSkill.GOLD_RAIN]: 0,
     [PedalSkill.METEOR]: 30,
     [PedalSkill.ROCKET]: 50,
 };
@@ -77,7 +77,7 @@ export const SkillWeights: Record<PedalSkill, number> = {
     [PedalSkill.SPIKE]: 100,         // 尖刺
     [PedalSkill.GOLD]: 200,         // 金币
     [PedalSkill.SHIELD]: 100,      // 护盾 (调低点)
-    [PedalSkill.GOLD_RAIN]: 100,     // 金币雨
+    [PedalSkill.GOLD_RAIN]: 5000,     // 金币雨
     [PedalSkill.METEOR]: 100,        // 陨石
     [PedalSkill.ROCKET]: 100,        // 火箭
 };

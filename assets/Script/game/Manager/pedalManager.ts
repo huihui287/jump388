@@ -1,7 +1,7 @@
 import { _decorator, Component, Node, Prefab, instantiate, Vec3, v3, NodePool, UITransform } from 'cc';
 import LoaderManeger from '../../sysloader/LoaderManeger';
 import { App } from '../../Controller/app';
-import { PedalType, PedalDefaults, PedalDefaultsLowLayer, PedalSkill } from '../../Tools/enumPedal';
+import { PedalType, PedalDefaults, PedalDefaultsLowLayer, PedalSkill, SkillWeights } from '../../Tools/enumPedal';
 import { Pedal } from '../Pedal/Pedal';
 import { Hero } from '../Hero';
 import GameData from '../../Common/GameData';
@@ -76,6 +76,14 @@ export class pedalManager extends Component {
      * - 若为空，则按全局配置随机（兼容旧逻辑）
      */
     private _enabledPedalSkills: PedalSkill[] = [];
+    /**
+     * GOLD_RAIN 在本关已生成的次数（限制“技能出现次数”，不是“技能触发次数”）
+     */
+    private _goldRainSpawnedThisLevel: number = 0;
+    /**
+     * GOLD_RAIN 每关最多出现次数
+     */
+    private readonly _goldRainMaxPerLevel: number = 3;
 
     /**
      * 当前连续段状态
@@ -142,6 +150,7 @@ export class pedalManager extends Component {
         this._pedalTypeRemaining = {};
         this._pedalRunRules = [];
         this._enabledPedalSkills = [];
+        this._goldRainSpawnedThisLevel = 0;
         this._currentRunType = null;
         this._currentRunRemaining = 0;
         
@@ -244,6 +253,7 @@ export class pedalManager extends Component {
 
         this._pedalRunRules = config.pedalRunRules ?? [];
         this._enabledPedalSkills = config.enabledPedalSkills ?? [];
+        this._goldRainSpawnedThisLevel = 0;
         this._currentRunType = null;
         this._currentRunRemaining = 0;
         this._configReady = true;
@@ -444,6 +454,9 @@ export class pedalManager extends Component {
             this._enabledPedalSkills.length <= 0 || this._enabledPedalSkills.indexOf(PedalSkill.SPIKE) !== -1;
         const shieldEnabled =
             this._enabledPedalSkills.length <= 0 || this._enabledPedalSkills.indexOf(PedalSkill.SHIELD) !== -1;
+        const goldRainEnabled =
+            this._enabledPedalSkills.length <= 0 || this._enabledPedalSkills.indexOf(PedalSkill.GOLD_RAIN) !== -1;
+        const goldRainAllowedThisLevel = goldRainEnabled && this._goldRainSpawnedThisLevel < this._goldRainMaxPerLevel;
 
         // 检查是否应该强制生成尖刺（已生成护盾且过了 2 个间隔踏板）
         if (spikeEnabled && this._spikePermitFromShield && this._blockSpikeForPedals === 0) {
@@ -451,10 +464,15 @@ export class pedalManager extends Component {
         } else {
             // 否则进行正常随机（但要受 allowSpike 限制：没有许可或在冷却中则不允许随机到尖刺）
             const allowSpike = spikeEnabled && this._blockSpikeForPedals <= 0 && this._spikePermitFromShield;
+            let allowedSkills = this._enabledPedalSkills.length > 0 ? this._enabledPedalSkills : undefined;
+            if (!goldRainAllowedThisLevel) {
+                const base = allowedSkills && allowedSkills.length > 0 ? allowedSkills : (Object.keys(SkillWeights) as PedalSkill[]);
+                allowedSkills = base.filter((s) => s !== PedalSkill.GOLD_RAIN);
+            }
             selectedSkill = PedalSkillRegistry.selectRandomSkill({
                 currentLayer: this.NewlayerS,
                 lastSkill: this._lastSkill,
-                allowedSkills: this._enabledPedalSkills.length > 0 ? this._enabledPedalSkills : undefined,
+                allowedSkills,
                 goldWeightMultiplier: goldWeightMul,
                 blockSpikeForPedals: this._blockSpikeForPedals,
                 allowSpike,
@@ -475,6 +493,10 @@ export class pedalManager extends Component {
             if (this._blockSpikeForPedals > 0) {
                 this._blockSpikeForPedals -= 1;
             }
+        }
+
+        if (selectedSkill === PedalSkill.GOLD_RAIN) {
+            this._goldRainSpawnedThisLevel += 1;
         }
 
         this._lastSkill = selectedSkill;

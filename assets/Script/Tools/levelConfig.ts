@@ -38,6 +38,29 @@ export interface LevelConfigData {
 //     CLOUD = 'cloudPedal',
 // }
 
+
+// /**
+//  * 踏板技能枚举
+//  * 控制 Hero 落到踏板时触发的特殊效果
+//  */
+// export enum PedalSkill {
+//     NONE = 'none',// 无效果
+//     SPRING = 'springPedal',// 弹簧跳跃高度
+//     //尖刺
+//     SPIKE = 'spikePedal',
+//     //金币堆
+//     GOLD = 'goldPedal',
+//     //护盾
+//     SHIELD = 'shieldPedal',
+//     //金币雨
+//     GOLD_RAIN = 'goldRainPedal',
+//     //陨石
+//     METEOR = 'meteorPedal',
+//     //火箭
+//     ROCKET = 'rocketPedal'  
+// }
+
+
 // 游戏关卡配置
 export const LevelConfigs: { [key: number]: LevelConfigData } = {
     1: {
@@ -59,6 +82,11 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
         enabledPedalSkills: [
             PedalSkill.NONE,
             PedalSkill.GOLD,
+            PedalSkill.SPRING,
+            PedalSkill.GOLD_RAIN,
+            PedalSkill.SHIELD,
+            PedalSkill.METEOR,
+            PedalSkill.ROCKET,
         ],
     },
     2: {
@@ -72,6 +100,11 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.MOVE_PEDAL]: 30,
             [PedalType.CLOUD]: 14,
         },
+        pedalRunRules: [
+            { pedalType: PedalType.MOVE_PEDAL, fromLayer: 2, toLayer: 120, minRun: 2, maxRun: 4 },
+            { pedalType: PedalType.FRACTURE_PEDAL, fromLayer: 20, toLayer: 180, minRun: 1, maxRun: 2 },
+            { pedalType: PedalType.CLOUD, fromLayer: 60, toLayer: 260, minRun: 1, maxRun: 2 },
+        ],
         enabledPedalSkills: [
             PedalSkill.NONE,
             PedalSkill.GOLD,
@@ -90,6 +123,11 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.MOVE_PEDAL]: 40,
             [PedalType.CLOUD]: 19,
         },
+        pedalRunRules: [
+            { pedalType: PedalType.MOVE_PEDAL, fromLayer: 2, toLayer: 120, minRun: 2, maxRun: 4 },
+            { pedalType: PedalType.FRACTURE_PEDAL, fromLayer: 20, toLayer: 180, minRun: 1, maxRun: 2 },
+            { pedalType: PedalType.CLOUD, fromLayer: 60, toLayer: 260, minRun: 1, maxRun: 2 },
+        ],
         enabledPedalSkills: [
             PedalSkill.NONE,
             PedalSkill.GOLD,
@@ -109,6 +147,11 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.MOVE_PEDAL]: 30,
             [PedalType.CLOUD]: 19,
         },
+        pedalRunRules: [
+            { pedalType: PedalType.MOVE_PEDAL, fromLayer: 2, toLayer: 120, minRun: 2, maxRun: 4 },
+            { pedalType: PedalType.FRACTURE_PEDAL, fromLayer: 20, toLayer: 180, minRun: 1, maxRun: 2 },
+            { pedalType: PedalType.CLOUD, fromLayer: 60, toLayer: 260, minRun: 1, maxRun: 2 },
+        ],
         enabledPedalSkills: [
             PedalSkill.NONE,
             PedalSkill.GOLD,
@@ -129,6 +172,11 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.MOVE_PEDAL]: 50,
             [PedalType.CLOUD]: 34,
         },
+        pedalRunRules: [
+            { pedalType: PedalType.MOVE_PEDAL, fromLayer: 2, toLayer: 120, minRun: 2, maxRun: 4 },
+            { pedalType: PedalType.FRACTURE_PEDAL, fromLayer: 20, toLayer: 180, minRun: 1, maxRun: 2 },
+            { pedalType: PedalType.CLOUD, fromLayer: 60, toLayer: 260, minRun: 1, maxRun: 2 },
+        ],
         enabledPedalSkills: [
             PedalSkill.NONE,
             PedalSkill.GOLD,

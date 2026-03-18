@@ -26,6 +26,7 @@ import { MoveManager } from './Manager/MoveManager';
 import { PedalSkill } from '../Tools/enumPedal';
 import { CameraManager } from './Manager/CameraManager';
 import { LevelConfig } from '../Tools/levelConfig';
+import { goldRainManager } from './Manager/goldRainManager';
 
 const { ccclass, property } = _decorator;
 
@@ -64,6 +65,11 @@ export class Game extends BaseNodeCom {
     @property(bgMgr)
     bgMgrCom: bgMgr = null!;
 
+
+    /** 金币雨管理组件 */
+    @property(goldRainManager)
+    goldRainManagerCom: goldRainManager = null!;
+    
     onDestroy(): void {
         App.gameCtr.setPause(false);
 
@@ -79,6 +85,7 @@ export class Game extends BaseNodeCom {
         EventManager.off(EventName.Game.RestartGame, this.evtRestartGame, this);
         EventManager.off(EventName.Game.HitSpike, this.onHitSpike, this);
         EventManager.off(EventName.Game.GetGold, this.onGetGold, this);
+        EventManager.off(EventName.Game.GetGoldRain, this.onGetGoldRain, this);
 
     }
     /**
@@ -119,6 +126,11 @@ export class Game extends BaseNodeCom {
    
         if (this.bgMgrCom) {
             this.bgMgrCom.setHero(this.heroCom.node);
+        }
+
+        if (this.goldRainManagerCom) {
+            this.goldRainManagerCom.setHero(this.heroCom);
+            this.goldRainManagerCom.resetSession();
         }
     }
 
@@ -195,6 +207,8 @@ export class Game extends BaseNodeCom {
         EventManager.on(EventName.Game.HitSpike, this.onHitSpike, this);
         /** 获得金币 */
         EventManager.on(EventName.Game.GetGold, this.onGetGold, this);
+        /** 获得金币雨 */
+        EventManager.on(EventName.Game.GetGoldRain, this.onGetGoldRain, this);
     }
 
     /**
@@ -294,6 +308,12 @@ export class Game extends BaseNodeCom {
                 });
             }
         });
+    }
+
+    private onGetGoldRain(pedalNode: Node) {
+        if (!pedalNode) return;
+        if (!this.goldRainManagerCom) return;
+        this.goldRainManagerCom.tryTrigger(pedalNode);
     }
 
     evtPause() {
@@ -537,6 +557,10 @@ export class Game extends BaseNodeCom {
         this.gameState = GameState.PLAYING;
         App.gameCtr.setPause(false);
 
+        if (this.goldRainManagerCom) {
+            this.goldRainManagerCom.resetSession();
+        }
+
         // 9. 恢复游戏逻辑
         EventManager.emit(EventName.Game.Resume);
 
@@ -647,6 +671,10 @@ export class Game extends BaseNodeCom {
             this.heroCom.reset(); 
             // 如果希望开局自动跳跃，可以给 Hero 施加一个初始向上速度或状态
             // 但根据 pedalManager 逻辑，初始位置 0 会生成踏板在脚下，Hero 下落会踩中
+        }
+
+        if (this.goldRainManagerCom) {
+            this.goldRainManagerCom.resetSession();
         }
         
         // 4. 重置摄像机
