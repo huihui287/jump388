@@ -71,6 +71,13 @@ export class pedalManager extends Component {
     private _pedalRunRules: PedalRunRule[] = [];
 
     /**
+     * 本关允许出现的技能列表（来自 LevelConfigs[level].enabledPedalSkills）
+     * - 仅用于“生成哪种技能”的随机过滤
+     * - 若为空，则按全局配置随机（兼容旧逻辑）
+     */
+    private _enabledPedalSkills: PedalSkill[] = [];
+
+    /**
      * 当前连续段状态
      * - 当 _currentRunRemaining > 0 时，后续生成继续返回 _currentRunType
      */
@@ -134,6 +141,7 @@ export class pedalManager extends Component {
         this._spikePermitFromShield = false;
         this._pedalTypeRemaining = {};
         this._pedalRunRules = [];
+        this._enabledPedalSkills = [];
         this._currentRunType = null;
         this._currentRunRemaining = 0;
         
@@ -235,6 +243,7 @@ export class pedalManager extends Component {
         }
 
         this._pedalRunRules = config.pedalRunRules ?? [];
+        this._enabledPedalSkills = config.enabledPedalSkills ?? [];
         this._currentRunType = null;
         this._currentRunRemaining = 0;
         this._configReady = true;
@@ -431,15 +440,21 @@ export class pedalManager extends Component {
 
         let selectedSkill: PedalSkill = PedalSkill.NONE;
 
+        const spikeEnabled =
+            this._enabledPedalSkills.length <= 0 || this._enabledPedalSkills.indexOf(PedalSkill.SPIKE) !== -1;
+        const shieldEnabled =
+            this._enabledPedalSkills.length <= 0 || this._enabledPedalSkills.indexOf(PedalSkill.SHIELD) !== -1;
+
         // 检查是否应该强制生成尖刺（已生成护盾且过了 2 个间隔踏板）
-        if (this._spikePermitFromShield && this._blockSpikeForPedals === 0) {
+        if (spikeEnabled && this._spikePermitFromShield && this._blockSpikeForPedals === 0) {
             selectedSkill = PedalSkill.SPIKE;
         } else {
             // 否则进行正常随机（但要受 allowSpike 限制：没有许可或在冷却中则不允许随机到尖刺）
-            const allowSpike = this._blockSpikeForPedals <= 0 && this._spikePermitFromShield;
+            const allowSpike = spikeEnabled && this._blockSpikeForPedals <= 0 && this._spikePermitFromShield;
             selectedSkill = PedalSkillRegistry.selectRandomSkill({
                 currentLayer: this.NewlayerS,
                 lastSkill: this._lastSkill,
+                allowedSkills: this._enabledPedalSkills.length > 0 ? this._enabledPedalSkills : undefined,
                 goldWeightMultiplier: goldWeightMul,
                 blockSpikeForPedals: this._blockSpikeForPedals,
                 allowSpike,
@@ -451,7 +466,7 @@ export class pedalManager extends Component {
             // 刚刚生成了护盾，设置间隔和许可
             // 设置为 2，代表接下来的 2 个踏板将作为间隔，不生成尖刺
             this._blockSpikeForPedals = 2;
-            this._spikePermitFromShield = true;
+            this._spikePermitFromShield = shieldEnabled && spikeEnabled;
         } else if (selectedSkill === PedalSkill.SPIKE) {
             // 刚刚生成了尖刺，消耗掉本次许可
             this._spikePermitFromShield = false;

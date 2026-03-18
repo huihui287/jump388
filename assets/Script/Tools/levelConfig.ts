@@ -1,4 +1,4 @@
-import { PedalType } from "./enumPedal";
+import { PedalSkill, PedalType } from "./enumPedal";
 
 export interface PedalRunRule {
     pedalType: PedalType;
@@ -15,6 +15,13 @@ export interface LevelConfigData {
     bgIndex?: number;
     pedalTypeCounts?: Partial<Record<PedalType, number>>;
     pedalRunRules?: PedalRunRule[];
+    /**
+     * 本关允许出现的“道具/技能”列表（图片中的“道具”对应项目里的 PedalSkill）
+     * 说明：
+     * - 只影响“生成哪种技能”的随机逻辑，不影响技能效果本身（效果由各 Skill 脚本实现）
+     * - 未配置时：默认不做限制（等同于允许所有技能按全局权重与门槛出现）
+     */
+    enabledPedalSkills?: PedalSkill[];
 }
 
 
@@ -49,6 +56,10 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             { pedalType: PedalType.FRACTURE_PEDAL, fromLayer: 20, toLayer: 180, minRun: 1, maxRun: 2 },
             { pedalType: PedalType.CLOUD, fromLayer: 60, toLayer: 260, minRun: 1, maxRun: 2 },
         ],
+        enabledPedalSkills: [
+            PedalSkill.NONE,
+            PedalSkill.GOLD,
+        ],
     },
     2: {
         AlllayerNum: 300,
@@ -61,6 +72,12 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.MOVE_PEDAL]: 30,
             [PedalType.CLOUD]: 14,
         },
+        enabledPedalSkills: [
+            PedalSkill.NONE,
+            PedalSkill.GOLD,
+            PedalSkill.SPRING,
+            PedalSkill.GOLD_RAIN,
+        ],
     },
     3: {
         AlllayerNum: 300,
@@ -73,6 +90,13 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.MOVE_PEDAL]: 40,
             [PedalType.CLOUD]: 19,
         },
+        enabledPedalSkills: [
+            PedalSkill.NONE,
+            PedalSkill.GOLD,
+            PedalSkill.SPRING,
+            PedalSkill.GOLD_RAIN,
+            PedalSkill.SHIELD,
+        ],
     },
     4: {
         AlllayerNum: 200,
@@ -85,6 +109,14 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.MOVE_PEDAL]: 30,
             [PedalType.CLOUD]: 19,
         },
+        enabledPedalSkills: [
+            PedalSkill.NONE,
+            PedalSkill.GOLD,
+            PedalSkill.SPRING,
+            PedalSkill.GOLD_RAIN,
+            PedalSkill.SHIELD,
+            PedalSkill.METEOR,
+        ],
     },
     5: {
         AlllayerNum: 300,
@@ -97,6 +129,15 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.MOVE_PEDAL]: 50,
             [PedalType.CLOUD]: 34,
         },
+        enabledPedalSkills: [
+            PedalSkill.NONE,
+            PedalSkill.GOLD,
+            PedalSkill.SPRING,
+            PedalSkill.GOLD_RAIN,
+            PedalSkill.SHIELD,
+            PedalSkill.METEOR,
+            PedalSkill.ROCKET,
+        ],
     }
 };
 
@@ -121,6 +162,10 @@ export class LevelConfig {
                 [PedalType.WOOD]: 99,
             },
             pedalRunRules: [],
+            enabledPedalSkills: [
+                PedalSkill.NONE,
+                PedalSkill.GOLD,
+            ],
         };
     }
 }

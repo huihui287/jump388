@@ -15,6 +15,13 @@ export interface PedalSkillRandomParams {
     currentLayer: number;
     /** 上一次生成的技能（用于去重，NONE 允许连续） */
     lastSkill: PedalSkill;
+    /**
+     * 允许参与随机的技能列表（关卡配置）
+     * 说明：
+     * - 若未传入，则表示不做限制（兼容旧逻辑）
+     * - 若传入，则仅 allowedSkills 内的技能才可能被选中
+     */
+    allowedSkills?: PedalSkill[];
     /** 金币蛙等被动对金币踏板出现率的倍率（仅影响 GOLD 的权重） */
     goldWeightMultiplier?: number;
     /** SHIELD 之后的尖刺冷却：>0 时本次不允许生成 SPIKE */
@@ -49,6 +56,12 @@ export class PedalSkillRegistry {
         for (const key in SkillWeights) {
             const skill = key as PedalSkill;
             let weight = SkillWeights[skill];
+
+            if (params.allowedSkills && params.allowedSkills.length > 0) {
+                if (params.allowedSkills.indexOf(skill) === -1) continue;
+            }
+
+
 
             if (skill === PedalSkill.SPIKE) {
                 if ((params.blockSpikeForPedals ?? 0) > 0) continue;

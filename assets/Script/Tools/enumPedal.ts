@@ -65,7 +65,7 @@ export const SkillFloorLimit: Record<PedalSkill, number> = {
     [PedalSkill.SPIKE]: 20,
     [PedalSkill.GOLD]: 0,
     [PedalSkill.SHIELD]: 20,
-    [PedalSkill.GOLD_RAIN]: 0,
+    [PedalSkill.GOLD_RAIN]: 20,
     [PedalSkill.METEOR]: 30,
     [PedalSkill.ROCKET]: 50,
 };
