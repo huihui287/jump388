@@ -1,19 +1,64 @@
 import { PedalSkill, PedalType } from "./enumPedal";
 
 export interface PedalRunRule {
+    /**
+     * 需要执行“连续段”的踏板类型
+     */
     pedalType: PedalType;
+    /**
+     * 连续段生效的起始层数（包含）
+     * 说明：层数口径与 pedalManager.NewlayerS 保持一致（非初始 PEDAL1 的层数，从 1 开始）。
+     */
     fromLayer: number;
+    /**
+     * 连续段生效的结束层数（包含）
+     */
     toLayer: number;
+    /**
+     * 连续段最短长度（闭区间随机）
+     * 例：minRun=2,maxRun=4 表示一次连续生成 2~4 个同类型踏板。
+     */
     minRun: number;
+    /**
+     * 连续段最长长度（闭区间随机）
+     */
     maxRun: number;
 }
 
 export interface LevelConfigData {
+    /**
+     * 本关总层数（用于控制踏板生成上限）
+     * 说明：如果同时配置了 pedalTypeCounts，则 AlllayerNum 仅作为兜底，
+     * 实际总层数由 pedalTypeCounts 各类型数量求和决定（见 pedalManager.loadPedalConfig）。
+     */
     AlllayerNum: number;
+    /**
+     * 通关奖励金币
+     */
     goldReward: number;
+    /**
+     * 金币踏板（PedalSkill.GOLD）触发时的奖励金币数
+     */
     pedalGold: number;
+    /**
+     * 背景索引（可选）
+     * 说明：不填时会默认使用 (level - 1)，以保证旧关卡无需补字段也能工作。
+     */
     bgIndex?: number;
+    /**
+     * 本关踏板类型生成次数配额（可选）
+     * - key：PedalType
+     * - value：该类型在本关最多生成的次数
+     *
+     * 说明：
+     * - 配置后会在 pedalManager 中做“扣减”，次数为 0 的类型不会再被生成
+     * - 本关总层数会用此对象中所有类型数量求和来计算
+     */
     pedalTypeCounts?: Partial<Record<PedalType, number>>;
+    /**
+     * 本关连续段规则（可选）
+     * 说明：用于在指定层数区间内，让某种踏板以“连续段”形式出现，提升关卡节奏与辨识度。
+     */
     pedalRunRules?: PedalRunRule[];
     /**
      * 本关允许出现的“道具/技能”列表（图片中的“道具”对应项目里的 PedalSkill）
@@ -61,7 +106,22 @@ export interface LevelConfigData {
 // }
 
 
-// 游戏关卡配置
+/**
+ * 游戏关卡配置表（按关卡编号索引）
+ *
+ * 使用方式：
+ * - 通过 LevelConfig.getConfig(level) 获取某一关的配置（包含默认 bgIndex 兜底）
+ * - pedalManager.loadPedalConfig 会读取其中的：
+ *   - goldReward / pedalGold
+ *   - pedalTypeCounts（决定每种踏板生成配额、以及本关总层数）
+ *   - pedalRunRules（连续段规则）
+ *   - enabledPedalSkills（本关允许参与随机的技能候选集）
+ *
+ * 配置约定：
+ * - key 为关卡号（1、2、3...）
+ * - enabledPedalSkills 可以包含 PedalSkill.NONE（代表“无技能”）
+ * - 若某关未配置，将使用 LevelConfig.getConfig 的默认值兜底
+ */
 export const LevelConfigs: { [key: number]: LevelConfigData } = {
     1: {
         AlllayerNum: 300,
@@ -189,8 +249,16 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
     }
 };
 
-// 游戏关卡配置工具类
+/**
+ * 游戏关卡配置工具类
+ * - 负责读取 LevelConfigs 并补齐默认字段
+ * - 兜底策略：未配置的关卡会使用默认配置，避免运行时崩溃
+ */
 export class LevelConfig {
+    /**
+     * 获取指定关卡配置
+     * @param level 关卡号（从 1 开始）
+     */
     public static getConfig(level: number): LevelConfigData {
         if (LevelConfigs[level]) {
             const c = LevelConfigs[level];
