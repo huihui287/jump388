@@ -351,12 +351,15 @@ export class pedalManager extends Component {
             this._currentRunRemaining = 0;
         }
 
-        const selected = this.pickPedalTypeByRemaining();
+        // 直接通过随机抽取获取下一个类型（已包含层数合法性判定和剩余次数判定）
+        const selected = this.pickPedalTypeByRemaining(layer);
+
         const selectedRem = Math.max(0, Math.floor(Number(this._pedalTypeRemaining[selected] ?? 0)));
         if (selectedRem > 0) {
             this._pedalTypeRemaining[selected] = selectedRem - 1;
         }
 
+        // 检查该类型在当前层数是否配置了“连续段”规则
         const rule = this.findRunRule(selected, layer);
         if (rule) {
             const runLen = this.randomInt(rule.minRun, rule.maxRun);
@@ -384,26 +387,40 @@ export class pedalManager extends Component {
      * - PEDAL1 在第 0 层固定生成；若配置里 PEDAL1 > 1，则后续层数也可能随机到 PEDAL1
      * - 若所有类型剩余次数都为 0，则回退为 WOOD
      */
-    private pickPedalTypeByRemaining(): PedalType {
+    private pickPedalTypeByRemaining(layer: number): PedalType {
         const allTypes: PedalType[] = Object.keys(PedalType).map((k) => PedalType[k as keyof typeof PedalType]);
-        const candidates: Array<{ type: PedalType; remain: number }> = [];
+        const candidates: PedalType[] = [];
 
-        let total = 0;
         for (const t of allTypes) {
             const remain = Math.max(0, Math.floor(Number(this._pedalTypeRemaining[t] ?? 0)));
             if (remain <= 0) continue;
-            candidates.push({ type: t, remain });
-            total += remain;
+            if (!this.isPedalTypeAllowedInLayer(t, layer)) continue;
+            candidates.push(t);
         }
 
-        if (total <= 0) return PedalType.WOOD;
+        if (candidates.length <= 0) return PedalType.WOOD;
 
-        let r = Math.random() * total;
-        for (const c of candidates) {
-            r -= c.remain;
-            if (r <= 0) return c.type;
+        // 完全等概率随机抽取一个合法的类型
+        const randomIndex = Math.floor(Math.random() * candidates.length);
+        return candidates[randomIndex];
+    }
+
+    /**
+     * 检查某个类型是否在当前层数允许使用
+     * 说明：
+     * - layer 是“非 PEDAL1 的层数”，从 1 开始
+     */
+    private isPedalTypeAllowedInLayer(type: PedalType, layer: number): boolean {
+        if (!this._pedalRunRules || this._pedalRunRules.length === 0) return true;
+
+        let hasRule = false;
+        for (const r of this._pedalRunRules) {
+            if (r.pedalType !== type) continue;
+            hasRule = true;
+            if (layer >= Number(r.fromLayer) && layer <= Number(r.toLayer)) return true;
         }
-        return candidates[candidates.length - 1].type;
+
+        return !hasRule;
     }
 
     /**
@@ -415,7 +432,7 @@ export class pedalManager extends Component {
         if (!this._pedalRunRules || this._pedalRunRules.length === 0) return null;
         for (const r of this._pedalRunRules) {
             if (r.pedalType !== type) continue;
-            if (layer < r.fromLayer || layer > r.toLayer) continue;
+            if (layer < Number(r.fromLayer) || layer > Number(r.toLayer)) continue;
             return r;
         }
         return null;
