@@ -17,6 +17,20 @@ export interface LevelConfigData {
     pedalRunRules?: PedalRunRule[];
 }
 
+
+// /**
+//  * 踏板类型枚举
+//  * 与预制体名称一致，用于加载资源与对象池索引
+//  */
+// export enum PedalType {
+//     PEDAL1 = 'pedal1',            // 最开始的白踏板：基础踏板PEDAL1
+//     WOOD = 'woodPedal',           // 木踏板：基础踏板
+//     FRACTURE_PEDAL = 'fracturePedal', // 断裂踏板：偏向特殊/易碎行为
+//     MOVE_PEDAL = 'movePedal',     // 移动踏板：偏向移动
+//     // 云踏板CLOUD
+//     CLOUD = 'cloudPedal',
+// }
+
 // 游戏关卡配置
 export const LevelConfigs: { [key: number]: LevelConfigData } = {
     1: {
@@ -25,13 +39,13 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
         pedalGold: 10,
         pedalTypeCounts: {
             [PedalType.PEDAL1]: 1,
-            [PedalType.WOOD]: 245,
+            [PedalType.WOOD]: 205,
             [PedalType.FRACTURE_PEDAL]: 25,
-            [PedalType.MOVE_PEDAL]: 20,
+            [PedalType.MOVE_PEDAL]: 60,
             [PedalType.CLOUD]: 9,
         },
         pedalRunRules: [
-            { pedalType: PedalType.MOVE_PEDAL, fromLayer: 10, toLayer: 120, minRun: 2, maxRun: 4 },
+            { pedalType: PedalType.MOVE_PEDAL, fromLayer: 2, toLayer: 120, minRun: 2, maxRun: 4 },
             { pedalType: PedalType.FRACTURE_PEDAL, fromLayer: 20, toLayer: 180, minRun: 1, maxRun: 2 },
             { pedalType: PedalType.CLOUD, fromLayer: 60, toLayer: 260, minRun: 1, maxRun: 2 },
         ],

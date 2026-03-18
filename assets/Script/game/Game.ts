@@ -520,20 +520,27 @@ export class Game extends BaseNodeCom {
             this.cameraCom.node.setPosition(0, 0, this.cameraCom.node.position.z);
         }
 
-        // 5. 加载关卡额外数据（如果需要）
+        // 5. 重置背景节点位置
+        const bgMgrCom = this.viewList.get('bgMgr')?.getComponent(bgMgr);
+        if (bgMgrCom && this.heroCom) {
+            bgMgrCom.setHero(this.heroCom.node);
+            bgMgrCom.resetBgs();
+        }
+
+        // 6. 加载关卡额外数据（如果需要）
         await this.loadExtraData(nextLv);
 
-        // 6. 更新 UI (例如关卡显示)
+        // 7. 更新 UI (例如关卡显示)
         this.setLevelInfo();
 
-        // 7. 重置游戏状态并开始
+        // 8. 重置游戏状态并开始
         this.gameState = GameState.PLAYING;
         App.gameCtr.setPause(false);
 
-        // 8. 恢复游戏逻辑
+        // 9. 恢复游戏逻辑
         EventManager.emit(EventName.Game.Resume);
 
-        // 9. 播放背景音乐
+        // 10. 播放背景音乐
         AudioManager.getInstance().playMusic('background1', true);
     }
 
