@@ -135,9 +135,9 @@ export const LevelConfigs: { [key: number]: LevelConfigData } = {
             [PedalType.CLOUD]: 9,
         },
         pedalRunRules: [
-            { pedalType: PedalType.MOVE_PEDAL, fromLayer: 2, toLayer: 120, minRun: 2, maxRun: 4 },
-            { pedalType: PedalType.FRACTURE_PEDAL, fromLayer: 20, toLayer: 180, minRun: 1, maxRun: 2 },
-            { pedalType: PedalType.CLOUD, fromLayer: 60, toLayer: 260, minRun: 1, maxRun: 2 },
+            { pedalType: PedalType.MOVE_PEDAL, fromLayer: 30, toLayer: 290, minRun: 1, maxRun: 10 },
+            { pedalType: PedalType.FRACTURE_PEDAL, fromLayer: 50, toLayer: 200, minRun: 1, maxRun: 2 },
+            { pedalType: PedalType.CLOUD, fromLayer: 100, toLayer: 150, minRun: 1, maxRun: 5 },
         ],
         enabledPedalSkills: [
             PedalSkill.NONE,
